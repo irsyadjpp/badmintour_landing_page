@@ -158,7 +158,7 @@ export default function Header() {
 
               {/* Menu 3: COMPETE (Tournament) */}
               <NavigationMenuItem>
-                <Link href="/tournament" legacyBehavior passHref>
+                <Link href="/tournament" legacyBehavior={false} passHref>
                   <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "rounded-full bg-transparent hover:bg-secondary/50 font-bold text-base")}>
                     Turnamen
                   </NavigationMenuLink>
@@ -172,10 +172,12 @@ export default function Header() {
         {/* 3. CTA & MOBILE MENU */}
         <div className="flex items-center gap-3">
             {/* Login Button - Pill Shape, Accent Color for Gen-Z Pop */}
-            <Button className="hidden md:flex rounded-full bg-accent text-accent-foreground hover:bg-accent/90 font-bold px-6 shadow-lg shadow-accent/20 h-10 transition-transform hover:scale-105">
-                Join Member
-                <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
+            <Link href="/login">
+                <Button className="hidden md:flex rounded-full bg-accent text-accent-foreground hover:bg-accent/90 font-bold px-6 shadow-lg shadow-accent/20 h-10 transition-transform hover:scale-105">
+                    Join Member
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+            </Link>
 
             {/* Mobile Toggle */}
             <Sheet>
@@ -205,9 +207,11 @@ export default function Header() {
                                 </div>
                             </Link>
                         ))}
-                        <Button className="w-full rounded-full bg-accent text-accent-foreground font-bold h-12 mt-4 text-lg">
-                            Gabung Member Sekarang
-                        </Button>
+                         <Link href="/login">
+                            <Button className="w-full rounded-full bg-accent text-accent-foreground font-bold h-12 mt-4 text-lg">
+                                Gabung Member Sekarang
+                            </Button>
+                        </Link>
                     </div>
                 </SheetContent>
             </Sheet>
