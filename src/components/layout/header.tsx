@@ -132,8 +132,8 @@ export default function Header() {
                     <ListItem href="/sparring" title="Sparring & Fun Match" icon={Swords}>
                       Tantang komunitas lain atau cari lawan sepadan.
                     </ListItem>
-                    <ListItem href="/ranking" title="Leaderboard" icon={TrendingUp}>
-                      Cek statistik dan peringkat permainanmu.
+                    <ListItem href="/hall-of-fame" title="Hall of Fame" icon={Trophy}>
+                      Apresiasi untuk member paling aktif & suportif di komunitas.
                     </ListItem>
                   </ul>
                 </NavigationMenuContent>
