@@ -2,63 +2,36 @@ import Header from '@/components/layout/header';
 import HeroSection from '@/components/sections/hero-section';
 import FeaturesSection from '@/components/sections/features-section';
 import EventsSection from '@/components/sections/events-section';
-import CommunitySection from '@/components/sections/community-section';
 import Footer from '@/components/layout/footer';
-import BookingWidget from '@/components/mabar/booking-widget';
-import MatchGenerator from '@/components/mabar/match-generator';
-import GamificationCard from '@/components/mabar/gamification-card';
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-background font-sans text-foreground">
       <Header />
       <main className="flex-1">
         <HeroSection />
-        <FeaturesSection />
-        <EventsSection />
+        {/* ID 'services' digunakan untuk navigasi scroll */}
+        <div id="services">
+            <FeaturesSection />
+        </div>
+        {/* ID 'schedule' digunakan untuk navigasi scroll */}
+        <div id="schedule">
+            <EventsSection />
+        </div>
         
-        <section className="container py-12 space-y-12">
-          <div>
-            <h2 className="text-3xl font-black mb-8 text-center">Demo: Mabar Registration</h2>
-            <div className="flex flex-col md:flex-row gap-8 justify-center items-start">
-                <BookingWidget 
-                  price={35000} 
-                  minLevel="Intermediate" 
-                  userLevel="Intermediate" 
-                  totalSlots={12} 
-                  currentParticipants={10} 
-                  waitlistCount={0}
-                />
-                {/* Contoh jika user levelnya kurang */}
-                <BookingWidget 
-                  price={35000} 
-                  minLevel="Advance" 
-                  userLevel="Intermediate" 
-                  totalSlots={12} 
-                  currentParticipants={5} 
-                  waitlistCount={0}
-                />
+        {/* CTA Section Pengganti Community Section yang lebih 'To The Point' */}
+        <section className="py-24 bg-primary text-primary-foreground text-center">
+            <div className="container px-4">
+                <h2 className="text-3xl md:text-5xl font-black mb-6 uppercase">Siap Masuk Lapangan?</h2>
+                <p className="text-lg md:text-xl max-w-2xl mx-auto mb-8 text-primary-foreground/90 font-medium">
+                    Jangan cuma jadi penonton. Daftar member sekarang, dapatkan harga khusus member, lacak statistik permainanmu, dan temukan lawan sepadan.
+                </p>
+                 {/* Link ke Login/Register */}
+                 <a href="/login" className="inline-block bg-accent text-accent-foreground px-8 py-4 rounded-full text-lg font-bold hover:scale-105 transition-transform shadow-xl">
+                    Gabung Komunitas (Gratis)
+                </a>
             </div>
-          </div>
-
-          <div>
-            <h2 className="text-3xl font-black mb-8 text-center">Demo: Admin Match Generator</h2>
-            <div className="flex justify-center">
-              <MatchGenerator />
-            </div>
-          </div>
-          
-          <div>
-            <h2 className="text-3xl font-black mb-8 text-center">Demo: Gamification</h2>
-            <div className="flex justify-center">
-                <div className="max-w-md">
-                    <GamificationCard />
-                </div>
-            </div>
-          </div>
         </section>
-
-        <CommunitySection />
       </main>
       <Footer />
     </div>

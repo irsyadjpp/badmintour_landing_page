@@ -2,15 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Bot, Menu, X } from 'lucide-react';
+import { Bot, Menu, X, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const navLinks = [
-  { href: '#services', label: 'Services' },
-  { href: '#events', label: 'Events' },
-  { href: '#community', label: 'Community' },
+  { href: '#services', label: 'Layanan' },
+  { href: '#schedule', label: 'Jadwal' },
 ];
 
 export default function Header() {
@@ -50,44 +49,48 @@ export default function Header() {
         isScrolled ? 'border-b border-border/40 bg-background/95 backdrop-blur-sm' : 'bg-transparent'
       )}
     >
-      <div className="container flex h-16 items-center">
-        <Link href="/" className="mr-6 flex items-center gap-2">
-          <Bot className="h-6 w-6 text-primary" />
-          <span className="font-bold">BadminTour</span>
+      <div className="container flex h-16 items-center justify-between px-4">
+        <Link href="/" className="flex items-center gap-2 z-50">
+          <Bot className="h-8 w-8 text-primary" />
+          <span className="font-headline font-black text-xl tracking-tight">BadminTour</span>
         </Link>
-        <nav className="hidden items-center gap-6 md:flex">
+
+        {/* Desktop Nav */}
+        <nav className="hidden md:flex items-center gap-8">
           <NavContent />
         </nav>
-        <div className="ml-auto flex items-center gap-4">
-          <Button variant="ghost">Log In</Button>
-          <Button className="hidden sm:flex" style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>
-            Sign Up
-          </Button>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-4">
+          <Link href="/login">
+            <Button variant="ghost" className="font-bold">Masuk</Button>
+          </Link>
+          <Link href="/login?role=non-member">
+             <Button className="hidden sm:flex rounded-full px-6 font-bold shadow-lg shadow-accent/20" style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>
+                Daftar Sekarang
+             </Button>
+          </Link>
+
+          {/* Mobile Menu */}
           <div className="md:hidden">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Menu className="h-6 w-6" />
-                  <span className="sr-only">Open menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-full">
-                <div className="flex h-full flex-col">
-                    <div className="flex items-center justify-between border-b p-4">
-                         <Link href="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
-                            <Bot className="h-6 w-6 text-primary" />
-                            <span className="font-bold">BadminTour</span>
-                        </Link>
-                        <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
-                            <X className="h-6 w-6" />
-                            <span className="sr-only">Close menu</span>
-                        </Button>
-                    </div>
-                  <nav className="flex-1 space-y-2 p-4">
+              <SheetContent side="right" className="w-full sm:w-[300px]">
+                <div className="flex flex-col h-full mt-6">
+                  <nav className="flex-1 space-y-4">
                     <NavContent isMobile />
                   </nav>
-                   <div className="mt-auto border-t p-4">
-                        <Button className="w-full" style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>Sign Up</Button>
+                   <div className="mt-auto p-4 space-y-4">
+                        <Link href="/login" className="w-full block">
+                            <Button variant="outline" className="w-full">Masuk</Button>
+                        </Link>
+                        <Link href="/login?role=non-member" className="w-full block">
+                             <Button className="w-full font-bold" style={{ backgroundColor: 'hsl(var(--accent))', color: 'hsl(var(--accent-foreground))' }}>Daftar Member</Button>
+                        </Link>
                    </div>
                 </div>
               </SheetContent>
