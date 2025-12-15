@@ -1,3 +1,58 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-player",
+      "description": "A badminton player jumping for a smash.",
+      "imageUrl": "https://images.unsplash.com/photo-1689058260074-5b94674b82c4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxiYWRtaW50b24lMjBzbWFzaHxlbnwwfHx8fDE3NjU4MTUyMjF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "badminton smash"
+    },
+    {
+      "id": "feature-mabar",
+      "description": "A group of people playing badminton.",
+      "imageUrl": "https://images.unsplash.com/photo-1738330194751-e096b51af7bf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxiYWRtaW50b24lMjBncm91cHxlbnwwfHx8fDE3NjU4MTUyMjF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "badminton group"
+    },
+    {
+      "id": "feature-sparring",
+      "description": "Two players in a competitive badminton match.",
+      "imageUrl": "https://images.unsplash.com/photo-1613918431551-b2ef2720387c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxiYWRtaW50b24lMjBtYXRjaHxlbnwwfHx8fDE3NjU3OTIzMDN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "badminton match"
+    },
+    {
+      "id": "feature-coaching",
+      "description": "A coach training a badminton player.",
+      "imageUrl": "https://images.unsplash.com/photo-1732955365690-84d4cfe88436?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxiYWRtaW50b24lMjB0cmFpbmluZ3xlbnwwfHx8fDE3NjU4MTUyMjF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "badminton training"
+    },
+    {
+      "id": "avatar-1",
+      "description": "Avatar of a community member.",
+      "imageUrl": "https://images.unsplash.com/photo-1725028748781-7adb1df9a943?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxwZXJzb24lMjBmYWNlfGVufDB8fHx8MTc2NTcxMzM3MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person face"
+    },
+    {
+      "id": "avatar-2",
+      "description": "Avatar of a community member.",
+      "imageUrl": "https://images.unsplash.com/photo-1530268729831-4b0b9e170218?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxwZXJzb24lMjBmYWNlfGVufDB8fHx8MTc2NTcxMzM3MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person face"
+    },
+    {
+      "id": "avatar-3",
+      "description": "Avatar of a community member.",
+      "imageUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxwZXJzb24lMjBmYWNlfGVufDB8fHx8MTc2NTcxMzM3MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person face"
+    },
+    {
+      "id": "avatar-4",
+      "description": "Avatar of a community member.",
+      "imageUrl": "https://images.unsplash.com/photo-1530268729831-4b0b9e170218?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxwZXJzb24lMjBmYWNlfGVufDB8fHx8MTc2NTcxMzM3MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person face"
+    },
+    {
+      "id": "avatar-5",
+      "description": "Avatar of a community member.",
+      "imageUrl": "https://images.unsplash.com/photo-1710974481447-fb001ad9ad5a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxwZXJzb24lMjBmYWNlfGVufDB8fHx8MTc2NTcxMzM3MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person face"
+    }
+  ]
 }
