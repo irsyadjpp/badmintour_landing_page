@@ -158,11 +158,14 @@ export default function Header() {
 
               {/* Menu 3: COMPETE (Tournament) */}
               <NavigationMenuItem>
-                <Link href="/tournament" legacyBehavior={false} passHref>
-                  <NavigationMenuLink className={cn(navigationMenuTriggerStyle(), "rounded-full bg-transparent hover:bg-secondary/50 font-bold text-base")}>
+                <NavigationMenuLink asChild>
+                  <Link
+                    href="/tournament"
+                    className={cn(navigationMenuTriggerStyle(), "rounded-full bg-transparent hover:bg-secondary/50 font-bold text-base")}
+                  >
                     Turnamen
-                  </NavigationMenuLink>
-                </Link>
+                  </Link>
+                </NavigationMenuLink>
               </NavigationMenuItem>
 
             </NavigationMenuList>
