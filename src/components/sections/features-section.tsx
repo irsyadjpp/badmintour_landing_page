@@ -1,99 +1,138 @@
 import { Card } from '@/components/ui/card';
-import { Trophy, Target, Users, ArrowUpRight } from 'lucide-react'; // Icon baru
+import { Trophy, Target, Users, ArrowUpRight, Sparkles } from 'lucide-react'; 
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 
 export default function FeaturesSection() {
   const imgMabar = PlaceHolderImages.find((img) => img.id === 'feature-mabar');
-  // Gunakan gambar sparring untuk turnamen sementara
   const imgTournament = PlaceHolderImages.find((img) => img.id === 'feature-sparring'); 
   const imgDrilling = PlaceHolderImages.find((img) => img.id === 'feature-coaching');
 
   return (
-    <section id="services" className="w-full py-20 bg-muted/30">
+    <section id="services" className="w-full py-24 bg-muted/50">
       <div className="container px-4">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-          <div className="max-w-2xl">
-            <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-4">
-              OUR SERVICES
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-end mb-16">
+          <div className="max-w-2xl space-y-4">
+            <h2 className="text-5xl md:text-7xl font-black tracking-tighter text-foreground uppercase">
+              Our <span className="text-primary">Ecosystem</span>
             </h2>
-            <p className="text-lg text-muted-foreground">
-              Layanan manajemen olahraga profesional untuk individu maupun korporasi.
+            <p className="text-xl text-muted-foreground font-medium max-w-lg">
+              Bukan sekadar lapangan. Kami membangun ekosistem badminton modern untuk semua level pemain.
             </p>
           </div>
-          <Button variant="link" className="text-primary font-bold text-lg p-0 h-auto">
-            Lihat Detail Layanan <ArrowUpRight className="ml-2 w-5 h-5" />
+          <Button variant="link" className="text-foreground font-bold text-xl p-0 hover:text-primary transition-colors decoration-2 underline-offset-8">
+            Explore All Services <ArrowUpRight className="ml-2 w-6 h-6" />
           </Button>
         </div>
 
-        {/* BENTO GRID LAYOUT */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[400px]">
+        {/* BENTO GRID MD3 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[450px]">
           
-          {/* Card 1: MABAR RUTIN (Large - Span 2 Columns) */}
-          <Card className="group relative overflow-hidden rounded-[2rem] border-0 bg-black md:col-span-2 shadow-xl">
+          {/* Card 1: Mabar (Primary Focus) */}
+          <Card className="group relative overflow-hidden rounded-[2.5rem] border-0 bg-zinc-900 md:col-span-2 shadow-2xl">
              <div className="absolute inset-0 z-0">
                {imgMabar && (
-                 <Image src={imgMabar.imageUrl} alt="Mabar Rutin Bandung" fill className="object-cover opacity-60 transition-transform duration-700 group-hover:scale-105" />
+                 <Image 
+                    src={imgMabar.imageUrl} 
+                    alt="Mabar Rutin Bandung" 
+                    fill 
+                    className="object-cover opacity-60 transition-transform duration-700 group-hover:scale-110 group-hover:opacity-40" 
+                 />
                )}
-               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
              </div>
-             <div className="relative z-10 flex h-full flex-col justify-end p-8">
-                <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-accent text-accent-foreground">
-                   <Users className="h-6 w-6" />
+             <div className="relative z-10 flex h-full flex-col justify-end p-10">
+                <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-accent-foreground shadow-lg rotate-3 group-hover:rotate-0 transition-transform">
+                   <Users className="h-7 w-7" />
                 </div>
-                <h3 className="text-3xl font-bold text-white mb-2">Mabar Rutin & Komunitas</h3>
-                <p className="text-gray-300 max-w-md">Jadwal main bareng yang terorganisir setiap minggu. Sistem rotasi fair play, shuttlecock berkualitas, dan komunitas yang suportif untuk semua level.</p>
+                <h3 className="text-4xl font-black text-white mb-4 uppercase tracking-tight">Community Mabar</h3>
+                <p className="text-zinc-300 text-lg max-w-lg leading-relaxed">
+                    Main bareng rutin tanpa drama. Sistem rotasi fair-play, shuttlecock premium, dan lawan yang selevel.
+                </p>
+                <div className="mt-8 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                    <Button className="rounded-full bg-white text-black hover:bg-white/90 font-bold">Gabung Group WA</Button>
+                </div>
              </div>
           </Card>
 
-          {/* Card 2: EVENT & TURNAMEN (Vertical Stack Top) */}
-          <Card className="group relative overflow-hidden rounded-[2rem] border-0 bg-white dark:bg-zinc-900 shadow-lg hover:shadow-xl transition-all">
-             <div className="absolute top-0 right-0 p-32 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-             <div className="flex flex-col h-full p-8">
+          {/* Card 2: Tournament (Vertical) */}
+          <Card className="group relative overflow-hidden rounded-[2.5rem] border-0 bg-white shadow-xl flex flex-col">
+             <div className="absolute top-0 right-0 p-40 bg-primary/5 rounded-full blur-3xl" />
+             
+             <div className="p-10 flex-1 flex flex-col z-10">
                 <div className="mb-auto">
-                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-6">
-                        <Trophy className="h-6 w-6" />
+                    <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary mb-6">
+                        <Trophy className="h-7 w-7" />
                     </div>
-                    <h3 className="text-2xl font-bold mb-2">Event Organizer</h3>
-                    <p className="text-muted-foreground text-sm">Spesialis penyelenggara turnamen badminton, dari Fun Match amatir hingga Open Championship profesional.</p>
+                    <h3 className="text-3xl font-black mb-2 uppercase text-foreground">Events &<br/>Turnamen</h3>
+                    <p className="text-muted-foreground font-medium">Dari Fun Match weekend hingga Open Championship berhadiah jutaan.</p>
                 </div>
-                <div className="mt-6 relative h-32 rounded-xl overflow-hidden">
-                    {imgTournament && <Image src={imgTournament.imageUrl} alt="Tournament Organizer" fill className="object-cover" />}
-                </div>
+             </div>
+             
+             {/* Image at bottom half */}
+             <div className="relative h-1/2 w-full mt-4 overflow-hidden rounded-t-[2.5rem]">
+                {imgTournament && (
+                    <Image src={imgTournament.imageUrl} alt="Tournament" fill className="object-cover object-top hover:scale-105 transition-transform duration-500" />
+                )}
              </div>
           </Card>
 
-          {/* Card 3: DRILLING (Span 1 but distinct style) */}
-          <Card className="group relative overflow-hidden rounded-[2rem] border-0 bg-accent md:col-span-1 shadow-lg">
-             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 mix-blend-overlay"></div>
-             <div className="flex flex-col h-full p-8 relative z-10">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-black text-white mb-6">
-                    <Target className="h-6 w-6" />
+          {/* Card 3: Drilling (Yellow/Accent) */}
+          <Card className="group relative overflow-hidden rounded-[2.5rem] border-0 bg-accent md:col-span-1 shadow-xl">
+             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5 mix-blend-overlay"></div>
+             
+             <div className="flex flex-col h-full p-10 relative z-10">
+                <div className="flex justify-between items-start mb-8">
+                    <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-black text-white">
+                        <Target className="h-7 w-7" />
+                    </div>
+                    <div className="bg-black/10 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
+                        Pro Program
+                    </div>
                 </div>
-                <h3 className="text-2xl font-bold text-black mb-2">Drilling Program</h3>
-                <p className="text-black/80 font-medium">Program latihan intensif untuk meningkatkan stamina, footwork, dan teknik pukulan. Privat atau grup.</p>
+                
+                <h3 className="text-4xl font-black text-black mb-4 uppercase leading-[0.9]">Drilling<br/>Program.</h3>
+                <p className="text-black/80 font-bold text-lg leading-snug">
+                    Upgrade skill pukulan dan footwork bareng coach berlisensi.
+                </p>
+                
                 <div className="mt-auto pt-8">
-                    <Button className="w-full rounded-full bg-black text-white hover:bg-black/80">Daftar Drilling</Button>
+                     <Button className="w-full rounded-full bg-black text-white h-12 font-bold hover:scale-105 transition-transform">
+                        Cek Paket Latihan
+                    </Button>
                 </div>
              </div>
           </Card>
 
-           {/* Card 4: Stats (Span 2) */}
-           <Card className="group relative overflow-hidden rounded-[2rem] border-2 border-dashed border-primary/20 bg-background md:col-span-2 flex items-center justify-center p-8">
-              <div className="flex flex-col md:flex-row gap-8 text-center md:text-left items-center">
-                 <div>
-                    <h3 className="text-4xl md:text-5xl font-black text-foreground">50+</h3>
-                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Turnamen Digelar</p>
+           {/* Card 4: Stats (Wide) */}
+           <Card className="group relative overflow-hidden rounded-[2.5rem] border-4 border-white bg-zinc-100 md:col-span-2 flex items-center p-8 md:p-12 shadow-lg">
+              <div className="absolute right-0 top-0 h-full w-1/2 bg-gradient-to-l from-white to-transparent opacity-50 pointer-events-none" />
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 w-full gap-8">
+                 <div className="text-center md:text-left">
+                    <h3 className="text-4xl md:text-5xl font-black text-primary">50+</h3>
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Turnamen</p>
                  </div>
-                 <div className="h-12 w-[2px] bg-border hidden md:block"></div>
-                 <div>
-                    <h3 className="text-4xl md:text-5xl font-black text-foreground">1000+</h3>
-                    <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Member Komunitas</p>
+                 <div className="text-center md:text-left">
+                    <h3 className="text-4xl md:text-5xl font-black text-foreground">1K+</h3>
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Members</p>
+                 </div>
+                 <div className="col-span-2 flex items-center justify-center md:justify-end">
+                    <div className="bg-white p-4 rounded-2xl shadow-sm flex items-center gap-3 border border-zinc-200">
+                        <div className="flex -space-x-3">
+                            {[1,2,3].map(i => (
+                                <div key={i} className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white" />
+                            ))}
+                        </div>
+                        <div className="text-left">
+                            <p className="font-bold text-sm leading-none">Join Them</p>
+                            <p className="text-xs text-muted-foreground">Mulai karirmu disini.</p>
+                        </div>
+                    </div>
                  </div>
               </div>
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-24 h-24 bg-accent/20 rounded-full blur-2xl"></div>
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-24 h-24 bg-primary/20 rounded-full blur-2xl"></div>
            </Card>
 
         </div>
