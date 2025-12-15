@@ -1,40 +1,42 @@
-import { MapPin, Calendar, Clock, ArrowRight, Trophy } from 'lucide-react';
+import { MapPin, Clock, ArrowRight, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 
 const events = [
   {
     id: 1,
-    category: "Newbie Friendly",
-    title: 'Weekend Smash Fest',
+    category: "🔥 Newbie Welcome",
+    title: 'Weekend Fun Game',
     date: '24',
     month: 'AUG',
-    time: '10:00 - 13:00',
-    location: 'Central Badminton Arena',
+    time: '10:00 - 13:00 WIB',
+    location: 'GOR KONI Bandung',
     status: 'Sisa 4 Slot',
     isHot: true,
+    buttonText: 'Amankan Slot'
   },
   {
     id: 2,
-    category: "Drilling Session",
-    title: 'Beginner\'s Clinic',
+    category: "🚀 Drilling Session",
+    title: 'Upgrade Skill: Basic & Footwork',
     date: '25',
     month: 'AUG',
-    time: '14:00 - 16:00',
-    location: 'Northside Sports Hall',
+    time: '19:00 - 21:00 WIB',
+    location: 'GOR C-Tra Arena',
     status: 'Open',
     isHot: false,
+    buttonText: 'Join Kelas'
   },
   {
     id: 3,
-    category: "Sparring Mode",
-    title: 'Advanced Night Session',
+    category: "⚔️ Sparring Mode",
+    title: 'Friendly Match / Sparring Night',
     date: '27',
     month: 'AUG',
-    time: '19:00 - 21:00',
-    location: 'Eastwood Badminton Club',
+    time: '20:00 - 23:00 WIB',
+    location: 'GOR Batununggal Indah',
     status: 'Full Booked',
     isHot: false,
+    buttonText: 'Yah, Full Booked'
   },
 ];
 
@@ -46,12 +48,12 @@ export default function EventsSection() {
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
             <div>
                 <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase mb-2">
-                    Jadwal Main
+                    Jadwal Mabar & Latihan
                 </h2>
-                <p className="text-muted-foreground text-lg">Pilih jadwal, daftar, dan langsung main.</p>
+                <p className="text-muted-foreground text-lg">Cek jadwal, amanin slot, terus langsung gas ke lapangan. Jangan sampai kehabisan!</p>
             </div>
             <Button variant="outline" className="rounded-full px-6 border-2 font-bold hover:bg-accent hover:text-accent-foreground hover:border-accent">
-                Lihat Semua Jadwal
+                Cek Jadwal Bulan Depan →
             </Button>
         </div>
 
@@ -99,7 +101,7 @@ export default function EventsSection() {
                             className={`w-full md:w-auto h-12 rounded-full px-8 text-base font-bold ${event.status === 'Full Booked' ? 'bg-muted text-muted-foreground hover:bg-muted' : 'bg-black text-white hover:bg-primary'}`}
                             disabled={event.status === 'Full Booked'}
                         >
-                            {event.status === 'Full Booked' ? 'Penuh' : 'Book Slot'}
+                            {event.buttonText}
                             {event.status !== 'Full Booked' && <ArrowRight className="ml-2 w-4 h-4" />}
                         </Button>
                     </div>
