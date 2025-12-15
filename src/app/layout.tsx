@@ -20,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className="scroll-smooth">
-      <body className={`${outfit.variable} font-sans antialiased`}>
+    <html lang="id" className="scroll-smooth" suppressHydrationWarning>
+      <body className={`${outfit.variable} font-sans antialiased`} suppressHydrationWarning>
         {children}
         <Toaster />
       </body>
