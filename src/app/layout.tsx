@@ -1,10 +1,17 @@
 import type { Metadata } from 'next';
+import { Outfit } from 'next/font/google'; // Import font Outfit
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
+const outfit = Outfit({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-outfit', // Set variable CSS
+});
+
 export const metadata: Metadata = {
-  title: 'BadminTour',
-  description: 'Level up your badminton game with the BadminTour community.',
+  title: 'BadminTour - Komunitas Badminton Modern',
+  description: 'Platform Mabar, Sparring, dan Coaching Badminton.',
 };
 
 export default function RootLayout({
@@ -13,16 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="font-body antialiased">
+    <html lang="id" className="scroll-smooth">
+      <body className={`${outfit.variable} font-sans antialiased`}>
         {children}
         <Toaster />
       </body>
