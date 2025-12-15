@@ -47,9 +47,9 @@ export default function FeaturesSection() {
                 <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-accent-foreground shadow-lg rotate-3 group-hover:rotate-0 transition-transform">
                    <Users className="h-7 w-7" />
                 </div>
-                <h3 className="text-4xl font-black text-white mb-4 uppercase tracking-tight">Community Mabar</h3>
+                <h3 className="text-4xl font-black text-white mb-4 uppercase tracking-tight">Daily Mabar</h3>
                 <p className="text-zinc-300 text-lg max-w-lg leading-relaxed">
-                    Main bareng rutin tanpa drama. Sistem rotasi fair-play, shuttlecock premium, dan lawan yang selevel.
+                    Cari keringat bareng circle baru. Fun game santai, kalah menang yang penting happy. Slot terbatas tiap harinya!
                 </p>
                 <div className="mt-8 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
                     <Button className="rounded-full bg-white text-black hover:bg-white/90 font-bold">Gabung Group WA</Button>
@@ -66,8 +66,8 @@ export default function FeaturesSection() {
                     <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary mb-6">
                         <Trophy className="h-7 w-7" />
                     </div>
-                    <h3 className="text-3xl font-black mb-2 uppercase text-foreground">Events &<br/>Turnamen</h3>
-                    <p className="text-muted-foreground font-medium">Dari Fun Match weekend hingga Open Championship berhadiah jutaan.</p>
+                    <h3 className="text-3xl font-black mb-2 uppercase text-foreground">Friendly Match</h3>
+                    <p className="text-muted-foreground font-medium">Uji strategi di lapangan. Sparring internal atau lawan komunitas lain. Serius dikit, seru-seruan yang banyak.</p>
                 </div>
              </div>
              
@@ -93,9 +93,9 @@ export default function FeaturesSection() {
                     </div>
                 </div>
                 
-                <h3 className="text-4xl font-black text-black mb-4 uppercase leading-[0.9]">Drilling<br/>Program.</h3>
+                <h3 className="text-4xl font-black text-black mb-4 uppercase leading-[0.9]">Level Up /<br/>Drilling.</h3>
                 <p className="text-black/80 font-bold text-lg leading-snug">
-                    Upgrade skill pukulan dan footwork bareng coach berlisensi.
+                    Skill stuck di situ-situ aja? Join program latihan bareng coach komunitas. Materi basic sampai taktik ganda.
                 </p>
                 
                 <div className="mt-auto pt-8">

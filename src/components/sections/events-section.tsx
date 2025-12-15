@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 const events = [
   {
     id: 1,
-    category: "FUN MATCH",
+    category: "Newbie Friendly",
     title: 'Weekend Smash Fest',
     date: '24',
     month: 'AUG',
@@ -16,7 +16,7 @@ const events = [
   },
   {
     id: 2,
-    category: "COACHING",
+    category: "Drilling Session",
     title: 'Beginner\'s Clinic',
     date: '25',
     month: 'AUG',
@@ -27,7 +27,7 @@ const events = [
   },
   {
     id: 3,
-    category: "SPARRING",
+    category: "Sparring Mode",
     title: 'Advanced Night Session',
     date: '27',
     month: 'AUG',

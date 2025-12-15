@@ -25,10 +25,10 @@ export default function HeroSection() {
             
             {/* Main Typography - Besar & Rapat (Gen-Z Style) */}
             <h1 className="font-heading text-5xl sm:text-7xl lg:text-8xl font-black tracking-tighter text-foreground leading-[0.9]">
-              BANDUNG <br />
+              BADMINTOUR <br />
               <span className="relative inline-block mt-2">
                 <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary to-accent">
-                  BADMINTON HUB.
+                  COMMUNITY HUB.
                 </span>
                 {/* Dekorasi Garis Bawah */}
                 <svg className="absolute w-full h-3 -bottom-1 left-0 text-accent -z-0" viewBox="0 0 100 10" preserveAspectRatio="none">
@@ -38,17 +38,16 @@ export default function HeroSection() {
             </h1>
 
             <p className="max-w-2xl text-muted-foreground text-lg md:text-xl font-medium leading-relaxed">
-              Platform manajemen olahraga terintegrasi. Reservasi mabar, drilling program, hingga turnamen profesional dalam satu ekosistem.
+              Gak perlu ribet atur jadwal. Di sini kamu bisa booking slot Mabar, upgrade skill lewat Drilling, atau uji mental di Fun Match. Suasana santai, mainnya tetap kompetitif. Newbie sampai Advance, gas terus!
             </p>
 
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center pt-4">
               <Button size="lg" className="h-14 rounded-full px-10 text-lg font-bold bg-primary text-white hover:bg-primary/90 hover:scale-105 transition-all shadow-xl shadow-primary/20">
-                Join Mabar Rutin
-                <ArrowRight className="ml-2 h-5 w-5" />
+                GAS MABAR 🏸
               </Button>
               <Button size="lg" variant="secondary" className="h-14 rounded-full px-10 text-lg font-bold bg-secondary hover:bg-secondary/80 text-foreground border border-border/50">
-                Info Turnamen
+                CEK KELAS DRILLING
               </Button>
             </div>
         </div>
@@ -99,8 +98,7 @@ export default function HeroSection() {
         <div className="flex animate-marquee whitespace-nowrap">
             {[...Array(10)].map((_, i) => (
                 <div key={i} className="flex items-center mx-4">
-                    <span className="text-3xl md:text-5xl font-black text-black italic tracking-tighter">JOIN THE COMMUNITY</span>
-                    <span className="text-3xl md:text-5xl font-black text-white mx-6 stroke-black text-stroke-2">READY TO SMASH?</span>
+                    <span className="text-3xl md:text-5xl font-black text-black italic tracking-tighter">MABAR SANTAI • COMPETITIVE FUN • NEWBIE WELCOME • DRILLING PROGRAM • SPARRING SESSION • NO DRAMA JUST SWEAT • BANDUNG BADMINTON</span>
                 </div>
             ))}
         </div>
