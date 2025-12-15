@@ -9,68 +9,60 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = React.useState(false);
 
   React.useEffect(() => {
+    const SCROLL_THRESHOLD = 20;
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      setIsScrolled(window.scrollY > SCROLL_THRESHOLD);
     };
-    window.addEventListener('scroll', handleScroll);
+
+    // Panggil sekali saat load untuk handle refresh di tengah halaman
+    handleScroll();
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
-    <header className={cn(
-      "fixed top-0 left-0 right-0 z-50 flex justify-center transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] px-4",
-      isScrolled ? "py-4" : "pt-6" // Adjusted padding for top position
-    )}>
-      <div className={cn(
-        "flex items-center justify-between transition-all duration-300",
-        isScrolled
-          ? "bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border border-white/20 shadow-xl dark:shadow-black/20 rounded-full px-6 h-[60px]"
-          : "w-full max-w-6xl h-[72px]"
-      )}>
+    <nav className="fixed top-0 left-0 right-0 z-50 flex justify-center items-start pt-6 px-4 pointer-events-none">
+      
+      <div 
+        className={cn(
+            "pointer-events-auto flex items-center justify-between transition-all duration-700 ease-[cubic-bezier(0.19,1,0.22,1)]",
+            isScrolled
+              ? 'w-auto max-w-[90%] bg-[#121212]/90 backdrop-blur-xl rounded-full py-3 px-6 shadow-2xl border border-white/10 mt-2'
+              : 'w-full max-w-7xl py-4 px-2'
+        )}
+      >
 
-        {/* 1. LOGO SECTION */}
-        <Link href="/" className="flex items-center gap-2 group">
-           <div className={cn("relative flex items-center justify-center w-10 h-10 rounded-full text-white overflow-hidden group-hover:scale-105 transition-transform", isScrolled ? "bg-primary" : "bg-primary")}>
-             <Zap className="w-5 h-5 absolute z-10" />
-             <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent" />
-          </div>
-          <span className={cn("font-heading font-black text-xl tracking-tighter", isScrolled ? "text-foreground" : "text-foreground")}>
-            Badmin<span className="text-primary">Tour</span>
-            <span className="text-accent">.</span>
-          </span>
+        <Link href="/" className="flex items-center gap-1 group pl-2">
+            <span className={cn("text-2xl transition-transform duration-500 origin-center", isScrolled ? 'scale-0 w-0 mr-0' : 'scale-100')}>🏸</span>
+            <span className={cn("font-black tracking-tighter text-white drop-shadow-md group-hover:text-primary transition-colors duration-300", isScrolled ? 'text-lg' : 'text-2xl')}>
+                Badmin<span className="text-primary">Tour</span><span className="text-accent">.</span>
+            </span>
         </Link>
 
-        {/* 2. DESKTOP NAVIGATION */}
-        <div className={cn(
-            "hidden md:flex items-center font-bold text-sm",
-            isScrolled ? "gap-6 text-muted-foreground" : "gap-8 text-foreground/90"
-        )}>
-            <Link href="#hero" className="hover:text-primary transition relative group">
+        <div className={cn("hidden md:flex items-center font-bold transition-all duration-500", isScrolled ? 'gap-5 text-gray-200' : 'gap-8 text-white')}>
+            <Link href="#hero" className="hover:text-accent transition relative group text-sm tracking-wide">
                 Home
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all group-hover:w-full"></span>
             </Link>
-            <Link href="#services" className="hover:text-primary transition relative group">
-                Services
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+            <Link href="#services" className="hover:text-accent transition relative group text-sm tracking-wide">
+                Aktivitas
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all group-hover:w-full"></span>
             </Link>
-            <Link href="#schedule" className="hover:text-primary transition relative group">
-                Schedule
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+            <Link href="#schedule" className="hover:text-accent transition relative group text-sm tracking-wide">
+                Jadwal
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all group-hover:w-full"></span>
             </Link>
-            <Link href="#community" className="hover:text-primary transition flex items-center gap-1">
-                Community
+            <Link href="#community" className="hover:text-accent transition flex items-center gap-1 text-sm tracking-wide">
+                <span className="text-accent">📸</span> Momen
             </Link>
         </div>
 
-        {/* 3. CTA */}
-        <Link href="/login" className={cn(
-            "rounded-full text-sm font-bold hover:scale-105 transition-transform shadow-lg",
-             isScrolled ? "bg-primary text-primary-foreground px-5 py-2" : "bg-primary text-primary-foreground px-6 py-2.5"
-        )}>
-            Join Member
+        <Link href="/login" className="bg-white text-foreground px-6 py-2.5 rounded-full text-sm font-black hover:bg-accent hover:text-accent-foreground hover:scale-105 transition-all duration-300 shadow-lg whitespace-nowrap">
+            LOGIN
         </Link>
 
       </div>
-    </header>
+    </nav>
   );
 }
