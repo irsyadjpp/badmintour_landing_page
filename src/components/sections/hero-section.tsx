@@ -20,7 +20,7 @@ export default function HeroSection() {
             {/* Pill Badge */}
             <div className="inline-flex items-center rounded-full border border-primary/20 bg-white/50 backdrop-blur-sm px-4 py-1.5 text-sm font-bold text-primary shadow-sm hover:shadow-md transition-all cursor-default">
               <span className="flex h-2.5 w-2.5 rounded-full bg-primary mr-3 animate-pulse"></span>
-              #1 Sports Management di Bandung
+              Basecamp-nya Anak Badminton Bandung
             </div>
             
             {/* Main Typography - Besar & Rapat (Gen-Z Style) */}
