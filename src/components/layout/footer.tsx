@@ -18,7 +18,7 @@ export default function Footer() {
             </p>
             <div className="flex flex-wrap gap-4">
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/badmintour.official/"
                 target="_blank"
                 className="bg-white text-black px-8 py-4 rounded-full font-bold text-lg hover:bg-accent transition transform hover:-translate-y-1 flex items-center gap-2"
               >
@@ -26,7 +26,8 @@ export default function Footer() {
                 <Instagram className="w-5 h-5" />
               </a>
               <a
-                href="#"
+                href="https://chat.whatsapp.com/KpM0wI5Akx05thwMSrlr01"
+                target="_blank"
                 className="border-2 border-white/20 text-white px-8 py-4 rounded-full font-bold text-lg hover:border-primary hover:text-primary transition"
               >
                 Gabung Grup WA
