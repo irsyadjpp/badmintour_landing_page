@@ -41,7 +41,7 @@ export default function Header() {
       >
         <a href="#" className="flex items-center gap-3 group z-20">
           <div className={cn("h-8 w-auto transition-transform duration-500 origin-left flex items-center", isScrolled ? 'scale-0 w-0' : 'scale-100')}>
-             <Image src="/images/logo.png" alt="Badmintour Logo" width={32} height={32} className="object-contain" />
+             <Image src="/images/logo.png" alt="Badmintour Logo" width={28} height={28} className="object-contain" />
           </div>
           <span
             id="brand-text"
