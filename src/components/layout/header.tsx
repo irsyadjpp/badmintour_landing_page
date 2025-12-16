@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { ChevronDown, Menu } from 'lucide-react';
 
@@ -39,9 +40,8 @@ export default function Header() {
         )}
       >
         <a href="#" className="flex items-center gap-3 group z-20">
-          <div className="h-10 w-auto transition-transform duration-500 origin-left flex items-center">
-            {/* Menggunakan emoji sebagai pengganti logo.png */}
-            <span className={cn("text-3xl transition-transform duration-500", isScrolled ? 'scale-0 w-0' : 'scale-100')}>🏸</span>
+          <div className={cn("h-10 w-auto transition-transform duration-500 origin-left flex items-center", isScrolled ? 'scale-0 w-0' : 'scale-100')}>
+             <Image src="/images/logo.png" alt="Badmintour Logo" width={40} height={40} className="object-contain" />
           </div>
           <span
             id="brand-text"
