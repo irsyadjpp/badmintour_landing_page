@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ClipboardList, Users, DollarSign, ScanQr, LogOut } from 'lucide-react';
+import { ClipboardList, Users, DollarSign, Scan, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
@@ -75,7 +75,7 @@ export default function HostNav() {
             {/* Center Action Button */}
             <div className="pointer-events-auto relative -top-3">
                 <button onClick={() => alert('Buka Kamera Scan QR...')} className="group w-16 h-16 bg-bad-yellow rounded-[1.5rem] shadow-[0_8px_20px_rgba(255,235,59,0.3)] flex items-center justify-center border-4 border-gray-100 dark:border-background hover:scale-110 hover:-translate-y-1 transition-all duration-300">
-                    <ScanQr className="w-8 h-8 text-black group-hover:rotate-90 transition-transform" />
+                    <Scan className="w-8 h-8 text-black group-hover:rotate-90 transition-transform" />
                 </button>
             </div>
 
