@@ -5,16 +5,18 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ShoppingBag, Check, ArrowRight, Info } from 'lucide-react';
+import { ChevronLeft, ShoppingBag, Check, ArrowRight, Info, X, Shirt, Lock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function JerseyDropPage() {
   const [selectedSize, setSelectedSize] = useState('L');
   const [playerName, setPlayerName] = useState('');
-  const [playerClub, setPlayerClub] = useState('INDONESIA');
   const [isLoading, setIsLoading] = useState(false);
   const [isClaimed, setIsClaimed] = useState(false);
+  const [isSizeChartOpen, setIsSizeChartOpen] = useState(false);
+  
   const jerseyImage = PlaceHolderImages.find((img) => img.id === 'jersey-mockup');
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   const handleClaim = () => {
     if (!playerName) {
@@ -34,7 +36,9 @@ export default function JerseyDropPage() {
     }, 1500);
   };
 
-  const sizes = ['S', 'M', 'L', 'XL'];
+  const toggleSizeChart = () => setIsSizeChartOpen(!isSizeChartOpen);
+
+  const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
 
   return (
     <div className="bg-bad-dark min-h-screen font-sans">
@@ -80,7 +84,7 @@ export default function JerseyDropPage() {
               {playerName || 'YOUR NAME'}
             </h2>
             <h3 id="previewClub" className="font-jersey font-medium text-xl sm:text-2xl text-accent tracking-[0.2em] uppercase drop-shadow-sm transition-all">
-              {playerClub || 'INDONESIA'}
+              BADMINTOUR
             </h3>
           </div>
 
@@ -93,9 +97,12 @@ export default function JerseyDropPage() {
           <div>
             <div className="flex justify-between items-center mb-4">
               <label className="font-bold text-sm text-gray-300 uppercase tracking-wide">1. Pilih Ukuran</label>
-              <a href="#" className="text-[10px] text-accent underline">Size Chart</a>
+              <Button type="button" onClick={toggleSizeChart} variant="link" className="text-accent text-[10px] font-bold border border-accent px-2 py-1 rounded h-auto hover:bg-accent hover:text-black">
+                <Shirt className="w-3 h-3 mr-1"/>
+                LIHAT SIZE CHART
+              </Button>
             </div>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-5 gap-2">
               {sizes.map(size => (
                 <div key={size} className="relative">
                   <input
@@ -110,7 +117,7 @@ export default function JerseyDropPage() {
                   <label
                     htmlFor={`size-${size.toLowerCase()}`}
                     className={cn(
-                      "block w-full py-3 rounded-xl border text-center font-bold text-gray-400 cursor-pointer transition-all hover:border-white",
+                      "block w-full py-3 rounded-xl border text-center font-bold text-gray-400 cursor-pointer transition-all hover:border-white text-sm",
                       "border-gray-700",
                       selectedSize === size && "bg-accent text-black border-accent scale-105 font-black"
                     )}
@@ -128,19 +135,19 @@ export default function JerseyDropPage() {
             <h3 className="font-bold text-sm text-white uppercase tracking-wide mb-1">2. Custom Nama Punggung</h3>
             <p className="text-[10px] text-gray-400 mb-6 flex items-start gap-1">
               <Info className="w-3 h-3 text-accent mt-0.5 shrink-0" />
-              Sesuai standar BWF/PBSI: Gunakan Nama Belakang (Surname) atau Nama Panggilan Jelas.
+              Standar BWF: Gunakan Nama Belakang (Surname).
             </p>
 
             <div className="space-y-5">
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Baris 1: Nama Pemain</label>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Nama Pemain</label>
                 <input
                   type="text"
                   id="inputName"
                   placeholder="CONTOH: KEVIN.S"
                   maxLength={12}
                   value={playerName}
-                  onChange={(e) => setPlayerName(e.target.value)}
+                  onChange={(e) => setPlayerName(e.target.value.toUpperCase())}
                   className="w-full bg-surface border-b border-gray-600 text-white text-xl font-jersey font-bold py-2 focus:outline-none focus:border-accent placeholder-gray-700 uppercase tracking-wider transition-colors"
                 />
                 <div className="flex justify-between mt-1">
@@ -150,24 +157,21 @@ export default function JerseyDropPage() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Baris 2: Klub / Negara</label>
-                <div className="relative">
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Klub / Komunitas</label>
+                <div className="relative opacity-75">
                   <select
                     id="inputClub"
-                    value={playerClub}
-                    onChange={(e) => setPlayerClub(e.target.value)}
-                    className="w-full bg-surface border-b border-gray-600 text-accent text-lg font-jersey font-medium py-2 pr-8 focus:outline-none focus:border-accent appearance-none uppercase tracking-widest cursor-pointer"
+                    value="BADMINTOUR"
+                    className="w-full bg-surface border-b border-gray-600 text-accent text-lg font-jersey font-medium py-2 pr-8 focus:outline-none appearance-none uppercase tracking-widest cursor-not-allowed"
+                    disabled
                   >
-                    <option value="INDONESIA">INDONESIA</option>
                     <option value="BADMINTOUR">BADMINTOUR</option>
-                    <option value="BANDUNG">BANDUNG</option>
-                    <option value="PB. JARUM">PB. DJARUM</option>
-                    <option value="PB. JAYA RAYA">PB. JAYA RAYA</option>
                   </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
-                    <ChevronLeft className="w-4 h-4 transform rotate-[-90deg]" />
+                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-600">
+                    <Lock className="w-4 h-4" />
                   </div>
                 </div>
+                <p className="text-[9px] text-gray-500 mt-1 italic">*Afiliasi dikunci khusus member Badmintour</p>
               </div>
             </div>
           </div>
@@ -178,7 +182,7 @@ export default function JerseyDropPage() {
         </form>
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-bad-dark/95 backdrop-blur-xl border-t border-white/10 pt-4 pb-8 px-6 z-50">
+      <div className="fixed bottom-0 left-0 right-0 bg-bad-dark/95 backdrop-blur-xl border-t border-white/10 pt-4 pb-8 px-6 z-30">
         <div className="max-w-lg mx-auto flex items-center gap-4">
           <div className="flex-1">
             <p className="text-[10px] text-gray-400 uppercase">Total Bayar</p>
@@ -207,9 +211,48 @@ export default function JerseyDropPage() {
           </button>
         </div>
       </div>
+      
+      {/* Size Chart Modal */}
+      <div id="sizeChartModal" className={cn(
+        "fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] items-center justify-center p-4 transition-opacity duration-300",
+        isSizeChartOpen ? "flex opacity-100" : "hidden opacity-0"
+      )} onClick={() => setIsSizeChartOpen(false)}>
+        <div className={cn("bg-[#1A1A1A] w-full max-w-sm rounded-3xl border border-white/10 shadow-2xl overflow-hidden transition-transform duration-300", isSizeChartOpen ? "scale-100" : "scale-95")} onClick={(e) => e.stopPropagation()}>
+            <div className="bg-accent p-4 flex justify-between items-center">
+                <h3 className="text-black font-black text-xl uppercase tracking-tighter">📏 Size Chart (CM)</h3>
+                <button onClick={toggleSizeChart} className="text-black hover:bg-black/10 p-1 rounded-full">
+                    <X className="w-6 h-6" />
+                </button>
+            </div>
+            <div className="p-6">
+                <p className="text-xs text-gray-400 mb-4 text-center">DEWASA UNISEX (REGULAR FIT)</p>
+                <div className="overflow-hidden rounded-xl border border-white/10">
+                    <table className="w-full text-sm text-left">
+                        <thead className="text-xs text-gray-400 uppercase bg-white/5">
+                            <tr>
+                                <th className="px-4 py-3 font-bold">Size</th>
+                                <th className="px-4 py-3 font-mono text-right">Lebar</th>
+                                <th className="px-4 py-3 font-mono text-right text-gray-500">x</th>
+                                <th className="px-4 py-3 font-mono text-left">Panjang</th>
+                            </tr>
+                        </thead>
+                        <tbody className="text-gray-200 font-medium">
+                            <tr className="bg-white/5"><td className="p-3 font-bold text-accent">S</td><td className="p-3 text-right font-mono">47</td><td className="p-3 text-gray-500 text-right">x</td><td className="p-3 text-left font-mono">67</td></tr>
+                            <tr><td className="p-3 font-bold text-accent">M</td><td className="p-3 text-right font-mono">50</td><td className="p-3 text-gray-500 text-right">x</td><td className="p-3 text-left font-mono">70</td></tr>
+                            <tr className="bg-white/5"><td className="p-3 font-bold text-accent">L</td><td className="p-3 text-right font-mono">52</td><td className="p-3 text-gray-500 text-right">x</td><td className="p-3 text-left font-mono">72</td></tr>
+                            <tr><td className="p-3 font-bold text-accent">XL</td><td className="p-3 text-right font-mono">54</td><td className="p-3 text-gray-500 text-right">x</td><td className="p-3 text-left font-mono">74</td></tr>
+                            <tr className="bg-white/5"><td className="p-3 font-bold text-accent">XXL</td><td className="p-3 text-right font-mono">56</td><td className="p-3 text-gray-500 text-right">x</td><td className="p-3 text-left font-mono">77</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p className="text-[10px] text-gray-500 mt-4 text-center italic">*Toleransi jahit 1-2 cm. Ukuran dalam Centimeter.</p>
+            </div>
+        </div>
+      </div>
 
+      {/* Success Modal */}
       <div id="successModal" className={cn(
-        "fixed inset-0 bg-black/95 backdrop-blur-md z-[60] flex-col items-center justify-center p-6 text-center transition-opacity duration-500",
+        "fixed inset-0 bg-black/95 backdrop-blur-md z-[70] flex-col items-center justify-center p-6 text-center transition-opacity duration-500",
         isClaimed ? "flex opacity-100" : "hidden opacity-0"
       )}>
         <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mb-6 animate-bounce shadow-[0_0_30px_rgba(0,200,83,0.5)]">
