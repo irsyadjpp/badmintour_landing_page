@@ -28,12 +28,10 @@ export default function MemberLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className="dark" suppressHydrationWarning>
-       <body className={`${outfit.variable} ${oswald.variable} font-sans antialiased bg-bad-dark text-white selection:bg-accent selection:text-black`} suppressHydrationWarning>
-        {children}
-        <Toaster />
-        <MemberNav />
-      </body>
-    </html>
+    <div className={`${outfit.variable} ${oswald.variable} font-sans antialiased bg-bad-dark text-white selection:bg-accent selection:text-black min-h-screen`}>
+      {children}
+      <Toaster />
+      <MemberNav />
+    </div>
   );
 }

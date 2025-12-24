@@ -14,12 +14,10 @@ export default function HostLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className="dark" suppressHydrationWarning>
-       <body className={`font-sans antialiased bg-background text-foreground`} suppressHydrationWarning>
-        {children}
-        <Toaster />
-        <HostNav />
-      </body>
-    </html>
+    <div className={`font-sans antialiased bg-background text-foreground min-h-screen`}>
+      {children}
+      <Toaster />
+      <HostNav />
+    </div>
   );
 }

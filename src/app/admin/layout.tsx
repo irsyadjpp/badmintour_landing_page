@@ -14,12 +14,10 @@ export default function AdminLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" suppressHydrationWarning>
-       <body className={`font-sans antialiased bg-muted/20`} suppressHydrationWarning>
-        {children}
-        <Toaster />
-        <AdminNav />
-      </body>
-    </html>
+    <div className={`font-sans antialiased bg-muted/20 min-h-screen`}>
+      {children}
+      <Toaster />
+      <AdminNav />
+    </div>
   );
 }

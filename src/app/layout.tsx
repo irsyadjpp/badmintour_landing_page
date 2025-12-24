@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" className="scroll-smooth" suppressHydrationWarning>
-      <body className={`${outfit.variable} font-sans antialiased`} suppressHydrationWarning>
+      <body className={`${outfit.variable} font-sans antialiased`}>
         {children}
         <Toaster />
       </body>
