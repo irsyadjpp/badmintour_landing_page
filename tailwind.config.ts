@@ -22,6 +22,7 @@ export default {
             jersey: ['var(--font-oswald)', 'sans-serif'],
 		},
   		colors: {
+        'bad-red': '#D32F2F',
         'bad-dark': '#0f0f0f',
         'surface': '#1E1E1E',
   			background: 'hsl(var(--background))',
