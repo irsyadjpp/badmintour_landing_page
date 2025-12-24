@@ -19,6 +19,7 @@ export default {
 		fontFamily: {
 			sans: ['var(--font-outfit)', 'sans-serif'],
 			heading: ['var(--font-outfit)', 'sans-serif'],
+            jersey: ['var(--font-oswald)', 'sans-serif'],
 		},
   		colors: {
         'bad-dark': '#0f0f0f',
@@ -84,6 +85,7 @@ export default {
             "marquee-reverse": "marquee-reverse 25s linear infinite",
             float: "float 6s ease-in-out infinite",
             'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'bounce': 'bounce 1s infinite',
         },
         keyframes: {
             marquee: {
@@ -97,7 +99,17 @@ export default {
             float: {
                 "0%, 100%": { transform: "translateY(0)" },
                 "50%": { transform: "translateY(-20px)" },
-            }
+            },
+            bounce: {
+                '0%, 100%': {
+                  transform: 'translateY(-25%)',
+                  animationTimingFunction: 'cubic-bezier(0.8, 0, 1, 1)',
+                },
+                '50%': {
+                  transform: 'translateY(0)',
+                  animationTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)',
+                },
+            },
         },
   	}
   },
