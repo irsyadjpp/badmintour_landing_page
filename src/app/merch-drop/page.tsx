@@ -26,10 +26,8 @@ export default function JerseyDropPage() {
   return (
     <div className="bg-bad-dark min-h-screen pb-32 font-sans">
       <header className="fixed top-0 w-full z-40 bg-bad-dark/80 backdrop-blur-md border-b border-white/10 px-6 py-4 flex items-center justify-between">
-        <Link href="/" passHref>
-          <a className="bg-surface p-2 rounded-full hover:bg-white/10 transition">
-            <ChevronLeft className="w-6 h-6 text-white" />
-          </a>
+        <Link href="/" className="bg-surface p-2 rounded-full hover:bg-white/10 transition">
+          <ChevronLeft className="w-6 h-6 text-white" />
         </Link>
         <div className="text-center">
           <span className="text-[10px] font-bold text-accent tracking-[0.2em] uppercase block">Badmintour Merch</span>
@@ -173,8 +171,8 @@ export default function JerseyDropPage() {
           <p className="text-2xl font-mono font-bold text-accent tracking-widest">JER-BDG-009</p>
         </div>
 
-        <Link href="/" passHref>
-          <a className="text-white font-bold underline decoration-2 decoration-accent hover:text-accent transition">Kembali ke Home</a>
+        <Link href="/" className="text-white font-bold underline decoration-2 decoration-accent hover:text-accent transition">
+            Kembali ke Home
         </Link>
       </div>
     </div>
