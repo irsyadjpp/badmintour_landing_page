@@ -14,13 +14,13 @@ export default function LoginPage() {
     // Di aplikasi nyata, ini akan memanggil API auth
     switch (role) {
       case 'admin':
-        router.push('/admin'); // Masuk halaman Admin
+        router.push('/admin/dashboard'); // Masuk halaman Admin
         break;
       case 'manager':
-        router.push('/manager'); // Masuk halaman Mabar Manager
+        router.push('/host/dashboard'); // Masuk halaman Mabar Manager
         break;
       case 'member':
-        router.push('/member'); // Masuk halaman Dashboard Pemain
+        router.push('/member/dashboard'); // Masuk halaman Dashboard Pemain
         break;
       case 'guest':
       default:

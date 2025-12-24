@@ -43,7 +43,7 @@ export default function JerseyDropPage() {
   return (
     <div className="bg-bad-dark min-h-screen font-sans">
       <header className="fixed top-0 w-full z-40 bg-bad-dark/90 backdrop-blur-md border-b border-white/10 px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="bg-surface p-2 rounded-full hover:bg-white/10 transition">
+        <Link href="/member/dashboard" className="bg-surface p-2 rounded-full hover:bg-white/10 transition">
           <ChevronLeft className="w-6 h-6 text-white" />
         </Link>
         <div className="text-center">
@@ -71,7 +71,7 @@ export default function JerseyDropPage() {
           
           {jerseyImage && (
             <Image 
-                src="https://via.placeholder.com/500x500/1E1E1E/333333?text=BACK+VIEW+JERSEY" 
+                src={jerseyImage.imageUrl}
                 alt="Jersey Back" 
                 width={500}
                 height={500}
@@ -267,7 +267,7 @@ export default function JerseyDropPage() {
             <p className="text-2xl font-mono font-bold text-white tracking-widest">BDG-JER-009</p>
         </div>
 
-        <Link href="/" className="px-8 py-3 rounded-full border border-white/20 text-white font-bold text-sm hover:bg-white hover:text-black transition">
+        <Link href="/member/dashboard" className="px-8 py-3 rounded-full border border-white/20 text-white font-bold text-sm hover:bg-white hover:text-black transition">
             Kembali ke Menu
         </Link>
       </div>
