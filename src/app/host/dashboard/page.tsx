@@ -6,13 +6,10 @@ import { ArrowLeft } from 'lucide-react';
 
 export default function ManagerDashboard() {
   return (
-    <div className="min-h-screen bg-muted/10">
+    <div className="min-h-screen">
         <div className="container mx-auto py-6 px-4">
             <div className="flex items-center gap-4 mb-6">
-                <Link href="/login">
-                    <Button variant="ghost" size="icon"><ArrowLeft className="h-5 w-5"/></Button>
-                </Link>
-                <div>
+                 <div>
                     <h1 className="text-2xl font-black">Host Dashboard</h1>
                     <p className="text-muted-foreground text-sm">Active Session Control</p>
                 </div>

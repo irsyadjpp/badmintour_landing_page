@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ShoppingBag, Check, ArrowRight, Info, X, Shirt, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,7 +23,6 @@ export default function JerseyDropPage() {
   const [isClaimed, setIsClaimed] = useState(false);
   const [isSizeChartOpen, setIsSizeChartOpen] = useState(false);
   
-  const jerseyImage = PlaceHolderImages.find((img) => img.id === 'jersey-mockup');
   const { toast } = useToast();
 
   const handleClaim = () => {
@@ -51,19 +49,7 @@ export default function JerseyDropPage() {
 
   return (
     <div className="bg-bad-dark min-h-screen font-sans pb-48">
-      <header className="fixed top-0 w-full z-40 bg-bad-dark/90 backdrop-blur-md border-b border-white/10 px-6 py-4 flex items-center justify-between">
-        <Link href="/member/dashboard" className="bg-surface p-2 rounded-full hover:bg-white/10 transition">
-          <ChevronLeft className="w-6 h-6 text-white" />
-        </Link>
-        <div className="text-center">
-          <span className="text-[10px] font-bold text-accent tracking-[0.2em] uppercase block">Official Kit</span>
-          <span className="font-black text-lg tracking-tight">LIMITED DROP</span>
-        </div>
-        <div className="p-2 opacity-50">
-          <ShoppingBag className="w-6 h-6" />
-        </div>
-      </header>
-
+      
       <main className="pt-24 px-6 max-w-lg mx-auto">
         <div className="mb-6">
           <div className="flex justify-between items-end mb-2">
@@ -78,15 +64,13 @@ export default function JerseyDropPage() {
         <div className="relative bg-surface rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden mb-8 aspect-square flex items-center justify-center group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[50px] rounded-full"></div>
           
-          {jerseyImage && (
-            <Image 
-                src={jerseyImage.imageUrl}
-                alt="Jersey Back" 
-                width={500}
-                height={500}
-                className="w-full h-full object-cover opacity-80 mix-blend-luminosity group-hover:mix-blend-normal transition duration-500"
-            />
-          )}
+          <Image 
+              src="https://via.placeholder.com/500x500/1E1E1E/333333?text=JERSEY+BACK"
+              alt="Jersey Back" 
+              width={500}
+              height={500}
+              className="w-full h-full object-cover opacity-80 mix-blend-luminosity group-hover:mix-blend-normal transition duration-500"
+          />
 
           <div className="absolute inset-0 flex flex-col items-center justify-center pt-10 pointer-events-none">
             <h2 id="previewName" className="font-jersey font-bold text-4xl sm:text-5xl text-white tracking-wider uppercase drop-shadow-md mb-2 transition-all">

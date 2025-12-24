@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import '../globals.css';
 import { Toaster } from '@/components/ui/toaster';
-import HostNav from '@/components/layout/host-nav';
+import HostSidebar from '@/components/layout/host-sidebar';
 
 export const metadata: Metadata = {
   title: 'Host Dashboard | BADMINTOUR',
@@ -14,10 +14,12 @@ export default function HostLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className={`font-sans antialiased bg-background text-foreground min-h-screen`}>
-      {children}
+    <div className={`font-sans antialiased bg-bad-dark text-white min-h-screen`}>
+        <HostSidebar />
+        <main className="ml-24 p-6 transition-all duration-500">
+            {children}
+        </main>
       <Toaster />
-      <HostNav />
     </div>
   );
 }

@@ -8,9 +8,6 @@ export default function AdminDashboard() {
     <div className="container mx-auto py-8 px-4">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-black">Admin Dashboard</h1>
-        <Link href="/login">
-            <Button variant="outline">Log Out</Button>
-        </Link>
       </div>
       
       {/* Tabel Manajemen Jadwal */}

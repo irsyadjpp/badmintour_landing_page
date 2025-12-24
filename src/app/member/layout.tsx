@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Outfit, Oswald } from 'next/font/google';
 import '../globals.css';
 import { Toaster } from '@/components/ui/toaster';
-import MemberNav from '@/components/layout/member-nav';
+import MemberHeader from '@/components/layout/member-header';
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -29,9 +29,9 @@ export default function MemberLayout({
 }>) {
   return (
     <div className={`${outfit.variable} ${oswald.variable} font-sans antialiased bg-bad-dark text-white selection:bg-accent selection:text-black min-h-screen`}>
+      <MemberHeader />
       {children}
       <Toaster />
-      <MemberNav />
     </div>
   );
 }
