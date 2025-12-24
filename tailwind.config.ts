@@ -17,11 +17,12 @@ export default {
     },
   	extend: {
 		fontFamily: {
-			// Kita ganti ke font yang lebih Gen-Z nanti di layout.tsx
 			sans: ['var(--font-outfit)', 'sans-serif'],
 			heading: ['var(--font-outfit)', 'sans-serif'],
 		},
   		colors: {
+        'bad-dark': '#0f0f0f',
+        'surface': '#1E1E1E',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -79,14 +80,15 @@ export default {
   			sm: 'calc(var(--radius) - 4px)'
   		},
         animation: {
-            marquee: "marquee 25s linear infinite",
+            marquee: "marquee 15s linear infinite",
             "marquee-reverse": "marquee-reverse 25s linear infinite",
             float: "float 6s ease-in-out infinite",
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         },
         keyframes: {
             marquee: {
-                from: { transform: "translateX(0)" },
-                to: { transform: "translateX(calc(-100% - 2rem))" },
+                '0%': { transform: 'translateX(0%)' },
+                '100%': { transform: 'translateX(-100%)' },
             },
             "marquee-reverse": {
                 from: { transform: "translateX(calc(-100% - 2rem))" },
