@@ -1,10 +1,11 @@
 'use client';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Shirt, CalendarDays, BarChart, QrCode } from 'lucide-react';
 
 export default function MemberDashboard() {
   return (
-    <div className="bg-gray-50 text-bad-dark min-h-screen pb-20">
+    <div className="bg-gray-50 text-bad-dark min-h-screen pb-40">
       <header className="bg-bad-dark text-white pt-8 pb-6 px-6 rounded-b-[2rem] shadow-xl">
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -13,7 +14,7 @@ export default function MemberDashboard() {
             </p>
             <h1 className="text-3xl font-black">KEVIN.S</h1>
           </div>
-          <div className="w-12 h-12 rounded-full bg-bad-yellow border-2 border-white overflow-hidden">
+          <div className="w-12 h-12 rounded-full bg-accent border-2 border-white overflow-hidden">
             <Image
               src="https://ui-avatars.com/api/?name=Kevin+S&background=FFEB3B&color=000"
               alt="Profile"
@@ -53,8 +54,8 @@ export default function MemberDashboard() {
             href="/member/jersey"
             className="bg-white p-5 rounded-3xl shadow-sm hover:shadow-md transition group border border-gray-100"
           >
-            <div className="w-10 h-10 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition text-xl">
-              👕
+            <div className="w-10 h-10 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition">
+              <Shirt />
             </div>
             <h3 className="font-bold text-gray-900 leading-tight">
               Claim Jersey
@@ -68,8 +69,8 @@ export default function MemberDashboard() {
             href="/#schedule"
             className="bg-white p-5 rounded-3xl shadow-sm hover:shadow-md transition group border border-gray-100"
           >
-            <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition text-xl">
-              📅
+            <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition">
+              <CalendarDays />
             </div>
             <h3 className="font-bold text-gray-900 leading-tight">
               Jadwal Mabar
@@ -81,8 +82,8 @@ export default function MemberDashboard() {
             href="#"
             className="bg-white p-5 rounded-3xl shadow-sm hover:shadow-md transition group border border-gray-100"
           >
-            <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition text-xl">
-              📊
+            <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition">
+              <BarChart />
             </div>
             <h3 className="font-bold text-gray-900 leading-tight">Riwayat</h3>
             <p className="text-xs text-gray-500 mt-1">Statistik permainan</p>
@@ -93,8 +94,8 @@ export default function MemberDashboard() {
             className="bg-accent p-5 rounded-3xl shadow-sm hover:shadow-md transition group border border-yellow-400 relative overflow-hidden"
           >
             <div className="absolute top-0 right-0 w-16 h-16 bg-black/5 rounded-full -mr-8 -mt-8"></div>
-            <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition text-xl">
-              🆔
+            <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition">
+              <QrCode />
             </div>
             <h3 className="font-bold text-black leading-tight">Member ID</h3>
             <p className="text-xs text-black/70 mt-1">Show QR Code</p>

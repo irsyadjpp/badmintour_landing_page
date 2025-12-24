@@ -8,6 +8,15 @@ import { cn } from '@/lib/utils';
 import { ChevronLeft, ShoppingBag, Check, ArrowRight, Info, X, Shirt, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+// Dummy useToast hook to prevent errors.
+const useToast = () => ({
+  toast: (options: { title: string; description: string, variant: string}) => {
+    if(typeof window !== 'undefined') {
+        alert(`${options.title}: ${options.description}`);
+    }
+  },
+});
+
 export default function JerseyDropPage() {
   const [selectedSize, setSelectedSize] = useState('L');
   const [playerName, setPlayerName] = useState('');
@@ -41,7 +50,7 @@ export default function JerseyDropPage() {
   const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
 
   return (
-    <div className="bg-bad-dark min-h-screen font-sans">
+    <div className="bg-bad-dark min-h-screen font-sans pb-48">
       <header className="fixed top-0 w-full z-40 bg-bad-dark/90 backdrop-blur-md border-b border-white/10 px-6 py-4 flex items-center justify-between">
         <Link href="/member/dashboard" className="bg-surface p-2 rounded-full hover:bg-white/10 transition">
           <ChevronLeft className="w-6 h-6 text-white" />
@@ -55,7 +64,7 @@ export default function JerseyDropPage() {
         </div>
       </header>
 
-      <main className="pt-24 px-6 max-w-lg mx-auto pb-48">
+      <main className="pt-24 px-6 max-w-lg mx-auto">
         <div className="mb-6">
           <div className="flex justify-between items-end mb-2">
             <span className="text-primary font-bold animate-pulse text-xs">🔥 SISA 3 SLOT LAGI!</span>
@@ -94,14 +103,16 @@ export default function JerseyDropPage() {
         </div>
 
         <form id="orderForm" className="space-y-8">
+          
           <div>
             <div className="flex justify-between items-center mb-4">
               <label className="font-bold text-sm text-gray-300 uppercase tracking-wide">1. Pilih Ukuran</label>
-              <Button type="button" onClick={toggleSizeChart} variant="link" className="text-accent text-[10px] font-bold border border-accent px-2 py-1 rounded h-auto hover:bg-accent hover:text-black">
-                <Shirt className="w-3 h-3 mr-1"/>
+              <button type="button" onClick={toggleSizeChart} className="text-[10px] font-bold text-accent border border-accent px-2 py-1 rounded hover:bg-accent hover:text-black transition flex items-center gap-1">
+                <Shirt className="w-3 h-3"/>
                 LIHAT SIZE CHART
-              </Button>
+              </button>
             </div>
+            
             <div className="grid grid-cols-5 gap-2">
               {sizes.map(size => (
                 <div key={size} className="relative">
@@ -112,14 +123,13 @@ export default function JerseyDropPage() {
                     value={size}
                     checked={selectedSize === size}
                     onChange={() => setSelectedSize(size)}
-                    className="sr-only"
+                    className="sr-only peer"
                   />
                   <label
                     htmlFor={`size-${size.toLowerCase()}`}
                     className={cn(
                       "block w-full py-3 rounded-xl border text-center font-bold text-gray-400 cursor-pointer transition-all hover:border-white text-sm",
-                      "border-gray-700",
-                      selectedSize === size && "bg-accent text-black border-accent scale-105 font-black"
+                      "border-gray-700 peer-checked:bg-accent peer-checked:text-black peer-checked:border-accent peer-checked:scale-105 peer-checked:font-black"
                     )}
                   >
                     {size}
@@ -182,6 +192,7 @@ export default function JerseyDropPage() {
         </form>
       </main>
 
+      {/* Footer Button */}
       <div className="fixed bottom-0 left-0 right-0 bg-bad-dark/95 backdrop-blur-xl border-t border-white/10 pt-4 pb-8 px-6 z-30">
         <div className="max-w-lg mx-auto flex items-center gap-4">
           <div className="flex-1">
@@ -216,7 +227,7 @@ export default function JerseyDropPage() {
       <div id="sizeChartModal" className={cn(
         "fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] items-center justify-center p-4 transition-opacity duration-300",
         isSizeChartOpen ? "flex opacity-100" : "hidden opacity-0"
-      )} onClick={() => setIsSizeChartOpen(false)}>
+      )} onClick={toggleSizeChart}>
         <div className={cn("bg-[#1A1A1A] w-full max-w-sm rounded-3xl border border-white/10 shadow-2xl overflow-hidden transition-transform duration-300", isSizeChartOpen ? "scale-100" : "scale-95")} onClick={(e) => e.stopPropagation()}>
             <div className="bg-accent p-4 flex justify-between items-center">
                 <h3 className="text-black font-black text-xl uppercase tracking-tighter">📏 Size Chart (CM)</h3>
@@ -274,13 +285,3 @@ export default function JerseyDropPage() {
     </div>
   );
 }
-
-// Dummy useToast hook to prevent errors since it's not defined in this file.
-// In a real app, this would be imported from the actual hook file.
-const useToast = () => ({
-  toast: (options: { title: string; description: string, variant: string}) => {
-    if(typeof alert !== 'undefined') {
-        alert(`${options.title}: ${options.description}`);
-    }
-  },
-});
