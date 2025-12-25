@@ -5,6 +5,7 @@ import {
     Users,
     Calendar,
     Settings,
+    Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -18,6 +19,7 @@ export default function AdminSidebar() {
         { href: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
         { href: "/admin/members", icon: Users, label: "Data Member" },
         { href: "/admin/events", icon: Calendar, label: "Events" },
+        { href: "/admin/finance", icon: Wallet, label: "Treasury" },
         { href: "#", icon: Settings, label: "Settings" },
     ];
 
