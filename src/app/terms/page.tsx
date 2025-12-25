@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -58,9 +57,9 @@ export default function TermsPage() {
                         
                         <div className="pt-8 px-4">
                             <Link href="/">
-                                {/* UPDATE: Menambahkan bg-transparent dan border yang lebih jelas */}
-                                <Button className="w-full bg-transparent border border-white/20 text-white hover:bg-white hover:text-black rounded-xl gap-2 font-bold h-12 transition-all">
-                                    <ChevronLeft className="w-4 h-4"/> Back to Home
+                                {/* UPDATE: High Contrast Yellow Theme Button */}
+                                <Button className="w-full bg-transparent border-2 border-[#ffbe00] text-[#ffbe00] hover:bg-[#ffbe00] hover:text-black rounded-xl gap-2 font-black h-12 transition-all uppercase tracking-wide">
+                                    <ChevronLeft className="w-5 h-5"/> Back to Home
                                 </Button>
                             </Link>
                         </div>
@@ -252,6 +251,3 @@ function BanCard({ text }: { text: string }) {
         </div>
     )
 }
-
-
-    
