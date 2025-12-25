@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ArrowRight, Shirt, X } from 'lucide-react';
+import { ChevronLeft, ArrowRight, Shirt, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
@@ -50,6 +50,14 @@ export default function JerseyDropPage() {
   const toggleSizeChart = () => setIsSizeChartOpen(!isSizeChartOpen);
 
   const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+
+  const priceNote = useMemo(() => {
+    if (totalPrice === 0) {
+      return "✨ Selamat! Kamu berhak mendapatkan 1 Jersey Gratis.";
+    }
+    return `ℹ️ Info Tagihan: 1 Pcs Gratis + ${quantity - 1} Pcs Berbayar (@150k)`;
+  }, [totalPrice, quantity]);
+
 
   return (
     <>
@@ -121,8 +129,11 @@ export default function JerseyDropPage() {
                             </div>
                         </div>
                     </div>
-                    <div id="priceNote" className={cn("mt-3 pt-3 border-t border-white/5 text-[11px] font-bold italic", totalPrice === 0 ? "text-bad-green" : "text-gray-400")}>
-                        {totalPrice === 0 ? "✨ Selamat! Kamu berhak mendapatkan 1 Jersey Gratis." : `ℹ️ Info Tagihan: 1 Pcs Gratis + ${quantity - 1} Pcs Berbayar (@150k)`}
+                    <div id="priceNote" className={cn(
+                        "mt-3 pt-3 border-t border-white/5 text-[11px] font-bold italic",
+                        totalPrice === 0 ? "text-bad-green" : "text-gray-400"
+                    )}>
+                       {priceNote}
                     </div>
                 </div>
 
