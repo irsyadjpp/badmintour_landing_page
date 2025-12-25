@@ -3,6 +3,39 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { db } from "@/lib/firebase-admin";
 
+// --- HELPER FUNCTIONS ---
+
+// 1. Generate 6 Digit PIN (Semua angka berbeda)
+function generateDistinctPin(): string {
+  // Pool angka 0-9
+  const digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+  
+  // Fisher-Yates Shuffle (Mengacak posisi array)
+  for (let i = digits.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [digits[i], digits[j]] = [digits[j], digits[i]];
+  }
+  
+  // Ambil 6 angka pertama dan gabungkan jadi string
+  return digits.slice(0, 6).join('');
+}
+
+// 2. Extract Nickname dari Nama
+function extractNickname(fullName: string): string {
+  // Regex untuk mencari teks di dalam kurung (...)
+  const match = fullName.match(/\(([^)]+)\)/);
+  
+  if (match && match[1]) {
+    // Jika ada kurung, ambil isinya (misal: "Irsyad (Chad)" -> "Chad")
+    return match[1].trim(); 
+  } else {
+    // Jika tidak ada kurung, ambil kata pertama (misal: "Irsyad Jpp" -> "Irsyad")
+    return fullName.split(' ')[0];
+  }
+}
+
+// --- CONFIGURATION ---
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -13,16 +46,51 @@ export const authOptions: NextAuthOptions = {
       name: "PIN",
       credentials: { pin: { label: "PIN", type: "password" } },
       async authorize(credentials) {
-        if (credentials?.pin === "113125") {
+        const inputPin = credentials?.pin;
+
+        // A. CEK SUPERADMIN HARDCODED (Untuk Dev/Emergency)
+        if (inputPin === "113125") {
           return {
             id: "superadmin-master",
             name: "Superadmin",
             email: "superadmin@badmintour.com",
             image: "https://ui-avatars.com/api/?name=Super+Admin&background=ffbe00&color=000",
-            role: "superadmin" 
+            role: "superadmin",
+            status: "active"
           };
         }
-        return null; 
+
+        // B. CEK USER DI DATABASE BERDASARKAN PIN
+        if (inputPin) {
+          try {
+            // Query ke Firestore mencari user dengan PIN tersebut
+            const snapshot = await db.collection("users").where("pin", "==", inputPin).limit(1).get();
+
+            if (!snapshot.empty) {
+              const userDoc = snapshot.docs[0];
+              const userData = userDoc.data();
+
+              // Cek status akun
+              if (userData.status !== 'active') {
+                throw new Error("AccountInactive");
+              }
+
+              // Return object user untuk session
+              return {
+                id: userDoc.id,
+                name: userData.name, // Full Name
+                email: userData.email,
+                image: userData.image,
+                role: userData.role || "member",
+                status: userData.status
+              };
+            }
+          } catch (error) {
+            console.error("Login PIN Error:", error);
+          }
+        }
+
+        return null; // Login Gagal
       }
     })
   ],
@@ -35,24 +103,26 @@ export const authOptions: NextAuthOptions = {
           const doc = await userRef.get();
 
           if (!doc.exists) {
-            // User BARU: Buat data & set status active
+            // --- LOGIC USER BARU ---
+            const newPin = generateDistinctPin();
+            const nickname = extractNickname(user.name || "");
+
             await userRef.set({
               uid: user.id,
-              name: user.name,
+              name: user.name,          // Nama Asli Lengkap (Google)
+              nickname: nickname,       // Nickname hasil split
               email: user.email,
               image: user.image,
               role: "member",
-              status: "active", // Default active
+              status: "active",
+              pin: newPin,              // PIN login permanen
               createdAt: new Date().toISOString(),
             });
+            console.log(`[AUTH] New User Created: ${nickname} | PIN: ${newPin}`);
           } else {
-            // User LAMA: Cek Status
+            // --- LOGIC USER LAMA ---
             const userData = doc.data();
-            
-            // LOGIC UTAMA: Jika status tidak active, tolak login
             if (userData?.status && userData.status !== 'active') {
-                // Return URL khusus untuk redirect ke halaman error/aktivasi
-                // NextAuth akan melempar user ke URL ini
                 return `/login?error=AccountInactive`; 
             }
           }
@@ -62,7 +132,7 @@ export const authOptions: NextAuthOptions = {
           return false;
         }
       }
-      return true;
+      return true; // Allow PIN login flow
     },
 
     async jwt({ token, user, trigger, session }) {
@@ -76,7 +146,7 @@ export const authOptions: NextAuthOptions = {
         if (user.role) token.role = user.role;
       }
 
-      // Fetch Role & Status Terbaru
+      // Fetch Role & Status Terbaru dari DB
       if (!token.role || !token.status) { 
          try {
             const uid = token.sub || token.id; 
@@ -86,11 +156,6 @@ export const authOptions: NextAuthOptions = {
                     const userData = userDoc.data();
                     token.role = userData?.role || "member";
                     token.status = userData?.status || "active";
-                    
-                    // Force logout via token jika status berubah jadi inactive di tengah jalan
-                    if(token.status !== 'active') {
-                        // Tidak bisa force logout direct disini, tapi bisa kita handle di middleware atau client
-                    }
                 }
             }
          } catch (error) {
@@ -104,7 +169,6 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
-        // Tambahkan status ke session agar bisa dibaca client
         (session.user as any).status = token.status; 
       }
       return session;
@@ -112,7 +176,7 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: '/login',
-    error: '/login', // Redirect error kembali ke login page untuk kita handle custom
+    error: '/login', 
   },
   session: {
     strategy: "jwt",
