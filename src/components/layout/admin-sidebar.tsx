@@ -4,8 +4,8 @@ import {
     LayoutDashboard,
     Users,
     Calendar,
-    Settings,
     Wallet,
+    Box, // New Icon
     LogOut,
 } from "lucide-react";
 import Link from "next/link";
@@ -21,6 +21,7 @@ export default function AdminSidebar() {
         { href: "/admin/members", icon: Users, label: "Members" },
         { href: "/admin/events", icon: Calendar, label: "Events" },
         { href: "/admin/finance", icon: Wallet, label: "Finance" },
+        { href: "/admin/inventory", icon: Box, label: "Inventory" }, // New Item
     ];
 
     return (
@@ -49,7 +50,7 @@ export default function AdminSidebar() {
                         >
                             <item.icon className="w-6 h-6 shrink-0" />
                             <span className="ml-4 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">{item.label}</span>
-                            {isActive && <div className="absolute right-4 w-1.5 h-1.5 bg-bad-green rounded-full animate-pulse"></div>}
+                            {isActive && <div className="absolute right-4 w-1.5 h-1.5 bg-bad-yellow rounded-full animate-pulse"></div>}
                         </Link>
                     );
                 })}
