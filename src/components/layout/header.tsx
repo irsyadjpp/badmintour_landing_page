@@ -15,11 +15,78 @@ import {
   SheetClose
 } from '@/components/ui/sheet';
 
+function MobileMenu() {
+    const [isMobileOpen, setIsMobileOpen] = React.useState(false);
+
+    return (
+        <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                className={cn(
+                  'p-2 rounded-full transition flex items-center justify-center text-gray-900 bg-gray-100 hover:bg-gray-200'
+                )}
+              >
+                <Menu className="w-6 h-6" />
+              </Button>
+            </SheetTrigger>
+            
+            {/* DRAWER CONTENT */}
+            <SheetContent side="top" className="w-full border-b border-border bg-background/95 backdrop-blur-xl p-6 rounded-b-[2rem]">
+                <SheetHeader className="mb-6 flex flex-row items-center justify-between">
+                    <SheetTitle className="flex items-center gap-2">
+                        <span className="text-2xl">🏸</span>
+                        <span className="font-heading text-xl font-black tracking-tight">
+                            BADMIN<span className="text-primary">TOUR</span>
+                        </span>
+                    </SheetTitle>
+                    {/* Tombol Close otomatis ada di kanan atas oleh SheetContent */}
+                </SheetHeader>
+                
+                <div className="flex flex-col gap-2">
+                    <div className="grid gap-2">
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-4 mt-2 mb-1">Play Area</p>
+                        <SheetClose asChild>
+                            <Link href="/#schedule" className="flex items-center justify-between py-3 px-4 text-sm font-bold bg-secondary/50 rounded-xl">
+                                Mabar Rutin <ArrowRight className="w-4 h-4 text-muted-foreground"/>
+                            </Link>
+                        </SheetClose>
+                        <SheetClose asChild>
+                            <Link href="/#services" className="flex items-center justify-between py-3 px-4 text-sm font-bold bg-secondary/50 rounded-xl">
+                                Turnamen <ArrowRight className="w-4 h-4 text-muted-foreground"/>
+                            </Link>
+                        </SheetClose>
+                    </div>
+                    
+                    <div className="grid gap-2 mt-4">
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-4 mt-2 mb-1">Training</p>
+                        <SheetClose asChild>
+                            <Link href="/#services" className="flex items-center justify-between py-3 px-4 text-sm font-bold bg-secondary/50 rounded-xl">
+                                Drilling Program <ArrowRight className="w-4 h-4 text-muted-foreground"/>
+                            </Link>
+                        </SheetClose>
+                    </div>
+
+                     <div className="mt-6 pt-6 border-t border-border">
+                        <SheetClose asChild>
+                            <Link href="/login" className="flex items-center justify-center w-full h-12 rounded-xl text-base font-bold bg-primary text-white shadow-lg hover:bg-primary/90 transition">
+                                Login Member
+                            </Link>
+                        </SheetClose>
+                    </div>
+                </div>
+            </SheetContent>
+        </Sheet>
+      );
+}
+
+
 export default function Header() {
   const [isScrolled, setIsScrolled] = React.useState(false);
-  const [isMobileOpen, setIsMobileOpen] = React.useState(false); // State untuk kontrol Sheet
+  const [isClient, setIsClient] = React.useState(false);
 
   React.useEffect(() => {
+    setIsClient(true);
     const SCROLL_THRESHOLD = 30;
     const handleScroll = () => {
       setIsScrolled(window.scrollY > SCROLL_THRESHOLD);
@@ -130,66 +197,7 @@ export default function Header() {
           
           {/* MOBILE MENU TOGGLE (SHEET) */}
           <div className="lg:hidden">
-            <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-                <SheetTrigger asChild>
-                  <button
-                    className={cn(
-                      'p-2 rounded-full transition flex items-center justify-center',
-                      isScrolled
-                        ? 'text-white bg-white/10 hover:bg-white/20'
-                        : 'text-gray-900 bg-gray-100 hover:bg-gray-200'
-                    )}
-                  >
-                    <Menu className="w-6 h-6" />
-                  </button>
-                </SheetTrigger>
-                
-                {/* DRAWER CONTENT */}
-                <SheetContent side="top" className="w-full border-b border-border bg-background/95 backdrop-blur-xl p-6 rounded-b-[2rem]">
-                    <SheetHeader className="mb-6 flex flex-row items-center justify-between">
-                        <SheetTitle className="flex items-center gap-2">
-                            <span className="text-2xl">🏸</span>
-                            <span className="font-heading text-xl font-black tracking-tight">
-                                BADMIN<span className="text-primary">TOUR</span>
-                            </span>
-                        </SheetTitle>
-                        {/* Tombol Close otomatis ada di kanan atas oleh SheetContent */}
-                    </SheetHeader>
-                    
-                    <div className="flex flex-col gap-2">
-                        <div className="grid gap-2">
-                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-4 mt-2 mb-1">Play Area</p>
-                            <SheetClose asChild>
-                                <Link href="/#schedule" className="flex items-center justify-between py-3 px-4 text-sm font-bold bg-secondary/50 rounded-xl">
-                                    Mabar Rutin <ArrowRight className="w-4 h-4 text-muted-foreground"/>
-                                </Link>
-                            </SheetClose>
-                            <SheetClose asChild>
-                                <Link href="/#services" className="flex items-center justify-between py-3 px-4 text-sm font-bold bg-secondary/50 rounded-xl">
-                                    Turnamen <ArrowRight className="w-4 h-4 text-muted-foreground"/>
-                                </Link>
-                            </SheetClose>
-                        </div>
-                        
-                        <div className="grid gap-2 mt-4">
-                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-4 mt-2 mb-1">Training</p>
-                            <SheetClose asChild>
-                                <Link href="/#services" className="flex items-center justify-between py-3 px-4 text-sm font-bold bg-secondary/50 rounded-xl">
-                                    Drilling Program <ArrowRight className="w-4 h-4 text-muted-foreground"/>
-                                </Link>
-                            </SheetClose>
-                        </div>
-
-                         <div className="mt-6 pt-6 border-t border-border">
-                            <SheetClose asChild>
-                                <Link href="/login" className="flex items-center justify-center w-full h-12 rounded-xl text-base font-bold bg-primary text-white shadow-lg hover:bg-primary/90 transition">
-                                    Login Member
-                                </Link>
-                            </SheetClose>
-                        </div>
-                    </div>
-                </SheetContent>
-            </Sheet>
+            {isClient ? <MobileMenu /> : null}
           </div>
         </div>
 
