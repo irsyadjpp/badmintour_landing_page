@@ -2,14 +2,14 @@
 
 import {
     LayoutGrid,
-    Swords, // Icon untuk Mabar/Sparring
-    Trophy, // Icon Turnamen
+    Swords, 
+    Trophy,
     Ticket,
     User,
     LogOut,
     History,
     Zap,
-    Dumbbell // Icon untuk Drilling/Coaching
+    Dumbbell
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -22,7 +22,6 @@ export default function MemberSidebar() {
 
     const navItems = [
         { href: "/member/dashboard", icon: LayoutGrid, label: "Dashboard" },
-        // REVISI: Mengganti Booking Lapangan dengan fitur spesifik
         { href: "/member/mabar", icon: Swords, label: "Cari Mabar & Sparring" },
         { href: "/member/drilling", icon: Dumbbell, label: "Drilling & Coaching" },
         { href: "/member/tournaments", icon: Trophy, label: "Info Turnamen" },
@@ -112,10 +111,13 @@ export default function MemberSidebar() {
                                     "text-[9px] font-bold transition-colors", 
                                     isActive ? "text-[#ffbe00]" : "text-gray-600"
                                 )}>
-                                    {item.label.split(' ')[0]} {/* Ambil kata pertama saja biar pendek */}
+                                    {item.label.split(' ')[0]} 
                                 </span>
                             </Link>
                         );
                     })}
                 </nav>
             </div>
+        </>
+    );
+}
