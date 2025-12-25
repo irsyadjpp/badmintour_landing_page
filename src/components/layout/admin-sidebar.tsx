@@ -4,12 +4,22 @@ import {
     Users,
     Calendar,
     Settings,
-    Plus
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export default function AdminSidebar() {
+    const pathname = usePathname();
+
+    const navItems = [
+        { href: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+        { href: "/admin/members", icon: Users, label: "Data Member" },
+        { href: "#", icon: Calendar, label: "Events" },
+        { href: "#", icon: Settings, label: "Settings" },
+    ];
+
     return (
         <aside className="fixed top-4 bottom-4 left-4 z-50 w-20 flex flex-col justify-between items-center bg-white border border-gray-200 rounded-[2rem] py-6 shadow-2xl font-sans group hover:w-64 transition-all duration-500 ease-[cubic-bezier(0.19,1,0.22,1)] overflow-hidden">
     
@@ -21,28 +31,25 @@ export default function AdminSidebar() {
             </div>
 
             <div className="flex-1 w-full space-y-2 px-3">
-                
-                <Link href="/admin/dashboard" className="flex items-center h-12 px-4 rounded-xl bg-bad-dark text-white relative overflow-hidden transition-all shadow-lg shadow-gray-300">
-                    <LayoutDashboard className="w-6 h-6 shrink-0" />
-                    <span className="ml-4 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">Dashboard</span>
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white rounded-r-full"></div>
-                </Link>
-
-                <Link href="/admin/members" className="flex items-center h-12 px-4 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-bad-dark transition-all">
-                    <Users className="w-6 h-6 shrink-0" />
-                    <span className="ml-4 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">Data Member</span>
-                </Link>
-
-                <Link href="#" className="flex items-center h-12 px-4 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-bad-dark transition-all">
-                    <Calendar className="w-6 h-6 shrink-0" />
-                    <span className="ml-4 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">Events</span>
-                </Link>
-
-                <Link href="#" className="flex items-center h-12 px-4 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-bad-dark transition-all">
-                    <Settings className="w-6 h-6 shrink-0" />
-                    <span className="ml-4 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">Settings</span>
-                </Link>
-
+                {navItems.map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                        <Link 
+                            key={item.label}
+                            href={item.href} 
+                            className={cn(
+                                "flex items-center h-12 px-4 rounded-xl relative overflow-hidden transition-all",
+                                isActive 
+                                    ? "bg-bad-dark text-white shadow-lg shadow-gray-300"
+                                    : "text-gray-500 hover:bg-gray-100 hover:text-bad-dark"
+                            )}
+                        >
+                            <item.icon className="w-6 h-6 shrink-0" />
+                            <span className="ml-4 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">{item.label}</span>
+                            {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white rounded-r-full"></div>}
+                        </Link>
+                    );
+                })}
             </div>
 
             <div className="w-full px-3 border-t border-gray-100 pt-4">
