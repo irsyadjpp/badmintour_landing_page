@@ -16,8 +16,9 @@ export default function LoginPage() {
   const [pin, setPin] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
 
-  // --- LOGIC: PIN LOGIN (Generic Interface) ---
+  // --- LOGIC: PIN LOGIN ---
   const handlePinChange = (index: number, value: string) => {
+    // Validasi hanya angka
     if (!/^\d*$/.test(value)) return;
 
     const newPin = [...pin];
@@ -37,6 +38,7 @@ export default function LoginPage() {
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Handle backspace
     if (e.key === 'Backspace' && !pin[index] && index > 0) {
       const prevInput = document.getElementById(`pin-${index - 1}`);
       prevInput?.focus();
@@ -46,23 +48,29 @@ export default function LoginPage() {
   const handlePinSubmit = async (fullPin: string) => {
     setIsLoading(true);
     
-    // Simulasi delay validasi
+    // Simulasi delay validasi backend
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Cek PIN (Logic Backend Mock)
-    // 113125 = Superadmin
+    // LOGIC REDIRECT UTAMA
+    // Cek PIN Khusus Superadmin
     if (fullPin === '113125') {
         toast({
-            title: "Access Granted",
+            title: "God Mode Access",
             description: "Welcome back, Superadmin.",
             className: "bg-[#ffbe00] text-black font-bold border-none"
         });
+        
+        // Simpan role sebagai superadmin
         localStorage.setItem('userRole', 'superadmin');
-        router.push('/admin/dashboard');
+        
+        // REDIRECT KE HALAMAN KHUSUS SUPERADMIN
+        router.push('/superadmin/dashboard');
     } else {
+        // Skenario User biasa pakai PIN (Future Development)
+        // Saat ini dianggap invalid jika bukan PIN Superadmin
         toast({
             title: "Login Gagal",
-            description: "PIN tidak ditemukan atau salah.",
+            description: "PIN tidak ditemukan atau akses ditolak.",
             variant: "destructive"
         });
         setPin(['', '', '', '', '', '']); 
@@ -72,7 +80,7 @@ export default function LoginPage() {
     setIsLoading(false);
   };
 
-  // --- LOGIC: GOOGLE LOGIN (Standard Member) ---
+  // --- LOGIC: GOOGLE LOGIN (MEMBER) ---
   const handleGoogleLogin = () => {
       setIsLoading(true);
       
@@ -83,8 +91,12 @@ export default function LoginPage() {
               className: "bg-[#ca1f3d] text-white font-bold border-none"
           });
           
+          // Role otomatis Member
           localStorage.setItem('userRole', 'member');
+          
+          // REDIRECT KE DASHBOARD MEMBER
           router.push('/member/dashboard');
+          
           setIsLoading(false);
       }, 1500);
   };
@@ -121,7 +133,7 @@ export default function LoginPage() {
                 {/* Aksen Garis Atas */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#ca1f3d] to-[#ffbe00]"></div>
                 
-                {/* 1. Metode Google */}
+                {/* 1. Metode Google (Member) */}
                 <div className="mb-8">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 text-center">Metode Cepat</p>
                     <Button 
@@ -144,7 +156,7 @@ export default function LoginPage() {
                     </div>
                 </div>
 
-                {/* 2. Metode PIN (Generic UI) */}
+                {/* 2. Metode PIN (Bisa untuk Superadmin / User lain kedepannya) */}
                 <div>
                     <div className="flex items-center justify-center gap-2 mb-6">
                         <KeyRound className="w-4 h-4 text-[#ffbe00]" />
@@ -185,7 +197,7 @@ export default function LoginPage() {
 
             </div>
 
-            {/* Copyright dinamis tahun saat ini */}
+            {/* Copyright */}
             <p className="text-center text-[10px] font-bold text-gray-600 mt-8 uppercase tracking-widest">
                 &copy; {new Date().getFullYear()} BadminTour
             </p>
