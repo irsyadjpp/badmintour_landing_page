@@ -22,7 +22,7 @@ export default function AdminSidebar() {
         { href: "/admin/orders", icon: ClipboardList, label: "Jersey Orders" },
         { href: "/admin/gamification", icon: Sparkles, label: "Gamification" },
         { href: "/admin/members", icon: Users, label: "Members" },
-        { href: "/admin/events", icon: Calendar, label: "Events" },
+        { href: "/admin/events", icon: Calendar, label: "Sessions" },
         { href: "/admin/finance", icon: Wallet, label: "Finance" },
         { href: "/admin/inventory", icon: Box, label: "Inventory" },
     ];
