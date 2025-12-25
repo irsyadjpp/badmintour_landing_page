@@ -4,14 +4,14 @@ import { useState } from 'react';
 import { 
     ArrowLeft, 
     Calendar, 
-    Clock, 
     MapPin, 
     DollarSign, 
-    Users, 
     Lock, 
     Zap, 
     ListChecks,
-    Save
+    Save,
+    LayoutGrid, // Icon untuk Court
+    Hash // Icon untuk Nomor
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,7 +43,6 @@ export default function CreateEventPage() {
     };
 
     return (
-        // FIX: Hapus 'max-w-4xl mx-auto' agar layout full-width rata kiri seperti dashboard
         <div className="space-y-8 pb-20">
             {/* Header */}
             <div className="flex items-center gap-4">
@@ -54,16 +53,16 @@ export default function CreateEventPage() {
                 </Link>
                 <div>
                     <h1 className="text-3xl font-black text-white tracking-tighter">New Event</h1>
-                    <p className="text-gray-400">Atur detail acara, harga, dan aturan main.</p>
+                    <p className="text-gray-400">Atur detail acara, lokasi, harga, dan aturan main.</p>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
-                {/* LEFT: MAIN FORM */}
+                {/* LEFT COLUMN: MAIN FORM */}
                 <div className="lg:col-span-2 space-y-6">
                     
-                    {/* 1. Basic Info */}
+                    {/* 1. Basic Info (Judul & Waktu) */}
                     <Card className="bg-[#151515] border-white/5 p-6 rounded-[2rem]">
                         <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                             <Calendar className="w-5 h-5 text-[#ca1f3d]" /> Basic Information
@@ -83,22 +82,54 @@ export default function CreateEventPage() {
                                     <Input type="time" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
                                 </div>
                             </div>
+                        </div>
+                    </Card>
+
+                    {/* 2. VENUE & COURTS (BARU) */}
+                    <Card className="bg-[#151515] border-white/5 p-6 rounded-[2rem]">
+                        <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                            <MapPin className="w-5 h-5 text-[#ca1f3d]" /> Venue & Courts
+                        </h3>
+                        <div className="space-y-4">
+                            {/* Nama GOR */}
                             <div className="space-y-2">
-                                <Label className="text-gray-400">Lokasi / Court</Label>
-                                <Select>
-                                    <SelectTrigger className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:ring-[#ca1f3d]">
-                                        <SelectValue placeholder="Pilih Lapangan" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
-                                        <SelectItem value="court1">Court 1 (Carpet)</SelectItem>
-                                        <SelectItem value="court2">Court 2 (Parquet)</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                <Label className="text-gray-400">Nama GOR / Lokasi</Label>
+                                <div className="relative">
+                                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                                    <Input 
+                                        placeholder="Contoh: GOR Wartawan" 
+                                        className="bg-[#0a0a0a] border-white/10 pl-10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" 
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* Jumlah Court */}
+                                <div className="space-y-2">
+                                    <Label className="text-gray-400 flex items-center gap-2">
+                                        <LayoutGrid className="w-3 h-3 text-[#ffbe00]" /> Jumlah Court
+                                    </Label>
+                                    <Input 
+                                        type="number" 
+                                        placeholder="Misal: 2" 
+                                        className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" 
+                                    />
+                                </div>
+                                {/* Nomor Court */}
+                                <div className="space-y-2">
+                                    <Label className="text-gray-400 flex items-center gap-2">
+                                        <Hash className="w-3 h-3 text-[#ffbe00]" /> Nomor Court
+                                    </Label>
+                                    <Input 
+                                        placeholder="Misal: 1, 2, 3" 
+                                        className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" 
+                                    />
+                                </div>
                             </div>
                         </div>
                     </Card>
 
-                    {/* 2. Pricing & Capacity */}
+                    {/* 3. Pricing & Capacity */}
                     <Card className="bg-[#151515] border-white/5 p-6 rounded-[2rem]">
                         <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                             <DollarSign className="w-5 h-5 text-[#ffbe00]" /> Pricing & Capacity
@@ -110,7 +141,7 @@ export default function CreateEventPage() {
                                     <Input type="number" placeholder="40000" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-gray-400">Total Slot</Label>
+                                    <Label className="text-gray-400">Total Slot Pemain</Label>
                                     <Input type="number" placeholder="12" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
                                 </div>
                             </div>
@@ -145,10 +176,10 @@ export default function CreateEventPage() {
 
                 </div>
 
-                {/* RIGHT: ADVANCED SETTINGS */}
+                {/* RIGHT COLUMN: ADVANCED SETTINGS */}
                 <div className="lg:col-span-1 space-y-6">
                     
-                    {/* 3. Skill Level Lock */}
+                    {/* 4. Skill Level Lock */}
                     <Card className={`p-6 rounded-[2rem] border transition-all ${isSkillLocked ? 'bg-[#ca1f3d]/10 border-[#ca1f3d]/30' : 'bg-[#151515] border-white/5'}`}>
                         <div className="flex items-center justify-between mb-4">
                             <h3 className={`text-sm font-bold flex items-center gap-2 ${isSkillLocked ? 'text-[#ca1f3d]' : 'text-gray-400'}`}>
@@ -173,7 +204,7 @@ export default function CreateEventPage() {
                         )}
                     </Card>
 
-                    {/* 4. Waitlist System */}
+                    {/* 5. Waitlist System */}
                     <Card className="bg-[#151515] border-white/5 p-6 rounded-[2rem]">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-sm font-bold text-gray-400 flex items-center gap-2">
@@ -183,18 +214,20 @@ export default function CreateEventPage() {
                         </div>
                         <p className="text-xs text-gray-500">
                             {isWaitlist 
-                                ? "Otomatis buka antrian saat slot penuh. Notifikasi 'Siapa Cepat Dia Dapat' akan dikirim jika ada slot kosong." 
+                                ? "Otomatis buka antrian saat slot penuh. Prioritas 'Siapa Cepat Dia Dapat'." 
                                 : "Saat penuh, pendaftaran ditutup total."}
                         </p>
                     </Card>
 
-                    {/* Save Button */}
-                    <Button onClick={handleSave} className="w-full h-14 bg-[#ca1f3d] hover:bg-[#a01830] text-white font-black rounded-xl shadow-lg hover:shadow-[#ca1f3d]/20 transition-all">
-                        <Save className="w-5 h-5 mr-2" /> PUBLISH EVENT
-                    </Button>
-                    <Button variant="outline" className="w-full h-12 border-white/10 text-gray-400 hover:text-white rounded-xl">
-                        Save as Draft
-                    </Button>
+                    {/* Save Buttons */}
+                    <div className="space-y-3 sticky top-6">
+                        <Button onClick={handleSave} className="w-full h-14 bg-[#ca1f3d] hover:bg-[#a01830] text-white font-black rounded-xl shadow-lg hover:shadow-[#ca1f3d]/20 transition-all">
+                            <Save className="w-5 h-5 mr-2" /> PUBLISH EVENT
+                        </Button>
+                        <Button variant="outline" className="w-full h-12 border-white/10 text-gray-400 hover:text-white rounded-xl">
+                            Save as Draft
+                        </Button>
+                    </div>
 
                 </div>
             </div>
