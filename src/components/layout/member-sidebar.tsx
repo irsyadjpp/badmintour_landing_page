@@ -89,32 +89,33 @@ export default function MemberSidebar() {
                 </TooltipProvider>
             </aside>
 
-            {/* MOBILE NAV (Bottom Bar Updated) */}
-            <div className="md:hidden fixed bottom-6 left-4 right-4 z-50">
-                <nav className="flex justify-around items-center bg-[#151515]/90 backdrop-blur-xl border border-white/10 rounded-[2rem] p-4 shadow-2xl">
-                    {/* Hanya menampilkan 4 menu utama di mobile untuk hemat ruang */}
+            {/* MOBILE NAV (Bottom Bar Updated with Labels) */}
+            <div className="md:hidden fixed bottom-4 left-4 right-4 z-50">
+                <nav className="flex justify-between items-center bg-[#151515]/95 backdrop-blur-xl border border-white/10 rounded-[2rem] px-6 py-3 shadow-2xl">
                     {[navItems[0], navItems[1], navItems[3], navItems[6]].map((item) => {
                         const isActive = pathname === item.href;
                         return (
                             <Link 
                                 key={item.label}
                                 href={item.href} 
-                                className={cn(
-                                    "p-3 rounded-2xl transition-all duration-300 relative",
+                                className="flex flex-col items-center gap-1"
+                            >
+                                <div className={cn(
+                                    "p-2 rounded-xl transition-all duration-300",
                                     isActive 
                                         ? "bg-[#ffbe00] text-black shadow-[0_0_15px_rgba(255,190,0,0.4)]" 
-                                        : "text-gray-500 hover:text-white"
-                                )}
-                            >
-                                <item.icon className={cn("w-6 h-6", isActive && "fill-current")} />
+                                        : "text-gray-500"
+                                )}>
+                                    <item.icon className="w-5 h-5" />
+                                </div>
+                                <span className={cn(
+                                    "text-[9px] font-bold transition-colors", 
+                                    isActive ? "text-[#ffbe00]" : "text-gray-600"
+                                )}>
+                                    {item.label.split(' ')[0]} {/* Ambil kata pertama saja biar pendek */}
+                                </span>
                             </Link>
                         );
                     })}
-                     <button onClick={() => signOut({ callbackUrl: '/' })} className="p-3 text-red-500">
-                        <LogOut className="w-6 h-6" />
-                    </button>
                 </nav>
             </div>
-        </>
-    );
-}
