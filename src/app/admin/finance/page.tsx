@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Download, Plus, TrendingUp, TrendingDown, Wallet, Ticket, Shirt, Building, Trash2, Milestone, Users, Trophy, Rocket, Box, Backpack } from 'lucide-react';
+import { Download, Plus, TrendingUp, TrendingDown, Wallet, Shirt, Building, Users, Trophy, Rocket, Box, Backpack, Milestone } from 'lucide-react';
 
 const monthlyData = [
     { name: 'Jan', Pemasukan: 15000000, Pengeluaran: 6000000 },
@@ -40,7 +40,7 @@ const getIcon = (category: string) => {
         
         // Pengeluaran
         case 'Sewa Lapangan': return <Building className="w-5 h-5"/>;
-        case 'Shuttlecock': return <Milestone className="w-5 h-5" />;
+        case 'Shuttlecock': return <Box className="w-5 h-5" />;
         case 'Alat Coaching': return <Backpack className="w-5 h-5"/>;
         
         default: return <Wallet className="w-5 h-5"/>;
@@ -110,16 +110,16 @@ export default function FinancePage() {
                                     <SelectContent>
                                         <SelectGroup>
                                             <SelectLabel>--- Pemasukan ---</SelectLabel>
-                                            <SelectItem value="mabar">Keuntungan Mabar</SelectItem>
-                                            <SelectItem value="coaching">Coaching / Drilling</SelectItem>
-                                            <SelectItem value="merch">Penjualan Merch</SelectItem>
-                                            <SelectItem value="event">Event / Turnamen</SelectItem>
+                                            <SelectItem value="Mabar">Keuntungan Mabar</SelectItem>
+                                            <SelectItem value="Coaching">Coaching / Drilling</SelectItem>
+                                            <SelectItem value="Merch">Penjualan Merch</SelectItem>
+                                            <SelectItem value="Event">Event / Turnamen</SelectItem>
                                         </SelectGroup>
                                         <SelectGroup>
                                             <SelectLabel>--- Pengeluaran ---</SelectLabel>
-                                            <SelectItem value="sewa">Sewa Lapangan</SelectItem>
-                                            <SelectItem value="kok">Beli Shuttlecock</SelectItem>
-                                            <SelectItem value="alat">Peralatan Pendukung</SelectItem>
+                                            <SelectItem value="Sewa Lapangan">Sewa Lapangan</SelectItem>
+                                            <SelectItem value="Shuttlecock">Beli Shuttlecock</SelectItem>
+                                            <SelectItem value="Alat Coaching">Peralatan Pendukung</SelectItem>
                                         </SelectGroup>
                                     </SelectContent>
                                 </Select>
@@ -146,7 +146,7 @@ export default function FinancePage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
              <Card className="p-6 rounded-[2rem] border-gray-100 shadow-sm relative overflow-hidden group">
                 <div className="absolute right-0 top-0 w-32 h-32 bg-green-50 rounded-bl-[4rem] -mr-4 -mt-4 transition group-hover:scale-110"></div>
-                <div className="relative z-10">
+                <CardContent className="relative z-10 p-0">
                     <div className="flex items-center gap-2 mb-2">
                         <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
                             <TrendingDown className="w-4 h-4"/>
@@ -155,12 +155,12 @@ export default function FinancePage() {
                     </div>
                     <p className="text-4xl font-black text-bad-green">Rp {totalIncome.toLocaleString('id-ID')}</p>
                     <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-wider">Mabar • Coaching • Merch • Event</p>
-                </div>
+                </CardContent>
             </Card>
 
             <Card className="p-6 rounded-[2rem] border-gray-100 shadow-sm relative overflow-hidden group">
                 <div className="absolute right-0 top-0 w-32 h-32 bg-red-50 rounded-bl-[4rem] -mr-4 -mt-4 transition group-hover:scale-110"></div>
-                 <div className="relative z-10">
+                 <CardContent className="relative z-10 p-0">
                     <div className="flex items-center gap-2 mb-2">
                         <div className="w-8 h-8 rounded-full bg-red-100 text-bad-red flex items-center justify-center">
                            <TrendingUp className="w-4 h-4"/>
@@ -169,19 +169,19 @@ export default function FinancePage() {
                     </div>
                     <p className="text-4xl font-black text-bad-red">Rp {totalExpense.toLocaleString('id-ID')}</p>
                     <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-wider">Lapangan • Kok • Alat</p>
-                </div>
+                </CardContent>
             </Card>
 
             <Card className="bg-bad-dark text-white p-6 rounded-[2rem] shadow-xl relative overflow-hidden">
                 <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-bl-[4rem] -mr-4 -mt-4"></div>
-                <div className="relative z-10">
+                <CardContent className="relative z-10 p-0">
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Net Profit (Saldo)</p>
                     <p className="text-4xl font-black text-accent">Rp {netProfit.toLocaleString('id-ID')}</p>
                     <div className="mt-4 h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
                         <div className="h-full bg-accent" style={{width: `${Math.round((netProfit / totalIncome) * 100)}%`}}></div>
                     </div>
                     <p className="text-[10px] text-gray-400 mt-1 text-right">Margin Keuntungan Sehat</p>
-                </div>
+                </CardContent>
             </Card>
         </div>
 
