@@ -124,7 +124,7 @@ export default function HeroSection() {
             {[...Array(10)].map((_, i) => (
                 <div key={i} className="flex items-center mx-4">
                     <span className="text-3xl md:text-5xl font-black text-black italic tracking-tighter">
-                        MABAR SETIAP HARI • PAGI SIANG MALAM • GOR BANDUNG • COACHING CLINIC • FUN MATCH WEEKEND •
+                        MABAR SETIAP HARI • PAGI SIANG MALAM • GOR Wartawan & Garandiri • COACHING CLINIC • FUN MATCH WEEKEND •
                     </span>
                 </div>
             ))}
