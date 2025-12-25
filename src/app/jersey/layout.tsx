@@ -1,21 +1,6 @@
 import type { Metadata } from 'next';
 import '../globals.css';
 import { Toaster } from '@/components/ui/toaster';
-import { Outfit, Oswald } from 'next/font/google';
-
-const outfit = Outfit({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-outfit',
-});
-
-const oswald = Oswald({
-  subsets: ['latin'],
-  display: 'swap',
-  weight: ['500', '700'],
-  variable: '--font-oswald',
-});
-
 
 export const metadata: Metadata = {
   title: 'Exclusive Drop | BADMINTOUR',
@@ -28,8 +13,8 @@ export default function MerchDropLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className={`${outfit.variable} ${oswald.variable}`}>
-        <body className='font-sans'>
+    <html lang="id" className="scroll-smooth">
+        <body className='font-sans bg-bad-dark text-white selection:bg-bad-yellow selection:text-black'>
             {children}
             <Toaster />
         </body>
