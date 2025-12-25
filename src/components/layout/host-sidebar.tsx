@@ -1,89 +1,113 @@
 'use client';
-import { Zap, Users, DollarSign, Scan, LogOut } from 'lucide-react';
-import Link from 'next/link';
-import Image from 'next/image';
+
+import {
+    LayoutGrid,
+    CalendarPlus, // Buat Event
+    Users, // Manajemen Peserta
+    Wallet, // Keuangan
+    Megaphone, // Broadcast/Community
+    QrCode, // Scan Tiket
+    Settings,
+    LogOut,
+    Zap,
+    Dumbbell,
+    Swords
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { signOut } from "next-auth/react";
 
 export default function HostSidebar() {
-  return (
-    <aside className="fixed top-4 bottom-4 left-4 z-50 w-20 flex flex-col justify-between items-center bg-[#121212] border border-white/10 rounded-[2rem] py-6 shadow-2xl font-sans group hover:w-64 transition-all duration-500 ease-[cubic-bezier(0.19,1,0.22,1)] overflow-hidden">
-      <div className="flex items-center justify-center w-full h-12 mb-8 relative">
-        <span className="absolute left-6 text-2xl transition-all duration-300 group-hover:opacity-0 group-hover:-translate-x-10">
-          🏸
-        </span>
-        <span className="absolute left-6 text-xl font-black text-white tracking-tighter opacity-0 translate-x-10 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 whitespace-nowrap">
-          HOST<span className="text-accent">.</span>PANEL
-        </span>
-      </div>
+    const pathname = usePathname();
 
-      <div className="flex-1 w-full space-y-4 px-3">
-        <Link
-          href="#"
-          className="flex items-center h-12 rounded-xl bg-white/10 text-accent relative overflow-hidden transition-all hover:bg-accent hover:text-black group/item"
-        >
-          <div className="w-14 flex-shrink-0 flex items-center justify-center">
-            <Zap className="w-6 h-6" />
-          </div>
-          <span className="font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            Live Match
-          </span>
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-accent rounded-r-full"></div>
-        </Link>
+    const navItems = [
+        { href: "/host/dashboard", icon: LayoutGrid, label: "Dashboard" },
+        { href: "/host/events", icon: CalendarPlus, label: "Kelola Event" },
+        { href: "/host/scan", icon: QrCode, label: "Scan Tiket" },
+        { href: "/host/community", icon: Users, label: "Komunitas" },
+        { href: "/host/finance", icon: Wallet, label: "Pendapatan" },
+        { href: "/host/settings", icon: Settings, label: "Pengaturan GOR" },
+    ];
 
-        <Link
-          href="#"
-          className="flex items-center h-12 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition-all group/item"
-        >
-          <div className="w-14 flex-shrink-0 flex items-center justify-center">
-            <Users className="w-6 h-6" />
-          </div>
-          <span className="font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            Data Pemain
-          </span>
-        </Link>
+    return (
+        <>
+            {/* DESKTOP SIDEBAR */}
+            <aside className="hidden md:flex fixed top-1/2 -translate-y-1/2 left-6 z-50 flex-col items-center py-8 bg-[#151515]/80 backdrop-blur-xl border border-white/10 rounded-[2.5rem] shadow-2xl transition-all duration-300 hover:bg-[#151515] hover:border-[#ffbe00]/30 min-h-[600px]">
+                <TooltipProvider delayDuration={0}>
+                    
+                    {/* Brand */}
+                    <div className="mb-8 p-3 rounded-full bg-blue-600/10 border border-blue-600/20 text-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.2)]">
+                        <Zap className="w-6 h-6 fill-current" />
+                    </div>
+        
+                    <nav className="flex-1 flex flex-col gap-4 w-full items-center justify-center px-3">
+                        {navItems.map((item) => {
+                            const isActive = pathname === item.href;
+                            return (
+                                <Tooltip key={item.label}>
+                                    <TooltipTrigger asChild>
+                                        <Link 
+                                            href={item.href} 
+                                            className={cn(
+                                                "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 relative group",
+                                                isActive 
+                                                    ? "bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.5)] scale-110" 
+                                                    : "text-gray-500 hover:bg-white/10 hover:text-white hover:scale-105"
+                                            )}
+                                        >
+                                            <item.icon className={cn("w-5 h-5", isActive && "fill-current")} />
+                                            {isActive && (
+                                                <span className="absolute -right-1 top-1 w-2 h-2 rounded-full bg-white border-2 border-[#151515]"></span>
+                                            )}
+                                        </Link>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right" className="ml-4 bg-[#1A1A1A] text-blue-500 border-blue-600/20 text-xs font-black px-3 py-1.5 rounded-lg shadow-xl uppercase tracking-wider">
+                                        {item.label}
+                                    </TooltipContent>
+                                </Tooltip>
+                            );
+                        })}
+                    </nav>
 
-        <Link
-          href="#"
-          className="flex items-center h-12 rounded-xl text-gray-400 hover:bg-white/10 hover:text-white transition-all group/item"
-        >
-          <div className="w-14 flex-shrink-0 flex items-center justify-center">
-            <DollarSign className="w-6 h-6" />
-          </div>
-          <span className="font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            Keuangan
-          </span>
-        </Link>
-      </div>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <button 
+                                onClick={() => signOut({ callbackUrl: '/' })}
+                                className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center mt-6 hover:bg-red-500 hover:text-white transition-all duration-300"
+                            >
+                                <LogOut className="w-4 h-4"/>
+                            </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="ml-4 bg-red-600 text-white border-red-600 text-xs font-bold">
+                            Sign Out
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            </aside>
 
-      <div className="w-full px-3 mb-4">
-        <button className="w-full h-14 bg-gradient-to-br from-accent to-orange-400 rounded-xl flex items-center justify-start text-black shadow-lg hover:scale-105 transition-transform group/btn overflow-hidden relative">
-          <div className="w-14 flex-shrink-0 flex items-center justify-center z-10">
-            <Scan className="w-7 h-7" />
-          </div>
-          <span className="font-black text-sm uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-10">
-            Scan QR
-          </span>
-          <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-        </button>
-      </div>
-
-      <div className="w-full px-3 border-t border-white/10 pt-4">
-        <Link
-          href="/login"
-          className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/10 transition-colors"
-        >
-          <Image
-            src="https://ui-avatars.com/api/?name=Host&background=D32F2F&color=fff"
-            alt="Host Avatar"
-            width={40}
-            height={40}
-            className="w-10 h-10 rounded-full border border-gray-600"
-          />
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-            <p className="text-white text-sm font-bold">Admin GOR</p>
-            <p className="text-xs text-primary font-bold">Log Out</p>
-          </div>
-        </Link>
-      </div>
-    </aside>
-  );
+            {/* MOBILE NAV */}
+            <div className="md:hidden fixed bottom-4 left-4 right-4 z-50">
+                <nav className="flex justify-between items-center bg-[#151515]/95 backdrop-blur-xl border border-white/10 rounded-[2rem] px-6 py-3 shadow-2xl">
+                    {[navItems[0], navItems[1], navItems[2], navItems[4]].map((item) => {
+                        const isActive = pathname === item.href;
+                        return (
+                            <Link key={item.label} href={item.href} className="flex flex-col items-center gap-1">
+                                <div className={cn(
+                                    "p-2 rounded-xl transition-all duration-300",
+                                    isActive ? "bg-blue-600 text-white" : "text-gray-500"
+                                )}>
+                                    <item.icon className="w-5 h-5" />
+                                </div>
+                                <span className={cn("text-[9px] font-bold", isActive ? "text-blue-500" : "text-gray-600")}>
+                                    {item.label.split(' ')[0]}
+                                </span>
+                            </Link>
+                        );
+                    })}
+                </nav>
+            </div>
+        </>
+    );
 }

@@ -1,23 +1,248 @@
 'use client';
-import SessionControlPanel from '@/components/admin/session-control';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 
-export default function ManagerDashboard() {
+import { useSession } from 'next-auth/react';
+import { 
+    Users, 
+    CalendarPlus, 
+    TrendingUp, 
+    DollarSign, 
+    Zap, 
+    Activity, 
+    Dumbbell, 
+    Swords, 
+    ArrowRight,
+    QrCode
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card } from "@/components/ui/card";
+import Link from 'next/link';
+import { Progress } from '@/components/ui/progress';
+
+export default function HostDashboard() {
+  const { data: session } = useSession();
+
+  // Mock Data Dashboard
+  const stats = {
+      activeEvents: 3,
+      totalParticipants: 48,
+      revenueToday: "Rp 1.250.000",
+      occupancyRate: 85
+  };
+
+  const upcomingEvents = [
+      { id: 1, title: "Mabar Senin Ceria", type: "Mabar", time: "19:00", quota: "12/12", status: "Full" },
+      { id: 2, title: "Private Coaching", type: "Drilling", time: "16:00", quota: "1/4", status: "Open" },
+  ];
+
   return (
-    <div className="min-h-screen">
-        <div className="container mx-auto py-6 px-4">
-            <div className="flex items-center gap-4 mb-6">
-                 <div>
-                    <h1 className="text-2xl font-black">Host Dashboard</h1>
-                    <p className="text-muted-foreground text-sm">Active Session Control</p>
+    <div className="space-y-8 pb-20">
+        
+        {/* 1. HOST HEADER */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-[#151515] p-6 rounded-[2rem] border border-white/5 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[80px] pointer-events-none group-hover:bg-blue-600/20 transition-all duration-500"></div>
+
+            <div className="flex items-center gap-5 relative z-10">
+                <Avatar className="w-20 h-20 border-4 border-[#1A1A1A] shadow-xl">
+                    <AvatarImage src={session?.user?.image || ""} />
+                    <AvatarFallback className="bg-blue-600 text-white font-black text-2xl">
+                        {session?.user?.name?.charAt(0) || "H"}
+                    </AvatarFallback>
+                </Avatar>
+                <div>
+                    <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-white">
+                        {session?.user?.name || 'Host'}
+                    </h1>
+                    <div className="flex items-center gap-3 mt-1">
+                        <Badge variant="outline" className="text-blue-500 border-blue-500/30 bg-blue-500/10 text-[10px] uppercase tracking-widest font-bold">
+                            Official Host
+                        </Badge>
+                        <span className="text-xs text-gray-500 font-mono flex items-center gap-1">
+                            <MapPinIcon className="w-3 h-3"/> GOR Wartawan
+                        </span>
+                    </div>
                 </div>
             </div>
 
-            {/* Panel Kontrol Sesi (Absensi & Matchmaking) */}
-            <SessionControlPanel />
+            <div className="flex gap-3 w-full md:w-auto relative z-10">
+                <Link href="/host/scan" className="flex-1 md:flex-none">
+                    <Button variant="outline" className="w-full h-12 rounded-xl border-white/10 hover:bg-white/5 text-gray-400 font-bold">
+                        <QrCode className="w-4 h-4 mr-2" /> Scan
+                    </Button>
+                </Link>
+                <Link href="/host/events/create" className="flex-1 md:flex-none">
+                    <Button className="w-full h-12 px-8 rounded-xl bg-blue-600 text-white hover:bg-blue-500 font-black shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:scale-105 transition-transform">
+                        <CalendarPlus className="w-4 h-4 mr-2" /> BUAT EVENT
+                    </Button>
+                </Link>
+            </div>
+        </header>
+
+        {/* 2. STATS OVERVIEW */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <StatsCard 
+                icon={Users} 
+                label="Total Peserta" 
+                value={stats.totalParticipants} 
+                sub="+12 hari ini" 
+                color="text-green-500" 
+                bg="bg-green-500" 
+            />
+            <StatsCard 
+                icon={DollarSign} 
+                label="Pendapatan Hari Ini" 
+                value={stats.revenueToday} 
+                sub="Target: Rp 2jt" 
+                color="text-[#ffbe00]" 
+                bg="bg-[#ffbe00]" 
+            />
+            <StatsCard 
+                icon={Activity} 
+                label="Occupancy Rate" 
+                value={`${stats.occupancyRate}%`} 
+                sub="High Traffic" 
+                color="text-blue-500" 
+                bg="bg-blue-500" 
+            />
+             <StatsCard 
+                icon={Zap} 
+                label="Active Events" 
+                value={stats.activeEvents} 
+                sub="Running Now" 
+                color="text-purple-500" 
+                bg="bg-purple-500" 
+            />
+        </div>
+
+        {/* 3. MAIN DASHBOARD CONTENT */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* Left: Quick Actions & Live Events */}
+            <div className="lg:col-span-8 space-y-6">
+                
+                {/* Quick Create Grid */}
+                <div>
+                    <h3 className="text-lg font-black text-white flex items-center gap-2 mb-4">
+                        <Zap className="w-5 h-5 text-blue-500" /> QUICK CREATE
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <CreateCard title="Mabar" icon={Users} desc="Sesi main bareng publik" href="/host/events/create?type=mabar" color="blue" />
+                        <CreateCard title="Drilling" icon={Dumbbell} desc="Kelas latihan/Coaching" href="/host/events/create?type=drilling" color="green" />
+                        <CreateCard title="Sparring" icon={Swords} desc="Slot tantangan squad" href="/host/events/create?type=sparring" color="red" />
+                    </div>
+                </div>
+
+                {/* Live Events Monitor */}
+                <div className="bg-[#151515] border border-white/5 rounded-[2rem] p-6">
+                     <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-lg font-black text-white">TODAY'S SCHEDULE</h3>
+                        <Link href="/host/events" className="text-xs font-bold text-gray-500 hover:text-white">View All</Link>
+                    </div>
+
+                    <div className="space-y-4">
+                        {upcomingEvents.map((event) => (
+                            <div key={event.id} className="flex items-center justify-between p-4 rounded-2xl bg-[#0a0a0a] border border-white/5 hover:border-white/10 transition group">
+                                <div className="flex items-center gap-4">
+                                    <div className={`p-3 rounded-xl ${event.type === 'Mabar' ? 'bg-blue-500/10 text-blue-500' : 'bg-green-500/10 text-green-500'}`}>
+                                        {event.type === 'Mabar' ? <Users className="w-5 h-5"/> : <Dumbbell className="w-5 h-5"/>}
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-white text-sm">{event.title}</h4>
+                                        <p className="text-xs text-gray-500 flex items-center gap-2 mt-1">
+                                            <span className="bg-white/10 px-1.5 rounded text-[10px]">{event.type}</span>
+                                            {event.time}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <Badge variant="secondary" className={`text-[10px] uppercase font-bold mb-1 ${event.status === 'Full' ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
+                                        {event.status}
+                                    </Badge>
+                                    <p className="text-xs font-mono text-gray-400">{event.quota}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+            </div>
+
+            {/* Right: Revenue & Insights */}
+            <div className="lg:col-span-4 space-y-6">
+                 <Card className="bg-gradient-to-b from-[#1A1A1A] to-black border-white/10 rounded-[2.5rem] p-6 h-full relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 to-purple-600"></div>
+                    <h3 className="text-lg font-black text-white mb-6">FINANCIAL INSIGHT</h3>
+                    
+                    <div className="space-y-6">
+                        <div>
+                            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">Weekly Goal</p>
+                            <div className="flex items-end gap-2 mb-2">
+                                <span className="text-3xl font-black text-white">65%</span>
+                                <span className="text-xs text-gray-400 mb-1">achieved</span>
+                            </div>
+                            <Progress value={65} className="h-2 bg-[#222]" indicatorClassName="bg-blue-600" />
+                        </div>
+
+                         <div className="p-4 rounded-2xl bg-[#0a0a0a] border border-white/5">
+                            <div className="flex justify-between mb-2">
+                                <span className="text-xs text-gray-400">Mabar Income</span>
+                                <span className="text-xs font-bold text-green-500">+12%</span>
+                            </div>
+                            <p className="font-mono text-white">Rp 4.200.000</p>
+                        </div>
+                        
+                         <Button className="w-full bg-white/5 text-white hover:bg-white hover:text-black font-bold rounded-xl border border-white/10">
+                            Withdraw Funds
+                        </Button>
+                    </div>
+                 </Card>
+            </div>
+
         </div>
     </div>
   );
+}
+
+// --- HELPER COMPONENTS ---
+
+function StatsCard({ icon: Icon, label, value, sub, color, bg }: any) {
+    return (
+        <Card className="bg-[#151515] border-white/5 p-5 rounded-[2rem] hover:bg-[#1A1A1A] transition-colors group">
+            <div className="flex justify-between items-start mb-4">
+                <div className={`p-3 rounded-2xl ${bg}/10 ${color}`}>
+                    <Icon className="w-5 h-5" />
+                </div>
+                {sub && <span className="text-[10px] font-bold text-gray-600 bg-white/5 px-2 py-1 rounded-full">{sub}</span>}
+            </div>
+            <p className="text-2xl font-black text-white tracking-tight">{value}</p>
+            <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mt-1">{label}</p>
+        </Card>
+    )
+}
+
+function CreateCard({ title, icon: Icon, desc, href, color }: any) {
+    const colorClasses: any = {
+        blue: "group-hover:bg-blue-600 group-hover:border-blue-500",
+        green: "group-hover:bg-green-600 group-hover:border-green-500",
+        red: "group-hover:bg-red-600 group-hover:border-red-500",
+    };
+
+    return (
+        <Link href={href} className="group">
+            <Card className={`bg-[#151515] border-white/5 p-6 rounded-[2rem] h-full transition-all duration-300 ${colorClasses[color]} hover:-translate-y-1 relative overflow-hidden`}>
+                <div className="relative z-10 text-center">
+                    <div className="w-12 h-12 mx-auto rounded-2xl bg-[#0a0a0a] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg">
+                        <Icon className={`w-6 h-6 ${color === 'blue' ? 'text-blue-500' : color === 'green' ? 'text-green-500' : 'text-red-500'}`} />
+                    </div>
+                    <h4 className="text-white font-black group-hover:text-white">{title}</h4>
+                    <p className="text-[10px] text-gray-500 mt-1 group-hover:text-white/80">{desc}</p>
+                </div>
+            </Card>
+        </Link>
+    )
+}
+
+function MapPinIcon({className}: {className?: string}) {
+    return <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
 }
