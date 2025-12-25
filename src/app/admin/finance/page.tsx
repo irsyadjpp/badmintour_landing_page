@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Download, Plus, TrendingUp, TrendingDown, Wallet, Shirt, Building, Users, Trophy, Rocket, Box, Backpack, Milestone, Zap } from 'lucide-react';
 
@@ -56,6 +56,9 @@ const expenseCategories = [
 export default function FinancePage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [transactionType, setTransactionType] = useState<'in' | 'out'>('in');
+    const [price, setPrice] = useState(0);
+    const [quantity, setQuantity] = useState(1);
+    const [expenseCategory, setExpenseCategory] = useState('Sewa Lapangan');
     
     const totalIncome = 32500000;
     const totalExpense = 12200000;
@@ -64,6 +67,20 @@ export default function FinancePage() {
     const exportToCsv = () => {
         alert('Mengunduh CSV...');
     }
+    
+    const totalExpenseCalculated = useMemo(() => price * quantity, [price, quantity]);
+
+    const {labelPrice, labelQty, placeholderQty} = useMemo(() => {
+        switch (expenseCategory) {
+            case 'Sewa Lapangan':
+                return { labelPrice: "Harga per Jam", labelQty: "Durasi (Jam)", placeholderQty: "2" };
+            case 'Shuttlecock':
+                return { labelPrice: "Harga per Slop", labelQty: "Jumlah Slop", placeholderQty: "1" };
+            default:
+                return { labelPrice: "Harga Satuan", labelQty: "Jumlah Item", placeholderQty: "1" };
+        }
+    }, [expenseCategory]);
+
 
     return (
     <main>
@@ -83,6 +100,7 @@ export default function FinancePage() {
                     </DialogTrigger>
                     <DialogContent className="w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl transform transition-all data-[state=open]:!slide-in-from-bottom-full md:data-[state=open]:!slide-in-from-top-[48%] data-[state=closed]:!slide-out-to-bottom-full md:data-[state=closed]:!slide-out-to-top-[48%] data-[state=open]:!zoom-in-100 data-[state=closed]:!zoom-out-100">
                         <DialogTitle className="sr-only">Tambah Transaksi Baru</DialogTitle>
+                         <DialogDescription className="sr-only">Formulir untuk menambahkan pemasukan atau pengeluaran baru.</DialogDescription>
                         <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6 md:hidden"></div>
                         <form onSubmit={(e) => { e.preventDefault(); alert('Transaksi Tersimpan!'); setIsModalOpen(false); }}>
                             <div className="bg-gray-100 p-1.5 rounded-2xl flex relative mb-8">
@@ -96,43 +114,65 @@ export default function FinancePage() {
                                 </button>
                             </div>
 
-                            <div className="mb-8 text-center relative group">
-                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Nominal (Rp)</label>
-                                <div className="relative inline-block w-full">
-                                    <span className="absolute left-0 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-300">Rp</span>
-                                    <Input type="number" id="inputAmount" className="w-full text-center text-5xl md:text-6xl font-black bg-transparent border-none focus:ring-0 outline-none money-input text-bad-dark placeholder-gray-200 h-auto p-0" placeholder="0" />
+                            {transactionType === 'in' ? (
+                                <div className="mb-8 text-center relative group">
+                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Total Terima (Rp)</label>
+                                    <div className="relative inline-block w-full">
+                                        <span className="absolute left-0 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-300">Rp</span>
+                                        <Input type="number" id="inputAmountIn" className="w-full text-center text-5xl md:text-6xl font-black bg-transparent border-none focus:ring-0 outline-none money-input text-bad-dark placeholder-gray-200 h-auto p-0" placeholder="0" />
+                                    </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="mb-8">
+                                    <div className="grid grid-cols-2 gap-4 mb-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2" id="labelPrice">{labelPrice}</label>
+                                            <Input type="number" id="inputPrice" value={price} onChange={e => setPrice(Number(e.target.value))} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 font-black text-xl focus:outline-none focus:border-bad-red transition text-center" placeholder="0" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2" id="labelQty">{labelQty}</label>
+                                            <Input type="number" id="inputQty" value={quantity} onChange={e => setQuantity(Number(e.target.value))} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 font-black text-xl focus:outline-none focus:border-bad-red transition text-center" placeholder={placeholderQty} />
+                                        </div>
+                                    </div>
+                                    <div className="text-center p-4 bg-red-50 rounded-2xl border border-red-100">
+                                        <p className="text-xs font-bold text-red-400 uppercase tracking-widest mb-1">Total Keluar</p>
+                                        <p className="text-4xl font-black text-bad-red" id="displayTotalOut">Rp {totalExpenseCalculated.toLocaleString('id-ID')}</p>
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="mb-8">
                                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Kategori</label>
-                                <div id="catIn" className={`grid grid-cols-3 gap-3 ${transactionType === 'in' ? '' : 'hidden'}`}>
-                                    {incomeCategories.map(cat => (
-                                        <label key={cat.value} className="cursor-pointer">
-                                            <input type="radio" name="category" value={cat.value} className="peer sr-only" defaultChecked={cat.value === 'Mabar'} />
-                                            <div className="flex flex-col items-center justify-center p-4 rounded-2xl border border-gray-100 bg-gray-50 peer-checked:bg-bad-green peer-checked:text-white peer-checked:border-bad-green peer-checked:shadow-glow-green transition-all hover:bg-gray-100">
-                                                <span className="text-2xl mb-1">{cat.icon}</span>
-                                                <span className="text-[10px] font-bold uppercase">{cat.label}</span>
-                                            </div>
-                                        </label>
-                                    ))}
-                                </div>
-                                <div id="catOut" className={`grid grid-cols-3 gap-3 ${transactionType === 'out' ? '' : 'hidden'}`}>
-                                    {expenseCategories.map(cat => (
-                                        <label key={cat.value} className="cursor-pointer">
-                                            <input type="radio" name="category" value={cat.value} className="peer sr-only" defaultChecked={cat.value === 'Sewa Lapangan'} />
-                                            <div className="flex flex-col items-center justify-center p-4 rounded-2xl border border-gray-100 bg-gray-50 peer-checked:bg-bad-red peer-checked:text-white peer-checked:border-bad-red peer-checked:shadow-glow-red transition-all hover:bg-gray-100">
-                                                <span className="text-2xl mb-1">{cat.icon}</span>
-                                                <span className="text-[10px] font-bold uppercase">{cat.label}</span>
-                                            </div>
-                                        </label>
-                                    ))}
-                                </div>
+                                {transactionType === 'in' ? (
+                                    <div id="catIn" className="grid grid-cols-3 gap-3">
+                                        {incomeCategories.map(cat => (
+                                            <label key={cat.value} className="cursor-pointer">
+                                                <input type="radio" name="category" value={cat.value} className="peer sr-only" defaultChecked={cat.value === 'Mabar'} />
+                                                <div className="flex flex-col items-center justify-center p-4 rounded-2xl border border-gray-100 bg-gray-50 peer-checked:bg-bad-green peer-checked:text-white peer-checked:border-bad-green peer-checked:shadow-glow-green transition-all hover:bg-gray-100">
+                                                    <span className="text-2xl mb-1">{cat.icon}</span>
+                                                    <span className="text-[10px] font-bold uppercase">{cat.label}</span>
+                                                </div>
+                                            </label>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div id="catOut" className="grid grid-cols-3 gap-3">
+                                        {expenseCategories.map(cat => (
+                                            <label key={cat.value} className="cursor-pointer">
+                                                <input type="radio" name="category" value={cat.value} className="peer sr-only" defaultChecked={cat.value === 'Sewa Lapangan'} onChange={() => setExpenseCategory(cat.value)} />
+                                                <div className="flex flex-col items-center justify-center p-4 rounded-2xl border border-gray-100 bg-gray-50 peer-checked:bg-bad-red peer-checked:text-white peer-checked:border-bad-red peer-checked:shadow-glow-red transition-all hover:bg-gray-100">
+                                                    <span className="text-2xl mb-1">{cat.icon}</span>
+                                                    <span className="text-[10px] font-bold uppercase">{cat.label}</span>
+                                                </div>
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                             
                             <div className="mb-8">
                                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Catatan</label>
-                                <Input type="text" className="w-full bg-gray-50 border-gray-200 rounded-xl px-4 py-3 h-auto font-bold focus:outline-none focus:border-gray-400 transition" placeholder="Contoh: Sesi Selasa Malam (12 Pax)" />
+                                <Input type="text" className="w-full bg-gray-50 border-gray-200 rounded-xl px-4 py-3 h-auto font-bold focus:outline-none focus:border-gray-400 transition" placeholder="Cth: Pembelian Slop JP Gold" />
                             </div>
 
                              <Button type="submit" className={`w-full py-4 h-auto rounded-2xl font-black text-lg shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${transactionType === 'in' ? 'bg-bad-dark text-white' : 'bg-bad-red text-white shadow-glow-red'}`}>
@@ -247,3 +287,5 @@ export default function FinancePage() {
     </main>
     )
 }
+
+    
