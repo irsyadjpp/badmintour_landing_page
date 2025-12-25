@@ -22,10 +22,13 @@ export default {
             jersey: ['var(--font-oswald)', 'sans-serif'],
 		},
   		colors: {
-        'bad-red': '#D32F2F',
-        'bad-dark': '#121212',
-        'bad-green': '#00C853',
-        'surface': '#1E1E1E',
+        'bad-red': '#FF3B30',      // Apple Red Style
+        'bad-dark': '#0D0D0D',     // Deep Black
+        'bad-card': '#1C1C1E',     // Secondary Dark
+        'bad-yellow': '#FFD60A',   // Vivid Yellow
+        'bad-green': '#32D74B',    // Neon Green
+        'bad-blue': '#0A84FF',
+        'surface': '#F2F2F7',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -113,6 +116,10 @@ export default {
                 },
             },
         },
+        boxShadow: {
+          'glow-green': '0 0 20px rgba(50, 215, 75, 0.3)',
+          'glow-red': '0 0 20px rgba(255, 59, 48, 0.3)',
+        }
   	}
   },
   plugins: [require("tailwindcss-animate")],
