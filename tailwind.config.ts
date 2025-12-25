@@ -19,7 +19,8 @@ export default {
 		fontFamily: {
 			sans: ['var(--font-outfit)', 'sans-serif'],
 			heading: ['var(--font-outfit)', 'sans-serif'],
-            jersey: ['var(--font-oswald)', 'sans-serif'],
+            // PERUBAHAN: Mengalihkan font-jersey ke Outfit juga
+            jersey: ['var(--font-outfit)', 'sans-serif'],
 		},
   		colors: {
         'bad-bg': '#121212',
