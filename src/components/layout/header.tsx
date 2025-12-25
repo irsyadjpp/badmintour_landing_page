@@ -35,7 +35,7 @@ function MobileMenu() {
             <SheetContent side="top" className="w-full border-b border-border bg-background/95 backdrop-blur-xl p-6 rounded-b-[2rem]">
                 <SheetHeader className="mb-6 flex flex-row items-center justify-between">
                     <SheetTitle className="flex items-center gap-2">
-                        <span className="text-2xl">🏸</span>
+                        <Image src="/images/logo.png" alt="Badmintour Logo" width={28} height={28} />
                         <span className="font-heading text-xl font-black tracking-tight">
                             BADMIN<span className="text-primary">TOUR</span>
                         </span>
@@ -113,9 +113,7 @@ export default function Header() {
       >
         <Link href="/" className="flex items-center gap-3 group z-20" onClick={() => window.scrollTo(0,0)}>
           <div className={cn("h-8 w-auto transition-transform duration-500 origin-left flex items-center", isScrolled ? 'scale-0 w-0' : 'scale-100')}>
-             {/* Pastikan file ini ada di public/images/logo.png, jika tidak, ganti src atau hapus Image */}
-             {/* <Image src="/images/logo.png" alt="Badmintour Logo" width={28} height={28} className="object-contain" /> */}
-             <span className="text-2xl">🏸</span>
+             <Image src="/images/logo.png" alt="Badmintour Logo" width={28} height={28} className="object-contain" />
           </div>
           <span
             id="brand-text"
