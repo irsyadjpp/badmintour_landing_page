@@ -5,38 +5,44 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Download, Plus, TrendingUp, TrendingDown, Wallet, Ticket, Shirt, Building, Trash2, Milestone, Users } from 'lucide-react';
+import { Download, Plus, TrendingUp, TrendingDown, Wallet, Ticket, Shirt, Building, Trash2, Milestone, Users, Trophy, Rocket, Box, Backpack } from 'lucide-react';
 
 const monthlyData = [
-    { name: 'Jan', Pemasukan: 12000000, Pengeluaran: 5000000 },
-    { name: 'Feb', Pemasukan: 15000000, Pengeluaran: 6000000 },
-    { name: 'Mar', Pemasukan: 10000000, Pengeluaran: 8000000 },
-    { name: 'Apr', Pemasukan: 18000000, Pengeluaran: 7000000 },
-    { name: 'May', Pemasukan: 22000000, Pengeluaran: 9000000 },
-    { name: 'Jun', Pemasukan: 20000000, Pengeluaran: 8000000 },
-    { name: 'Jul', Pemasukan: 25000000, Pengeluaran: 10000000 },
-    { name: 'Aug', Pemasukan: 24500000, Pengeluaran: 8200000 },
+    { name: 'Jan', Pemasukan: 15000000, Pengeluaran: 6000000 },
+    { name: 'Feb', Pemasukan: 18000000, Pengeluaran: 7000000 },
+    { name: 'Mar', Pemasukan: 12000000, Pengeluaran: 8000000 },
+    { name: 'Apr', Pemasukan: 20000000, Pengeluaran: 9000000 },
+    { name: 'May', Pemasukan: 25000000, Pengeluaran: 10000000 },
+    { name: 'Jun', Pemasukan: 22000000, Pengeluaran: 9000000 },
+    { name: 'Jul', Pemasukan: 28000000, Pengeluaran: 11000000 },
+    { name: 'Aug', Pemasukan: 32500000, Pengeluaran: 12200000 },
 ];
 
 const transactions = [
-    { id: 1, type: 'in', category: 'Member', amount: 150000, date: '24 Aug', desc: 'Regis: Kevin S.' },
-    { id: 2, type: 'in', category: 'Jersey', amount: 300000, date: '24 Aug', desc: 'Jersey: Size L (2pcs)' },
-    { id: 3, type: 'out', category: 'Court', amount: 250000, date: '23 Aug', desc: 'Sewa GOR Koni (3 Jam)' },
-    { id: 4, type: 'in', category: 'Ticket', amount: 750000, date: '23 Aug', desc: 'Tiket Bandung Open' },
-    { id: 5, type: 'out', category: 'Cock', amount: 180000, date: '22 Aug', desc: 'Beli 2 Slop JP Gold' },
-    { id: 6, type: 'out', category: 'Laundry', amount: 45000, date: '21 Aug', desc: 'Cuci Rompi Mabar' },
+    { id: 1, type: 'in', category: 'Mabar', amount: 850000, date: '24 Aug', desc: 'Sesi Rutin Selasa' },
+    { id: 2, type: 'in', category: 'Merch', amount: 450000, date: '24 Aug', desc: 'Jersey: 3pcs (L)' },
+    { id: 3, type: 'out', category: 'Sewa Lapangan', amount: 300000, date: '23 Aug', desc: 'GOR Koni (3 Jam)' },
+    { id: 4, type: 'in', category: 'Event', amount: 1500000, date: '23 Aug', desc: 'Registrasi Bandung Open' },
+    { id: 5, type: 'out', category: 'Shuttlecock', amount: 280000, date: '22 Aug', desc: 'Beli 3 Slop Samurai' },
+    { id: 6, type: 'in', category: 'Coaching', amount: 600000, date: '21 Aug', desc: 'Drilling Class (6 Orang)' },
+    { id: 7, type: 'out', category: 'Alat Coaching', amount: 150000, date: '20 Aug', desc: 'Beli Cone & Tali' },
 ];
 
 const getIcon = (category: string) => {
     switch(category) {
-        case 'Member': return <Users className="w-5 h-5"/>;
-        case 'Jersey': return <Shirt className="w-5 h-5"/>;
-        case 'Ticket': return <Ticket className="w-5 h-5"/>;
-        case 'Court': return <Building className="w-5 h-5"/>;
-        case 'Cock': return <Milestone className="w-5 h-5" />; // Using Milestone as a shuttlecock icon
-        case 'Laundry': return <Trash2 className="w-5 h-5"/>; // Using Trash2 as a laundry basket icon
+        // Pemasukan
+        case 'Mabar': return <Users className="w-5 h-5"/>;
+        case 'Coaching': return <Rocket className="w-5 h-5"/>;
+        case 'Merch': return <Shirt className="w-5 h-5"/>;
+        case 'Event': return <Trophy className="w-5 h-5"/>;
+        
+        // Pengeluaran
+        case 'Sewa Lapangan': return <Building className="w-5 h-5"/>;
+        case 'Shuttlecock': return <Milestone className="w-5 h-5" />;
+        case 'Alat Coaching': return <Backpack className="w-5 h-5"/>;
+        
         default: return <Wallet className="w-5 h-5"/>;
     }
 }
@@ -66,15 +72,15 @@ export default function FinancePage() {
     <main>
         <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
             <div>
-                <h1 className="text-4xl font-black text-bad-dark tracking-tight">Treasury & Finance</h1>
-                <p className="text-gray-500 mt-1">Pantau arus kas komunitas, tiket turnamen, dan penjualan merchandise.</p>
+                <h1 className="text-4xl font-black text-bad-dark tracking-tight">Financial Report</h1>
+                <p className="text-gray-500 mt-1">Laporan arus kas Mabar, Coaching, Merchandise, dan Turnamen.</p>
             </div>
             
             <div className="flex gap-3">
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                     <DialogTrigger asChild>
-                        <Button className="bg-bad-dark text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg flex items-center gap-2">
-                           <Plus className="w-5 h-5"/> Catat Transaksi
+                        <Button className="bg-bad-dark text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg flex items-center gap-2 group">
+                           <span className="group-hover:text-accent transition-colors">+ Catat Transaksi</span>
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-md bg-white rounded-[2rem] p-8">
@@ -102,18 +108,29 @@ export default function FinancePage() {
                                         <SelectValue placeholder="Pilih Kategori" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="member">Pendaftaran Member</SelectItem>
-                                        <SelectItem value="ticket">Tiket Turnamen</SelectItem>
-                                        <SelectItem value="jersey">Penjualan Jersey</SelectItem>
-                                        <SelectItem value="court">Sewa Lapangan</SelectItem>
-                                        <SelectItem value="cock">Beli Shuttlecock</SelectItem>
-                                        <SelectItem value="laundry">Laundry Rompi</SelectItem>
+                                        <SelectGroup>
+                                            <SelectLabel>--- Pemasukan ---</SelectLabel>
+                                            <SelectItem value="mabar">Keuntungan Mabar</SelectItem>
+                                            <SelectItem value="coaching">Coaching / Drilling</SelectItem>
+                                            <SelectItem value="merch">Penjualan Merch</SelectItem>
+                                            <SelectItem value="event">Event / Turnamen</SelectItem>
+                                        </SelectGroup>
+                                        <SelectGroup>
+                                            <SelectLabel>--- Pengeluaran ---</SelectLabel>
+                                            <SelectItem value="sewa">Sewa Lapangan</SelectItem>
+                                            <SelectItem value="kok">Beli Shuttlecock</SelectItem>
+                                            <SelectItem value="alat">Peralatan Pendukung</SelectItem>
+                                        </SelectGroup>
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div>
                                 <label className="text-xs font-bold text-gray-500 uppercase">Nominal (Rp)</label>
                                 <Input type="number" className="w-full mt-1 bg-gray-50 border-gray-200 rounded-xl px-4 py-3 font-bold outline-none h-auto" placeholder="0"/>
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-gray-500 uppercase">Keterangan</label>
+                                <Input type="text" className="w-full mt-1 bg-gray-50 border-gray-200 rounded-xl px-4 py-3 font-bold outline-none h-auto" placeholder="Cth: Sesi Selasa Malam"/>
                             </div>
                             <Button type="button" onClick={() => setIsModalOpen(false)} className="w-full py-3 h-auto rounded-xl bg-bad-dark text-white font-bold hover:bg-gray-800 mt-4">Simpan Data</Button>
                         </form>
@@ -137,7 +154,7 @@ export default function FinancePage() {
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Pemasukan</p>
                     </div>
                     <p className="text-4xl font-black text-bad-green">Rp {totalIncome.toLocaleString('id-ID')}</p>
-                    <p className="text-xs text-gray-400 mt-2 font-medium">Dari Member, Tiket, & Jersey</p>
+                    <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-wider">Mabar • Coaching • Merch • Event</p>
                 </div>
             </Card>
 
@@ -151,7 +168,7 @@ export default function FinancePage() {
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Pengeluaran</p>
                     </div>
                     <p className="text-4xl font-black text-bad-red">Rp {totalExpense.toLocaleString('id-ID')}</p>
-                    <p className="text-xs text-gray-400 mt-2 font-medium">Sewa Lapangan, Kok, Laundry</p>
+                    <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-wider">Lapangan • Kok • Alat</p>
                 </div>
             </Card>
 
@@ -161,9 +178,9 @@ export default function FinancePage() {
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Net Profit (Saldo)</p>
                     <p className="text-4xl font-black text-accent">Rp {netProfit.toLocaleString('id-ID')}</p>
                     <div className="mt-4 h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
-                        <div className="h-full bg-accent w-[65%]"></div>
+                        <div className="h-full bg-accent" style={{width: `${Math.round((netProfit / totalIncome) * 100)}%`}}></div>
                     </div>
-                    <p className="text-[10px] text-gray-400 mt-1 text-right">Target Profit: 65% Achieved</p>
+                    <p className="text-[10px] text-gray-400 mt-1 text-right">Margin Keuntungan Sehat</p>
                 </div>
             </Card>
         </div>
@@ -184,7 +201,7 @@ export default function FinancePage() {
                 </div>
                 <div className="h-80 w-full">
                     <ResponsiveContainer>
-                        <BarChart data={monthlyData}>
+                        <BarChart data={monthlyData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
                             <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#9ca3af', fontSize: 12}} dy={10} />
                             <YAxis axisLine={false} tickLine={false} tickFormatter={(value) => `${Number(value) / 1000000}Jt`} tick={{fill: '#9ca3af', fontSize: 12}} dx={-10}/>
@@ -220,9 +237,9 @@ export default function FinancePage() {
                          const iconBg = isIn ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600';
 
                          return (
-                            <div key={trx.id} className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl hover:shadow-md transition">
+                            <div key={trx.id} className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl hover:shadow-md transition group">
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-full ${iconBg} flex items-center justify-center`}>
+                                    <div className={`w-10 h-10 rounded-full ${iconBg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
                                         {getIcon(trx.category)}
                                     </div>
                                     <div>
