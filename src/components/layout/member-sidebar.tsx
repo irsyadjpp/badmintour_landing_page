@@ -2,13 +2,14 @@
 
 import {
     LayoutGrid,
-    CalendarDays,
+    Swords, // Icon untuk Mabar/Sparring
+    Trophy, // Icon Turnamen
     Ticket,
-    Trophy,
     User,
     LogOut,
     History,
-    Zap
+    Zap,
+    Dumbbell // Icon untuk Drilling/Coaching
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -21,25 +22,28 @@ export default function MemberSidebar() {
 
     const navItems = [
         { href: "/member/dashboard", icon: LayoutGrid, label: "Dashboard" },
-        { href: "/booking", icon: CalendarDays, label: "Booking Lapangan" },
+        // REVISI: Mengganti Booking Lapangan dengan fitur spesifik
+        { href: "/member/mabar", icon: Swords, label: "Cari Mabar & Sparring" },
+        { href: "/member/drilling", icon: Dumbbell, label: "Drilling & Coaching" },
+        { href: "/member/tournaments", icon: Trophy, label: "Info Turnamen" },
         { href: "/member/tickets", icon: Ticket, label: "Tiket Saya" },
         { href: "/member/history", icon: History, label: "Riwayat Match" },
-        { href: "/member/profile", icon: User, label: "Profil & Settings" },
+        { href: "/member/profile", icon: User, label: "Profil" },
     ];
 
     return (
         <>
-            {/* DESKTOP SIDEBAR (Floating Left) */}
-            <aside className="hidden md:flex fixed top-1/2 -translate-y-1/2 left-6 z-50 flex-col items-center py-8 bg-[#151515]/80 backdrop-blur-xl border border-white/10 rounded-[2.5rem] shadow-2xl transition-all duration-300 hover:bg-[#151515] hover:border-[#ffbe00]/30 min-h-[500px]">
+            {/* DESKTOP SIDEBAR */}
+            <aside className="hidden md:flex fixed top-1/2 -translate-y-1/2 left-6 z-50 flex-col items-center py-8 bg-[#151515]/80 backdrop-blur-xl border border-white/10 rounded-[2.5rem] shadow-2xl transition-all duration-300 hover:bg-[#151515] hover:border-[#ffbe00]/30 min-h-[600px]">
                 <TooltipProvider delayDuration={0}>
                     
-                    {/* Brand Icon */}
+                    {/* Brand */}
                     <div className="mb-8 p-3 rounded-full bg-[#ffbe00]/10 border border-[#ffbe00]/20 text-[#ffbe00] shadow-[0_0_15px_rgba(255,190,0,0.2)]">
                         <Zap className="w-6 h-6 fill-current" />
                     </div>
         
-                    {/* Navigation Items */}
-                    <nav className="flex-1 flex flex-col gap-6 w-full items-center justify-center px-3">
+                    {/* Nav Items */}
+                    <nav className="flex-1 flex flex-col gap-4 w-full items-center justify-center px-3">
                         {navItems.map((item) => {
                             const isActive = pathname === item.href;
                             return (
@@ -55,8 +59,6 @@ export default function MemberSidebar() {
                                             )}
                                         >
                                             <item.icon className={cn("w-5 h-5", isActive && "fill-current")} />
-                                            
-                                            {/* Active Dot Indicator */}
                                             {isActive && (
                                                 <span className="absolute -right-1 top-1 w-2 h-2 rounded-full bg-white border-2 border-[#151515]"></span>
                                             )}
@@ -70,12 +72,12 @@ export default function MemberSidebar() {
                         })}
                     </nav>
 
-                    {/* Logout Button */}
+                    {/* Logout */}
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <button 
                                 onClick={() => signOut({ callbackUrl: '/' })}
-                                className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center mt-6 hover:bg-red-500 hover:text-white transition-all duration-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]"
+                                className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center mt-6 hover:bg-red-500 hover:text-white transition-all duration-300"
                             >
                                 <LogOut className="w-4 h-4"/>
                             </button>
@@ -87,17 +89,18 @@ export default function MemberSidebar() {
                 </TooltipProvider>
             </aside>
 
-            {/* MOBILE NAVIGATION (Floating Bottom Bar) */}
+            {/* MOBILE NAV (Bottom Bar Updated) */}
             <div className="md:hidden fixed bottom-6 left-4 right-4 z-50">
                 <nav className="flex justify-around items-center bg-[#151515]/90 backdrop-blur-xl border border-white/10 rounded-[2rem] p-4 shadow-2xl">
-                    {navItems.slice(0, 4).map((item) => {
+                    {/* Hanya menampilkan 4 menu utama di mobile untuk hemat ruang */}
+                    {[navItems[0], navItems[1], navItems[3], navItems[6]].map((item) => {
                         const isActive = pathname === item.href;
                         return (
                             <Link 
                                 key={item.label}
                                 href={item.href} 
                                 className={cn(
-                                    "p-3 rounded-2xl transition-all duration-300",
+                                    "p-3 rounded-2xl transition-all duration-300 relative",
                                     isActive 
                                         ? "bg-[#ffbe00] text-black shadow-[0_0_15px_rgba(255,190,0,0.4)]" 
                                         : "text-gray-500 hover:text-white"
@@ -107,10 +110,7 @@ export default function MemberSidebar() {
                             </Link>
                         );
                     })}
-                     <button 
-                        onClick={() => signOut({ callbackUrl: '/' })}
-                        className="p-3 rounded-2xl text-red-500 hover:bg-red-500/10 transition-all"
-                    >
+                     <button onClick={() => signOut({ callbackUrl: '/' })} className="p-3 text-red-500">
                         <LogOut className="w-6 h-6" />
                     </button>
                 </nav>
