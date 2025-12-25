@@ -22,11 +22,13 @@ export default {
             jersey: ['var(--font-oswald)', 'sans-serif'],
 		},
   		colors: {
-        'bad-red': '#FF3B30',      // Apple Red Style
-        'bad-dark': '#0f0f0f',     // Deep Black
-        'bad-card': '#1C1C1E',     // Secondary Dark
-        'bad-yellow': '#FFD60A',   // Vivid Yellow
-        'bad-green': '#32D74B',    // Neon Green
+        'bad-bg': '#121212',
+        'bad-card-dark': '#1A1A1A',
+        'bad-accent': '#2D2D2D',
+        'bad-red': '#FF3B30',
+        'bad-dark': '#0f0f0f',
+        'bad-yellow': '#FFD60A',
+        'bad-green': '#32D74B',
         'bad-blue': '#0A84FF',
         'surface': '#1E1E1E',
   			background: 'hsl(var(--background))',

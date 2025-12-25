@@ -14,9 +14,9 @@ export default function AdminLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className={`font-sans antialiased bg-surface text-bad-dark min-h-screen`}>
+    <div className={`font-sans antialiased bg-bad-bg text-white min-h-screen selection:bg-white selection:text-black`}>
       <AdminSidebar />
-      <main className="ml-28 mr-8 py-8 transition-all duration-500">
+      <main className="ml-28 mr-6 py-8">
         {children}
       </main>
       <Toaster />
