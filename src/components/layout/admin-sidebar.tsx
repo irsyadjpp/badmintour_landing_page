@@ -28,7 +28,7 @@ export default function AdminSidebar() {
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white rounded-r-full"></div>
                 </Link>
 
-                <Link href="#" className="flex items-center h-12 px-4 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-bad-dark transition-all">
+                <Link href="/admin/members" className="flex items-center h-12 px-4 rounded-xl text-gray-500 hover:bg-gray-100 hover:text-bad-dark transition-all">
                     <Users className="w-6 h-6 shrink-0" />
                     <span className="ml-4 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">Data Member</span>
                 </Link>
