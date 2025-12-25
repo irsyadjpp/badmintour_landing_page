@@ -28,6 +28,8 @@ export default function MemberLayout({
   children: React.ReactNode;
 }>) {
   return (
+    // The bg-background and text-foreground are now on the body in globals.css
+    // For member pages, we want a dark theme, so we'll use bad-dark and text-white
     <div className={`${outfit.variable} ${oswald.variable} font-sans antialiased bg-bad-dark text-white selection:bg-accent selection:text-black min-h-screen`}>
       <MemberHeader />
       {children}
