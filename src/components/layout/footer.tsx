@@ -105,13 +105,13 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center px-6 max-w-7xl mx-auto text-xs text-gray-500 font-mono">
           <p>&copy; {new Date().getFullYear()} BADMINTOUR. DIBUAT DENGAN 🏸 DAN ☕ DI BANDUNG.</p>
           <div className="flex gap-4 mt-2 md:mt-0">
-            <a href="#" className="hover:text-accent">
+            <Link href="/privacy" className="hover:text-accent">
               PRIVACY
-            </a>
+            </Link>
             <span className="text-gray-700">|</span>
-            <a href="#" className="hover:text-accent">
-              TERMS OF MABAR
-            </a>
+            <Link href="/terms" className="hover:text-accent">
+              TERMS OF SERVICE
+            </Link>
           </div>
         </div>
       </div>
