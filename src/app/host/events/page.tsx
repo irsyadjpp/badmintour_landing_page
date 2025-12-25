@@ -40,7 +40,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 export default function HostEventsPage() {
     // Mock Data Events
@@ -98,11 +98,11 @@ export default function HostEventsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-end gap-4">
                 <div>
-                    <h1 className="text-4xl font-black text-white tracking-tighter">Event <span className="text-blue-600">Manager</span></h1>
+                    <h1 className="text-4xl font-black text-white tracking-tighter">Event <span className="text-[#ca1f3d]">Manager</span></h1>
                     <p className="text-gray-400 mt-2">Atur jadwal, harga, dan peserta dalam satu tempat.</p>
                 </div>
                 <Link href="/host/events/create">
-                    <Button className="h-12 px-6 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:scale-105 transition-transform">
+                    <Button className="h-12 px-6 rounded-xl bg-[#ca1f3d] hover:bg-[#a01830] text-white font-black shadow-[0_0_20px_rgba(202,31,61,0.4)] hover:scale-105 transition-transform">
                         <CalendarPlus className="w-5 h-5 mr-2" /> BUAT EVENT BARU
                     </Button>
                 </Link>
@@ -118,7 +118,7 @@ export default function HostEventsPage() {
                     <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-white/10 rounded-xl">
                         <Filter className="w-4 h-4 mr-2" /> Filter
                     </Button>
-                    <Button variant="ghost" className="text-blue-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-xl">
+                    <Button variant="ghost" className="text-[#ffbe00] hover:text-black hover:bg-[#ffbe00] rounded-xl font-bold">
                         Active (2)
                     </Button>
                 </div>
@@ -127,7 +127,7 @@ export default function HostEventsPage() {
             {/* Event List Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {events.map((event) => (
-                    <div key={event.id} className="group bg-[#151515] hover:bg-[#1A1A1A] border border-white/5 hover:border-blue-600/30 rounded-[2rem] p-6 transition-all duration-300 relative overflow-hidden">
+                    <div key={event.id} className="group bg-[#151515] hover:bg-[#1A1A1A] border border-white/5 hover:border-[#ca1f3d]/30 rounded-[2rem] p-6 transition-all duration-300 relative overflow-hidden">
                         {/* Status Badge */}
                         <div className="absolute top-4 right-4">
                             <Badge className={`${event.status === 'Full' ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'} border-0 font-black uppercase tracking-wider`}>
@@ -137,13 +137,13 @@ export default function HostEventsPage() {
 
                         {/* Title & Info */}
                         <div className="mb-6">
-                            <h3 className="text-xl font-black text-white mb-2 leading-tight group-hover:text-blue-500 transition-colors">{event.title}</h3>
+                            <h3 className="text-xl font-black text-white mb-2 leading-tight group-hover:text-[#ca1f3d] transition-colors">{event.title}</h3>
                             <div className="space-y-1">
                                 <p className="text-sm text-gray-400 flex items-center gap-2">
-                                    <Clock className="w-4 h-4 text-blue-600" /> {event.date} • {event.time}
+                                    <Clock className="w-4 h-4 text-[#ca1f3d]" /> {event.date} • {event.time}
                                 </p>
                                 <p className="text-sm text-gray-400 flex items-center gap-2">
-                                    <MapPin className="w-4 h-4 text-blue-600" /> {event.location}
+                                    <MapPin className="w-4 h-4 text-[#ca1f3d]" /> {event.location}
                                 </p>
                             </div>
                         </div>
@@ -167,7 +167,7 @@ export default function HostEventsPage() {
                             </div>
                             <div className="w-full bg-[#222] rounded-full h-2 overflow-hidden">
                                 <div 
-                                    className="bg-blue-600 h-full rounded-full" 
+                                    className="bg-[#ca1f3d] h-full rounded-full" 
                                     style={{ width: `${(event.participants / event.maxParticipants) * 100}%` }}
                                 ></div>
                             </div>
@@ -205,7 +205,7 @@ export default function HostEventsPage() {
                                         </div>
                                     </div>
                                     <DialogFooter>
-                                        <Button onClick={handleAddGuest} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold">
+                                        <Button onClick={handleAddGuest} className="w-full bg-[#ca1f3d] hover:bg-[#a01830] text-white font-bold">
                                             Tambahkan Peserta
                                         </Button>
                                     </DialogFooter>
@@ -240,11 +240,11 @@ export default function HostEventsPage() {
                 ))}
 
                 {/* Clone Placeholder Card */}
-                <div onClick={() => handleCloneEvent("Template")} className="border-2 border-dashed border-white/10 hover:border-blue-600/50 rounded-[2rem] p-6 flex flex-col items-center justify-center cursor-pointer transition-all group h-full min-h-[300px]">
-                    <div className="w-16 h-16 rounded-full bg-white/5 group-hover:bg-blue-600/10 flex items-center justify-center mb-4 transition-colors">
-                        <Copy className="w-8 h-8 text-gray-500 group-hover:text-blue-500" />
+                <div onClick={() => handleCloneEvent("Template")} className="border-2 border-dashed border-white/10 hover:border-[#ca1f3d]/50 rounded-[2rem] p-6 flex flex-col items-center justify-center cursor-pointer transition-all group h-full min-h-[300px]">
+                    <div className="w-16 h-16 rounded-full bg-white/5 group-hover:bg-[#ca1f3d]/10 flex items-center justify-center mb-4 transition-colors">
+                        <Copy className="w-8 h-8 text-gray-500 group-hover:text-[#ca1f3d]" />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-500 group-hover:text-blue-500">Clone From Template</h3>
+                    <h3 className="text-lg font-bold text-gray-500 group-hover:text-[#ca1f3d]">Clone From Template</h3>
                     <p className="text-xs text-gray-600 text-center mt-2 max-w-[200px]">Buat event cepat menggunakan settingan minggu lalu.</p>
                 </div>
             </div>

@@ -65,7 +65,7 @@ export default function CreateEventPage() {
                     {/* 1. Basic Info */}
                     <Card className="bg-[#151515] border-white/5 p-6 rounded-[2rem]">
                         <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                            <Calendar className="w-5 h-5 text-blue-500" /> Basic Information
+                            <Calendar className="w-5 h-5 text-[#ca1f3d]" /> Basic Information
                         </h3>
                         <div className="space-y-4">
                             <div className="space-y-2">
@@ -100,7 +100,7 @@ export default function CreateEventPage() {
                     {/* 2. Pricing & Capacity */}
                     <Card className="bg-[#151515] border-white/5 p-6 rounded-[2rem]">
                         <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                            <DollarSign className="w-5 h-5 text-green-500" /> Pricing & Capacity
+                            <DollarSign className="w-5 h-5 text-[#ffbe00]" /> Pricing & Capacity
                         </h3>
                         <div className="space-y-6">
                             <div className="grid grid-cols-2 gap-4">
@@ -119,7 +119,7 @@ export default function CreateEventPage() {
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="space-y-1">
                                         <Label className="text-white font-bold flex items-center gap-2">
-                                            <Zap className="w-4 h-4 text-yellow-500" /> Dynamic Pricing
+                                            <Zap className="w-4 h-4 text-[#ffbe00]" /> Dynamic Pricing
                                         </Label>
                                         <p className="text-[10px] text-gray-500">Aktifkan harga Early Bird atau Last Minute.</p>
                                     </div>
@@ -129,11 +129,11 @@ export default function CreateEventPage() {
                                 {isDynamicPrice && (
                                     <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
                                         <div className="space-y-2">
-                                            <Label className="text-yellow-500 text-xs uppercase font-bold">Early Bird Price</Label>
+                                            <Label className="text-[#ffbe00] text-xs uppercase font-bold">Early Bird Price</Label>
                                             <Input type="number" placeholder="30000" className="bg-[#151515] border-yellow-500/20 text-white h-10 rounded-lg" />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-yellow-500 text-xs uppercase font-bold">Limit (First X User)</Label>
+                                            <Label className="text-[#ffbe00] text-xs uppercase font-bold">Limit (First X User)</Label>
                                             <Input type="number" placeholder="5" className="bg-[#151515] border-yellow-500/20 text-white h-10 rounded-lg" />
                                         </div>
                                     </div>
@@ -148,9 +148,9 @@ export default function CreateEventPage() {
                 <div className="lg:col-span-1 space-y-6">
                     
                     {/* 3. Skill Level Lock */}
-                    <Card className={`p-6 rounded-[2rem] border transition-all ${isSkillLocked ? 'bg-red-900/10 border-red-500/30' : 'bg-[#151515] border-white/5'}`}>
+                    <Card className={`p-6 rounded-[2rem] border transition-all ${isSkillLocked ? 'bg-[#ca1f3d]/10 border-[#ca1f3d]/30' : 'bg-[#151515] border-white/5'}`}>
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className={`text-sm font-bold flex items-center gap-2 ${isSkillLocked ? 'text-red-500' : 'text-gray-400'}`}>
+                            <h3 className={`text-sm font-bold flex items-center gap-2 ${isSkillLocked ? 'text-[#ca1f3d]' : 'text-gray-400'}`}>
                                 <Lock className="w-4 h-4" /> Skill Lock
                             </h3>
                             <Switch checked={isSkillLocked} onCheckedChange={setIsSkillLocked} className="data-[state=checked]:bg-red-500"/>
@@ -188,7 +188,7 @@ export default function CreateEventPage() {
                     </Card>
 
                     {/* Save Button */}
-                    <Button onClick={handleSave} className="w-full h-14 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl shadow-lg hover:shadow-blue-600/20 transition-all">
+                    <Button onClick={handleSave} className="w-full h-14 bg-[#ca1f3d] hover:bg-[#a01830] text-white font-black rounded-xl shadow-lg hover:shadow-[#ca1f3d]/20 transition-all">
                         <Save className="w-5 h-5 mr-2" /> PUBLISH EVENT
                     </Button>
                     <Button variant="outline" className="w-full h-12 border-white/10 text-gray-400 hover:text-white rounded-xl">
