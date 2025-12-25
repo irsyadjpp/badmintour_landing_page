@@ -23,7 +23,8 @@ export default {
 		},
   		colors: {
         'bad-red': '#D32F2F',
-        'bad-dark': '#0f0f0f',
+        'bad-dark': '#121212',
+        'bad-green': '#00C853',
         'surface': '#1E1E1E',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
