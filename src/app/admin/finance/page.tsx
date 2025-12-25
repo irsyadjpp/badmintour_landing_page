@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Download, Plus, TrendingUp, TrendingDown, Wallet, Ticket, Shirt, Building, Trash2, Milestone } from 'lucide-react';
+import { Download, Plus, TrendingUp, TrendingDown, Wallet, Ticket, Shirt, Building, Trash2, Milestone, Users } from 'lucide-react';
 
 const monthlyData = [
     { name: 'Jan', Pemasukan: 12000000, Pengeluaran: 5000000 },
