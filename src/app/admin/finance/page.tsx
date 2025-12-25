@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Download, Plus, TrendingUp, TrendingDown, Wallet, Shirt, Building, Users, Trophy, Rocket, Box, Backpack, Milestone, Zap } from 'lucide-react';
 
@@ -82,6 +82,7 @@ export default function FinancePage() {
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl transform transition-all data-[state=open]:!slide-in-from-bottom-full md:data-[state=open]:!slide-in-from-top-[48%] data-[state=closed]:!slide-out-to-bottom-full md:data-[state=closed]:!slide-out-to-top-[48%] data-[state=open]:!zoom-in-100 data-[state=closed]:!zoom-out-100">
+                        <DialogTitle className="sr-only">Tambah Transaksi Baru</DialogTitle>
                         <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6 md:hidden"></div>
                         <form onSubmit={(e) => { e.preventDefault(); alert('Transaksi Tersimpan!'); setIsModalOpen(false); }}>
                             <div className="bg-gray-100 p-1.5 rounded-2xl flex relative mb-8">
