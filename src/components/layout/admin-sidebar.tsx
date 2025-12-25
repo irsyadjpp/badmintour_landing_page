@@ -1,3 +1,4 @@
+
 'use client';
 import {
     LayoutDashboard,
@@ -16,7 +17,7 @@ export default function AdminSidebar() {
     const navItems = [
         { href: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
         { href: "/admin/members", icon: Users, label: "Data Member" },
-        { href: "#", icon: Calendar, label: "Events" },
+        { href: "/admin/events", icon: Calendar, label: "Events" },
         { href: "#", icon: Settings, label: "Settings" },
     ];
 
