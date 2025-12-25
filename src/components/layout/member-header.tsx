@@ -10,7 +10,7 @@ export default function MemberHeader() {
 
     const navLinks = [
         { href: '/member/dashboard', label: 'Dashboard' },
-        { href: '/member/jersey', label: 'Jersey Drop', hot: true },
+        { href: '/jersey', label: 'Jersey Drop', hot: true },
         { href: '/#schedule', label: 'Jadwal' },
     ];
 
@@ -60,7 +60,7 @@ export default function MemberHeader() {
                             <p className="text-white font-bold">KEVIN.S</p>
                         </div>
                         <div className="lg:hidden border-b border-white/5">
-                            <Link href="/member/jersey" className="flex items-center gap-2 px-4 py-3 text-sm text-accent hover:bg-white/10 font-bold">
+                            <Link href="/jersey" className="flex items-center gap-2 px-4 py-3 text-sm text-accent hover:bg-white/10 font-bold">
                                 <Shirt className="w-4 h-4" /> Claim Jersey
                             </Link>
                             <Link href="/#schedule" className="flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-white/10 font-bold">
