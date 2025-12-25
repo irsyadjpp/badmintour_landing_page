@@ -14,9 +14,15 @@ export default function AdminLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className={`font-sans antialiased bg-bad-bg text-white min-h-screen selection:bg-white selection:text-black`}>
+    // Background global gelap
+    <div className={`font-sans antialiased bg-[#121212] text-white min-h-screen selection:bg-bad-yellow selection:text-black`}>
       <AdminSidebar />
-      <main className="ml-28 mr-6 py-8">
+      {/* PERBAIKAN LAYOUT:
+         - ml-24: Memberi jarak pas untuk sidebar (w-20 + gap)
+         - p-8: Padding keliling yang konsisten
+         - max-w-7xl: Mencegah konten terlalu melebar di layar ultrawide
+      */}
+      <main className="ml-24 p-8 w-[calc(100%-6rem)] mx-auto max-w-[1600px]">
         {children}
       </main>
       <Toaster />
