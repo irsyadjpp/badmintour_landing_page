@@ -15,7 +15,8 @@ import {
     Ticket,
     Zap,
     Crown,
-    Swords
+    Swords,
+    UserCog // Icon baru untuk Edit Profile
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,7 +36,6 @@ export default function MemberDashboard() {
   const { data: session } = useSession();
 
   // --- MOCK DATA ---
-  // Idealnya data ini diambil dari API/Firestore
   const activeTicket = {
     id: "TIC-8821",
     event: "Mabar Senin Malam: Competitive",
@@ -51,8 +51,8 @@ export default function MemberDashboard() {
     matches: 42,
     winRate: 68,
     points: 1250,
-    nextRank: 1500, // Target poin untuk naik rank
-    streak: 3 // Kemenangan beruntun
+    nextRank: 1500,
+    streak: 3
   };
 
   const recentMatches = [
@@ -64,7 +64,7 @@ export default function MemberDashboard() {
   return (
     <div className="space-y-8 pb-10">
         
-        {/* 1. HEADER SECTION (Simplified) */}
+        {/* 1. HEADER SECTION */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-[#151515] p-6 rounded-[2rem] border border-white/5 relative overflow-hidden">
             {/* Background Decoration */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#ffbe00]/5 rounded-full blur-[80px] pointer-events-none"></div>
@@ -94,12 +94,11 @@ export default function MemberDashboard() {
                 </div>
             </div>
 
-            {/* Tombol Sign Out dihapus karena sudah ada di sidebar */}
-            {/* Tombol Booking tetap ada sebagai Call to Action utama */}
+            {/* REVISI: Tombol Utama diganti ke "Lengkapi Profile" */}
             <div className="flex gap-3 w-full md:w-auto relative z-10">
-                <Link href="/booking" className="w-full md:w-auto">
+                <Link href="/member/profile" className="w-full md:w-auto">
                     <Button className="w-full md:w-auto h-12 px-8 rounded-xl bg-[#ffbe00] text-black hover:bg-yellow-400 font-black shadow-[0_0_20px_rgba(255,190,0,0.4)] hover:scale-105 transition-transform">
-                        <CalendarDays className="w-4 h-4 mr-2" /> BOOK COURT
+                        <UserCog className="w-4 h-4 mr-2" /> LENGKAPI PROFILE
                     </Button>
                 </Link>
             </div>
@@ -111,7 +110,7 @@ export default function MemberDashboard() {
             {/* LEFT COLUMN (8 Cols) */}
             <div className="lg:col-span-8 space-y-6">
                 
-                {/* A. ACTIVE TICKET (Boarding Pass Style) */}
+                {/* A. ACTIVE TICKET */}
                 <div className="relative group">
                     <div className="flex items-center justify-between mb-3 px-2">
                         <h3 className="text-lg font-black text-white flex items-center gap-2">
@@ -160,9 +159,8 @@ export default function MemberDashboard() {
                             </div>
                         </div>
 
-                        {/* Right: QR Code (Ticket Stub) */}
+                        {/* Right: QR Code */}
                         <div className="relative p-8 bg-white text-black flex flex-col items-center justify-center md:w-72 md:border-l-2 md:border-dashed md:border-gray-300">
-                             {/* Cutout Circles */}
                             <div className="absolute -top-4 md:top-auto md:-top-3 md:-left-3 left-1/2 -translate-x-1/2 md:translate-x-0 w-6 h-6 bg-[#0a0a0a] rounded-full"></div>
                             <div className="absolute -bottom-4 md:bottom-auto md:-bottom-3 md:-left-3 left-1/2 -translate-x-1/2 md:translate-x-0 w-6 h-6 bg-[#0a0a0a] rounded-full"></div>
 
@@ -200,7 +198,7 @@ export default function MemberDashboard() {
                         </div>
                     </Card>
 
-                    {/* Performance Card */}
+                    {/* Performance Stats */}
                     <div className="grid grid-cols-2 gap-4">
                         <Card className="bg-[#151515] border-white/5 rounded-[2rem] p-5 flex flex-col justify-between group hover:border-[#ffbe00]/20 transition-colors">
                             <div className="p-2 bg-green-500/10 w-fit rounded-lg text-green-500 mb-2">
@@ -256,12 +254,6 @@ export default function MemberDashboard() {
                                 </Badge>
                             </div>
                         ))}
-                        
-                        {recentMatches.length === 0 && (
-                            <div className="text-center py-8 text-gray-600 text-xs">
-                                Belum ada pertandingan.
-                            </div>
-                        )}
                     </CardContent>
                     <CardFooter>
                         <Button variant="ghost" className="w-full text-xs font-bold text-gray-500 hover:text-white rounded-xl">
@@ -270,18 +262,20 @@ export default function MemberDashboard() {
                     </CardFooter>
                 </Card>
 
-                {/* PROFILE COMPLETION CTA */}
+                {/* PROFILE COMPLETION CTA (Diubah karena Header sudah ada tombol utamanya) */}
                 <div className="bg-gradient-to-b from-[#1A1A1A] to-black border border-white/10 p-6 rounded-[2rem] text-center relative overflow-hidden">
                     <div className="w-16 h-16 bg-[#ffbe00]/10 text-[#ffbe00] rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
                         <User className="w-8 h-8" />
                     </div>
-                    <h3 className="font-black text-white text-lg mb-1">Lengkapi Profil</h3>
+                    <h3 className="font-black text-white text-lg mb-1">Status Member</h3>
                     <p className="text-xs text-gray-400 mb-6 px-4 leading-relaxed">
-                        Tambahkan nomor WA dan ukuran Jersey untuk mendapatkan hadiah eksklusif akhir tahun.
+                        Lengkapi profil kamu untuk membuka akses turnamen dan mendapatkan badge "Verified".
                     </p>
-                    <Button variant="outline" className="rounded-xl border-[#ffbe00] text-[#ffbe00] hover:bg-[#ffbe00] hover:text-black font-bold w-full h-12 transition-all">
-                        Edit Profile
-                    </Button>
+                    <Link href="/member/profile">
+                        <Button variant="outline" className="rounded-xl border-[#ffbe00] text-[#ffbe00] hover:bg-[#ffbe00] hover:text-black font-bold w-full h-12 transition-all">
+                            Cek Profil Saya
+                        </Button>
+                    </Link>
                 </div>
 
             </div>
