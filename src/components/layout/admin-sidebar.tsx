@@ -8,7 +8,8 @@ import {
     LogOut,
     ClipboardList,
     Sparkles,
-    Search
+    Search,
+    Trophy,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -21,24 +22,32 @@ export default function AdminSidebar() {
 
     const navItems = [
         { href: "/admin/dashboard", icon: LayoutDashboard, label: "Overview" },
-        { href: "/admin/orders", icon: ClipboardList, label: "Jersey Orders" },
-        { href: "/admin/gamification", icon: Sparkles, label: "Gamification" },
         { href: "/admin/members", icon: Users, label: "Members" },
         { href: "/admin/events", icon: Calendar, label: "Sessions" },
+        { href: "/admin/tournaments", icon: Trophy, label: "Tournaments" },
         { href: "/admin/finance", icon: Wallet, label: "Finance" },
+        { href: "/admin/orders", icon: ClipboardList, label: "Orders" },
         { href: "/admin/inventory", icon: Box, label: "Inventory" },
+        { href: "/admin/gamification", icon: Sparkles, label: "Gamification" },
     ];
 
     return (
-        <aside className="fixed top-4 bottom-4 left-4 z-50 w-20 bg-white rounded-[3rem] flex flex-col items-center py-8 shadow-2xl">
-            <button className="p-3 mb-8 text-gray-400 hover:text-black transition">
-                <Search className="w-6 h-6" />
-            </button>
+        <aside className="fixed top-4 bottom-4 left-4 z-50 w-20 bg-white rounded-[3rem] flex flex-col items-center py-8 shadow-2xl text-black">
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <button className="p-3 mb-8 text-gray-400 hover:text-black transition">
+                            <Search className="w-6 h-6" />
+                        </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="ml-2 bg-white text-black text-xs font-bold px-2 py-1 rounded shadow-sm">
+                        Search
+                    </TooltipContent>
+                </Tooltip>
     
-            <nav className="flex-1 flex flex-col gap-6 w-full items-center">
-                <TooltipProvider>
+                <nav className="flex-1 flex flex-col gap-6 w-full items-center">
                     {navItems.map((item) => {
-                        const isActive = pathname === item.href;
+                        const isActive = pathname.startsWith(item.href);
                         return (
                              <Tooltip key={item.label}>
                                 <TooltipTrigger asChild>
@@ -54,18 +63,25 @@ export default function AdminSidebar() {
                                         <item.icon className="w-5 h-5" />
                                     </Link>
                                 </TooltipTrigger>
-                                <TooltipContent side="right" className="ml-2 bg-white text-black text-xs font-bold px-2 py-1 rounded shadow-sm">
+                                <TooltipContent side="right" className="ml-2 bg-white text-black text-xs font-bold px-2 py-1 rounded shadow-sm z-50">
                                     {item.label}
                                 </TooltipContent>
                             </Tooltip>
                         );
                     })}
-                </TooltipProvider>
-            </nav>
+                </nav>
 
-            <Link href="/login" className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden mb-2">
-                <Image src="https://ui-avatars.com/api/?name=Admin&background=random" alt="Admin" width={40} height={40} className="w-full h-full object-cover"/>
-            </Link>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Link href="/login" className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden mt-8">
+                            <Image src="https://ui-avatars.com/api/?name=Admin&background=random" alt="Admin" width={40} height={40} className="w-full h-full object-cover"/>
+                        </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="ml-2 bg-white text-black text-xs font-bold px-2 py-1 rounded shadow-sm">
+                        Logout
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
         </aside>
     );
 }
