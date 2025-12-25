@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import '../../globals.css';
 import { Toaster } from '@/components/ui/toaster';
-import MemberNav from '@/components/layout/member-nav';
-
 
 export const metadata: Metadata = {
   title: 'Exclusive Drop | BADMINTOUR',
@@ -17,6 +15,7 @@ export default function MerchDropLayout({
   return (
     <>
         {children}
+        <Toaster />
     </>
   );
 }

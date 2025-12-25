@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Outfit } from 'next/font/google'; // Import font Outfit
+import { Outfit, Oswald } from 'next/font/google'; // Import font Oswald
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -7,6 +7,13 @@ const outfit = Outfit({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-outfit', // Set variable CSS
+});
+
+const oswald = Oswald({
+  subsets: ['latin'],
+  display: 'swap',
+  weight: ['500', '700'],
+  variable: '--font-oswald',
 });
 
 export const metadata: Metadata = {
@@ -21,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" className="scroll-smooth" suppressHydrationWarning>
-      <body className={`${outfit.variable} font-sans antialiased`}>
+      <body className={`${outfit.variable} ${oswald.variable} font-sans antialiased`}>
         {children}
         <Toaster />
       </body>
