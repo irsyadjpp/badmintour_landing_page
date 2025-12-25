@@ -27,7 +27,7 @@ const liveMatch = {
 // Data Mock untuk Sesi Mabar Aktif
 const activeSession = {
     title: "Mabar Rutin - Selasa",
-    location: "GOR Koni Bandung",
+    location: "GOR Wartawan Bandung",
     time: "19:00 - 23:00",
     registered: 18,
     checkedIn: 12,
@@ -262,5 +262,3 @@ export default function AdminDashboard() {
     </main>
   );
 }
-
-    
