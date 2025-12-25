@@ -20,7 +20,6 @@ export default function JerseyDropPage() {
     const [selectedSize, setSelectedSize] = useState('L');
     const [playerName, setPlayerName] = useState('');
     const [whatsAppNumber, setWhatsAppNumber] = useState('');
-    const [clubName, setClubName] = useState(''); // Tambahan opsional
     
     // UI State
     const [isSizeChartOpen, setIsSizeChartOpen] = useState(false);
@@ -75,8 +74,8 @@ export default function JerseyDropPage() {
                 body: JSON.stringify({
                     size: selectedSize,
                     customName: playerName,
-                    clubName: clubName || '-',
-                    senderName: session?.user?.name || playerName, // Fallback ke nama punggung jika guest
+                    clubName: 'BADMINTOUR', // OTOMATIS TERISI
+                    senderName: session?.user?.name || playerName, 
                     senderPhone: whatsAppNumber,
                     quantity: quantity
                 })
@@ -219,7 +218,7 @@ export default function JerseyDropPage() {
                             </div>
                         </div>
 
-                        {/* Input Form */}
+                        {/* Input Form (REMOVED CLUB NAME) */}
                         <div className="space-y-6">
                             <div>
                                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Nama Punggung (Max 12)</label>
@@ -240,16 +239,6 @@ export default function JerseyDropPage() {
                                     onChange={e => setWhatsAppNumber(e.target.value)} 
                                     placeholder="08xxxxxxxxxx" 
                                     className="w-full bg-[#151515] border border-white/20 rounded-xl px-5 py-4 text-lg font-bold text-white placeholder-gray-500 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none transition" 
-                                />
-                            </div>
-                             <div>
-                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Nama Club (Opsional)</label>
-                                <input 
-                                    type="text" 
-                                    value={clubName} 
-                                    onChange={e => setClubName(e.target.value.toUpperCase())} 
-                                    placeholder="PB JARUM" 
-                                    className="w-full bg-[#151515] border border-white/20 rounded-xl px-5 py-4 text-lg font-bold text-white placeholder-gray-500 focus:border-[#ffbe00] focus:ring-1 focus:ring-[#ffbe00] focus:outline-none transition uppercase tracking-widest" 
                                 />
                             </div>
                         </div>
