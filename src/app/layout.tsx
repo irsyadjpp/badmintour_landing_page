@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Outfit, Oswald } from 'next/font/google'; // Import font Oswald
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
+import NextAuthProvider from '@/components/providers/next-auth-provider';
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -17,8 +18,8 @@ const oswald = Oswald({
 });
 
 export const metadata: Metadata = {
-  title: 'BadminTour - Komunitas Badminton Modern',
-  description: 'Platform Mabar, Sparring, dan Coaching Badminton.',
+  title: 'BadminTour | Community Hub',
+  description: 'Platform booking lapangan dan komunitas badminton Bandung.',
 };
 
 export default function RootLayout({
@@ -29,8 +30,10 @@ export default function RootLayout({
   return (
     <html lang="id" className="scroll-smooth" suppressHydrationWarning>
       <body className={`${outfit.variable} ${oswald.variable} font-sans antialiased`}>
-        {children}
-        <Toaster />
+        <NextAuthProvider>
+            {children}
+            <Toaster />
+        </NextAuthProvider>
       </body>
     </html>
   );

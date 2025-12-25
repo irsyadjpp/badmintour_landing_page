@@ -1,44 +1,53 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 import { KeyRound, ArrowRight, Chrome } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { signIn, useSession } from 'next-auth/react'; // Import NextAuth
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { data: session } = useSession(); // Cek status session
   
   // State untuk Input PIN
   const [pin, setPin] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
 
-  // --- LOGIC: PIN LOGIN ---
+  // Redirect otomatis jika sudah login
+  useEffect(() => {
+    if (session?.user?.role === 'superadmin') {
+        router.push('/superadmin/dashboard');
+    } else if (session?.user?.role === 'member') {
+        router.push('/member/dashboard');
+    }
+  }, [session, router]);
+
+  // --- LOGIC: PIN LOGIN (Credentials) ---
   const handlePinChange = (index: number, value: string) => {
-    // Validasi hanya angka
     if (!/^\d*$/.test(value)) return;
 
     const newPin = [...pin];
     newPin[index] = value;
     setPin(newPin);
 
-    // Auto-focus ke kotak berikutnya
+    // Auto-focus next
     if (value && index < 5) {
       const nextInput = document.getElementById(`pin-${index + 1}`);
       nextInput?.focus();
     }
     
-    // Auto-submit jika sudah 6 digit
+    // Auto-submit
     if (index === 5 && value) {
       handlePinSubmit(newPin.join(''));
     }
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Handle backspace
     if (e.key === 'Backspace' && !pin[index] && index > 0) {
       const prevInput = document.getElementById(`pin-${index - 1}`);
       prevInput?.focus();
@@ -48,26 +57,13 @@ export default function LoginPage() {
   const handlePinSubmit = async (fullPin: string) => {
     setIsLoading(true);
     
-    // Simulasi delay validasi backend
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Menggunakan NextAuth Credentials Provider
+    const result = await signIn('credentials', {
+        pin: fullPin,
+        redirect: false, // Kita handle redirect manual biar bisa kasih Toast
+    });
 
-    // LOGIC REDIRECT UTAMA
-    // Cek PIN Khusus Superadmin
-    if (fullPin === '113125') {
-        toast({
-            title: "God Mode Access",
-            description: "Welcome back, Superadmin.",
-            className: "bg-[#ffbe00] text-black font-bold border-none"
-        });
-        
-        // Simpan role sebagai superadmin
-        localStorage.setItem('userRole', 'superadmin');
-        
-        // REDIRECT KE HALAMAN KHUSUS SUPERADMIN
-        router.push('/superadmin/dashboard');
-    } else {
-        // Skenario User biasa pakai PIN (Future Development)
-        // Saat ini dianggap invalid jika bukan PIN Superadmin
+    if (result?.error) {
         toast({
             title: "Login Gagal",
             description: "PIN tidak ditemukan atau akses ditolak.",
@@ -75,36 +71,30 @@ export default function LoginPage() {
         });
         setPin(['', '', '', '', '', '']); 
         document.getElementById('pin-0')?.focus();
+    } else {
+        // Berhasil (Redirect ditangani oleh useEffect di atas atau manual disini)
+        toast({
+            title: "God Mode Access",
+            description: "Welcome back, Superadmin.",
+            className: "bg-[#ffbe00] text-black font-bold border-none"
+        });
+        // Router push akan otomatis terjadi karena session berubah
     }
     
     setIsLoading(false);
   };
 
-  // --- LOGIC: GOOGLE LOGIN (MEMBER) ---
-  const handleGoogleLogin = () => {
+  // --- LOGIC: GOOGLE LOGIN ---
+  const handleGoogleLogin = async () => {
       setIsLoading(true);
-      
-      setTimeout(() => {
-          toast({
-              title: "Login Berhasil",
-              description: "Selamat datang, Member!",
-              className: "bg-[#ca1f3d] text-white font-bold border-none"
-          });
-          
-          // Role otomatis Member
-          localStorage.setItem('userRole', 'member');
-          
-          // REDIRECT KE DASHBOARD MEMBER
-          router.push('/member/dashboard');
-          
-          setIsLoading(false);
-      }, 1500);
+      // Panggil Sign In Google dari NextAuth
+      await signIn('google', { callbackUrl: '/member/dashboard' });
+      // Tidak perlu logic toast disini karena akan redirect otomatis ke Google
   };
 
   return (
     <main className="min-h-screen w-full flex items-center justify-center bg-[#121212] relative overflow-hidden font-sans text-white p-4">
         
-        {/* Background Decoration */}
         <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-[#ca1f3d]/10 rounded-full blur-[100px] pointer-events-none"></div>
         <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-[#ffbe00]/10 rounded-full blur-[100px] pointer-events-none"></div>
 
@@ -113,7 +103,6 @@ export default function LoginPage() {
             {/* Header */}
             <div className="text-center mb-10">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#1A1A1A] border border-white/10 mb-6 shadow-2xl group relative overflow-hidden">
-                    {/* Logo Image */}
                     <div className="relative w-10 h-10 group-hover:scale-110 transition-transform duration-300">
                         <Image 
                             src="/images/logo.png" 
@@ -130,10 +119,9 @@ export default function LoginPage() {
 
             {/* Card Login */}
             <div className="bg-[#1A1A1A] border border-white/5 rounded-[2.5rem] p-8 shadow-2xl backdrop-blur-sm relative overflow-hidden">
-                {/* Aksen Garis Atas */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#ca1f3d] to-[#ffbe00]"></div>
                 
-                {/* 1. Metode Google (Member) */}
+                {/* 1. Metode Google */}
                 <div className="mb-8">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 text-center">Metode Cepat</p>
                     <Button 
@@ -156,7 +144,7 @@ export default function LoginPage() {
                     </div>
                 </div>
 
-                {/* 2. Metode PIN (Bisa untuk Superadmin / User lain kedepannya) */}
+                {/* 2. Metode PIN */}
                 <div>
                     <div className="flex items-center justify-center gap-2 mb-6">
                         <KeyRound className="w-4 h-4 text-[#ffbe00]" />
@@ -197,7 +185,6 @@ export default function LoginPage() {
 
             </div>
 
-            {/* Copyright */}
             <p className="text-center text-[10px] font-bold text-gray-600 mt-8 uppercase tracking-widest">
                 &copy; {new Date().getFullYear()} BadminTour
             </p>
