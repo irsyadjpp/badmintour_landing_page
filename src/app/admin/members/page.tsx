@@ -220,7 +220,6 @@ export default function MemberManagementPage() {
                 <Button variant="outline" size="icon" className="w-10 h-10 rounded-xl"><span className="sr-only">Next</span>{'>'}</Button>
             </div>
         </div>
-    </main>
+    </div>
   );
 }
-
