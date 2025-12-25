@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 import { KeyRound, ArrowRight, Chrome } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -59,8 +60,6 @@ export default function LoginPage() {
         localStorage.setItem('userRole', 'superadmin');
         router.push('/admin/dashboard');
     } else {
-        // Untuk saat ini PIN lain dianggap invalid
-        // Di masa depan, logic ini bisa diganti untuk cek database User Member
         toast({
             title: "Login Gagal",
             description: "PIN tidak ditemukan atau salah.",
@@ -85,7 +84,7 @@ export default function LoginPage() {
           });
           
           localStorage.setItem('userRole', 'member');
-          router.push('/member/dashboard'); // Redirect ke dashboard member
+          router.push('/member/dashboard');
           setIsLoading(false);
       }, 1500);
   };
@@ -93,7 +92,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen w-full flex items-center justify-center bg-[#121212] relative overflow-hidden font-sans text-white p-4">
         
-        {/* Background Decoration dengan Warna Baru */}
+        {/* Background Decoration */}
         <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-[#ca1f3d]/10 rounded-full blur-[100px] pointer-events-none"></div>
         <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-[#ffbe00]/10 rounded-full blur-[100px] pointer-events-none"></div>
 
@@ -101,8 +100,17 @@ export default function LoginPage() {
             
             {/* Header */}
             <div className="text-center mb-10">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#1A1A1A] border border-white/10 mb-6 shadow-2xl group">
-                    <span className="text-4xl group-hover:scale-110 transition-transform duration-300">🏸</span>
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#1A1A1A] border border-white/10 mb-6 shadow-2xl group relative overflow-hidden">
+                    {/* Logo Image */}
+                    <div className="relative w-10 h-10 group-hover:scale-110 transition-transform duration-300">
+                        <Image 
+                            src="/images/logo.png" 
+                            alt="BadminTour Logo"
+                            fill
+                            className="object-contain"
+                            priority
+                        />
+                    </div>
                 </div>
                 <h1 className="text-4xl font-black tracking-tighter mb-2">BADMINTOUR<span className="text-[#ffbe00]">.</span></h1>
                 <p className="text-gray-400 font-medium">Community Hub & Court Booking</p>
@@ -177,8 +185,9 @@ export default function LoginPage() {
 
             </div>
 
+            {/* Copyright dinamis tahun saat ini */}
             <p className="text-center text-[10px] font-bold text-gray-600 mt-8 uppercase tracking-widest">
-                &copy; 2025 The Software Practice
+                &copy; {new Date().getFullYear()} BadminTour
             </p>
         </div>
     </main>
