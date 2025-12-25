@@ -1,362 +1,318 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { 
-    Shirt, 
-    Ruler, 
-    User, 
-    Save, 
-    Loader2, 
-    CheckCircle2, 
-    AlertCircle,
-    Phone,
-    UserCircle,
-    ArrowRightLeft,
-    MoveVertical
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card } from "@/components/ui/card";
-import { useToast } from '@/hooks/use-toast';
+import { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { cn } from '@/lib/utils';
+import { ChevronLeft, ArrowRight, Shirt, X, Check, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
-// --- DATA SIZE CHART BARU ---
-const sizeChartData = [
-    { size: 'S', width: 47, length: 67 },
-    { size: 'M', width: 50, length: 70 },
-    { size: 'L', width: 52, length: 72 },
-    { size: 'XL', width: 54, length: 74 },
-    { size: 'XXL', width: 56, length: 77 },
-];
-
-export default function JerseyPage() {
-    const { data: session, status } = useSession();
+export default function JerseyDropPage() {
+    const { data: session } = useSession();
+    const router = useRouter();
     const { toast } = useToast();
+
+    // STATE
+    const [quantity, setQuantity] = useState(1);
+    const [selectedSize, setSelectedSize] = useState('L');
+    const [playerName, setPlayerName] = useState('');
+    const [whatsAppNumber, setWhatsAppNumber] = useState('');
+    const [clubName, setClubName] = useState(''); // Tambahan opsional
     
+    // UI State
+    const [isSizeChartOpen, setIsSizeChartOpen] = useState(false);
+    const [isClaimed, setIsClaimed] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [existingOrder, setExistingOrder] = useState<any>(null);
+    const [orderId, setOrderId] = useState('');
 
-    // Form State
-    const [size, setSize] = useState("");
-    const [customName, setCustomName] = useState("");
-    const [clubName, setClubName] = useState("");
-    
-    // Contact Info (Wajib untuk Guest)
-    const [senderName, setSenderName] = useState("");
-    const [senderPhone, setSenderPhone] = useState("");
+    const basePrice = 150000;
 
-    // 1. Cek Pesanan Saya (Jika Login)
+    // Hitung Harga (1 Gratis, sisanya bayar)
+    const totalPrice = useMemo(() => {
+        const paidQty = Math.max(0, quantity - 1);
+        return paidQty * basePrice;
+    }, [quantity]);
+
+    const updateQty = (change: number) => {
+        setQuantity(prev => {
+            const newQty = prev + change;
+            if (newQty < 1) return 1;
+            if (newQty > 10) return 10; // Limit
+            return newQty;
+        });
+    };
+
+    // Pre-fill jika login
     useEffect(() => {
-        if (status === 'authenticated') {
-            const fetchOrder = async () => {
-                try {
-                    const res = await fetch('/api/member/jersey');
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data.order) {
-                            setExistingOrder(data.order);
-                            setSize(data.order.size);
-                            setCustomName(data.order.customName);
-                            setClubName(data.order.clubName);
-                            setSenderName(data.order.senderName);
-                            setSenderPhone(data.order.senderPhone);
-                        } else {
-                            // Pre-fill data user
-                            // @ts-ignore
-                            const nick = session?.user?.nickname || session?.user?.name?.split(" ")[0] || "";
-                            setCustomName(nick.toUpperCase());
-                            setSenderName(session?.user?.name || "");
-                        }
-                    }
-                } catch (e) {
-                    console.error("Gagal load order");
-                }
-            };
-            fetchOrder();
+        if (session?.user) {
+            // @ts-ignore
+            const nick = session.user.nickname || session.user.name?.split(" ")[0];
+            if (nick) setPlayerName(nick.toUpperCase());
         }
-    }, [status, session]);
+    }, [session]);
 
-    // 2. Handle Order
-    const handleOrder = async () => {
-        // Validation
-        if(!size || !customName || !senderName || !senderPhone) {
-            toast({ 
-                title: "Data Tidak Lengkap", 
-                description: "Nama, No WA, Ukuran, dan Nama Punggung wajib diisi.", 
-                variant: "destructive" 
-            });
+    const handleClaim = async () => {
+        // Validasi
+        if (!playerName) {
+            toast({ title: "Data Kurang", description: "Mohon isi nama punggung.", variant: "destructive" });
+            return;
+        }
+        if (!whatsAppNumber) {
+            toast({ title: "Data Kurang", description: "Nomor WhatsApp wajib diisi untuk konfirmasi.", variant: "destructive" });
             return;
         }
 
         setIsLoading(true);
+
         try {
+            // Kirim ke API Backend
             const res = await fetch('/api/member/jersey', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    size, 
-                    customName, 
-                    clubName,
-                    senderName,
-                    senderPhone
+                body: JSON.stringify({
+                    size: selectedSize,
+                    customName: playerName,
+                    clubName: clubName || '-',
+                    senderName: session?.user?.name || playerName, // Fallback ke nama punggung jika guest
+                    senderPhone: whatsAppNumber,
+                    quantity: quantity
                 })
             });
 
+            const data = await res.json();
+
             if (res.ok) {
-                toast({
-                    title: "Pesanan Berhasil! 🎉",
-                    description: "Admin akan menghubungi via WhatsApp untuk konfirmasi pembayaran.",
-                    className: "bg-green-600 text-white border-none"
-                });
-                // Jika login, update state existing order
-                if (status === 'authenticated') {
-                    setExistingOrder({ size, customName, clubName, status: 'pending' });
-                } else {
-                    // Jika guest, reset form penting
-                    setCustomName("");
-                    setClubName("");
-                    setSize("");
-                }
+                setOrderId(data.orderId || 'ORD-NEW');
+                setIsClaimed(true);
             } else {
-                throw new Error("Gagal menyimpan");
+                throw new Error(data.error || "Gagal memproses pesanan");
             }
         } catch (error) {
-            toast({ title: "Error", description: "Terjadi kesalahan sistem.", variant: "destructive" });
+            toast({ 
+                title: "Error", 
+                description: "Terjadi kesalahan saat menyimpan pesanan. Coba lagi nanti.", 
+                variant: "destructive" 
+            });
         } finally {
             setIsLoading(false);
         }
     };
 
+    const toggleSizeChart = () => setIsSizeChartOpen(!isSizeChartOpen);
+    const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+
+    const priceNote = useMemo(() => {
+        if (totalPrice === 0) {
+            return "✨ Selamat! Kamu berhak mendapatkan 1 Jersey Gratis.";
+        }
+        return `ℹ️ Info Tagihan: 1 Pcs Gratis + ${quantity - 1} Pcs Berbayar (@150k)`;
+    }, [totalPrice, quantity]);
+
     return (
-        <div className="min-h-screen bg-[#0a0a0a] pt-24 pb-20 px-4 md:px-8">
-            <div className="max-w-6xl mx-auto space-y-12">
+        <>
+            {/* HEADER NAVIGATION */}
+            <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex justify-between items-center pointer-events-none">
+                <Link href="/" className="pointer-events-auto w-12 h-12 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition border border-white/10 text-white">
+                    <ChevronLeft className="w-6 h-6" />
+                </Link>
+                <div className="pointer-events-auto bg-[#ffbe00] text-black px-4 py-1.5 rounded-full font-black text-xs uppercase tracking-widest shadow-[0_0_20px_rgba(255,190,0,0.4)] animate-pulse border-2 border-black">
+                    Public Access
+                </div>
+            </header>
+
+            <div className="flex flex-col lg:flex-row min-h-screen bg-[#0a0a0a]">
                 
-                {/* PAGE HEADER */}
-                <div className="text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div>
-                        <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter">
-                            OFFICIAL <span className="text-[#ffbe00]">SEASON 1</span> KIT
-                        </h1>
-                        <p className="text-gray-400 mt-2 text-lg max-w-xl">
-                            Edisi Terbatas. Material Dri-Fit Premium dengan sablon polyflex berkualitas.
-                        </p>
+                {/* LEFT: IMAGE PREVIEW (CLEAN) */}
+                <div className="lg:w-1/2 relative bg-[#121212] flex items-center justify-center p-8 lg:sticky lg:top-0 lg:h-screen overflow-hidden border-b lg:border-b-0 lg:border-r border-white/10">
+                    {/* Background Ambience */}
+                    <div className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] bg-[#ca1f3d]/10 blur-[120px] rounded-full"></div>
+                    <div className="absolute bottom-[-20%] left-[-20%] w-[80%] h-[80%] bg-[#ffbe00]/5 blur-[120px] rounded-full"></div>
+
+                    <div className="relative w-full max-w-md aspect-square z-10 group">
+                        {/* Jersey Image tanpa Overlay Text */}
+                        <Image 
+                            src="/images/jersey-season-1.png" 
+                            alt="Jersey Preview" 
+                            width={1000} 
+                            height={1000} 
+                            className="w-full h-full object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-105" 
+                            priority
+                        />
+
+                        {/* Badge Season */}
+                        <div className="absolute top-4 left-4 bg-black/60 backdrop-blur border border-white/10 px-4 py-2 rounded-xl">
+                            <p className="text-[10px] text-gray-300 uppercase font-bold tracking-widest">Season 1</p>
+                            <p className="text-white font-black text-lg">Official Kit</p>
+                        </div>
                     </div>
-                    
-                    {/* Status Badge */}
-                    {status === 'authenticated' && existingOrder ? (
-                        <div className="bg-green-500/10 border border-green-500/20 px-6 py-3 rounded-2xl flex items-center gap-3">
-                            <CheckCircle2 className="w-6 h-6 text-green-500" />
-                            <div className="text-left">
-                                <p className="text-green-500 font-bold text-sm">CLAIMED</p>
-                                <p className="text-gray-400 text-xs">Pesanan dikonfirmasi</p>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="bg-[#ffbe00]/10 border border-[#ffbe00]/20 px-6 py-3 rounded-2xl flex items-center gap-3 animate-pulse">
-                            <AlertCircle className="w-6 h-6 text-[#ffbe00]" />
-                            <div className="text-left">
-                                <p className="text-[#ffbe00] font-bold text-sm">PRE-ORDER OPEN</p>
-                                <p className="text-gray-400 text-xs">Siapapun bisa pesan</p>
-                            </div>
-                        </div>
-                    )}
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-                    
-                    {/* LEFT: JERSEY PREVIEW (CLEAN PRODUCT SHOT) */}
-                    <div className="relative group perspective-1000">
-                        {/* Background Glow */}
-                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#ca1f3d]/30 via-[#ffbe00]/10 to-transparent blur-[100px] rounded-full pointer-events-none"></div>
-                        
-                        {/* Container Gambar */}
-                        <div className="relative z-10 bg-[#151515]/50 backdrop-blur-sm border border-white/10 rounded-[3rem] p-8 flex items-center justify-center min-h-[550px] shadow-2xl overflow-hidden transition-all duration-500 hover:border-[#ffbe00]/30">
-                            
-                            {/* Gambar Jersey Polos - Efek Hover Subtle Scale */}
-                            <div className="relative w-full h-[500px] transition-transform duration-500 group-hover:scale-105">
-                                <Image 
-                                    src="/images/jersey-season-1.png" 
-                                    alt="Official Jersey Season 1 - Clean View" 
-                                    fill 
-                                    className="object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
-                                    priority
+                {/* RIGHT: FORM */}
+                <div className="lg:w-1/2 bg-[#0a0a0a] relative flex flex-col">
+                    <div className="flex-1 p-6 md:p-12 lg:p-16 space-y-10 max-w-2xl mx-auto w-full pt-24 lg:pt-16">
+
+                        {/* Title Section */}
+                        <div>
+                            <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none mb-4 text-white">
+                                Claim Your <br /><span className="text-[#ffbe00]">Legacy.</span>
+                            </h1>
+                            <div className="flex items-center gap-3">
+                                <span className="bg-green-500/20 text-green-500 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wide border border-green-500/30">
+                                    Free Claim Available
+                                </span>
+                                <p className="text-gray-300 text-sm font-medium">Khusus member terdaftar & publik.</p>
+                            </div>
+                        </div>
+
+                        {/* Quantity & Price Card */}
+                        <div className="bg-[#151515] p-5 rounded-[1.5rem] border border-white/10">
+                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Jumlah Pesanan</label>
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center bg-black/30 rounded-xl p-1 border border-white/10">
+                                    <button onClick={() => updateQty(-1)} className="w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center hover:bg-white/20 transition text-xl font-bold text-white">-</button>
+                                    <input type="number" value={quantity} readOnly className="w-16 bg-transparent text-center font-black text-2xl outline-none text-white" />
+                                    <button onClick={() => updateQty(1)} className="w-12 h-12 bg-white text-black rounded-lg flex items-center justify-center hover:bg-gray-200 transition text-xl font-bold">+</button>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">Estimasi Harga</p>
+                                    <div>
+                                        {totalPrice === 0 ? (
+                                            <>
+                                                <span className="text-3xl font-black text-[#ffbe00]">FREE</span>
+                                                <span className="text-sm text-gray-500 line-through decoration-[#ca1f3d] ml-1">Rp 150k</span>
+                                            </>
+                                        ) : (
+                                            <span className="text-3xl font-black text-white">Rp {totalPrice.toLocaleString('id-ID')}</span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className={cn(
+                                "mt-3 pt-3 border-t border-white/5 text-[11px] font-bold italic",
+                                totalPrice === 0 ? "text-green-500" : "text-gray-400"
+                            )}>
+                                {priceNote}
+                            </div>
+                        </div>
+
+                        {/* Size Selection */}
+                        <div>
+                            <div className="flex justify-between items-end mb-4">
+                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest">Pilih Ukuran</label>
+                                <button type="button" onClick={toggleSizeChart} className="text-xs font-bold text-[#ffbe00] hover:text-white transition flex items-center gap-1">
+                                    <Shirt className="w-4 h-4" />
+                                    Lihat Size Chart
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-5 gap-3">
+                                {sizes.map(size => (
+                                    <label key={size} className="cursor-pointer group">
+                                        <input type="radio" name="size" value={size} checked={selectedSize === size} onChange={() => setSelectedSize(size)} className="peer sr-only" />
+                                        <div className="h-14 rounded-xl border border-white/20 bg-white/5 flex items-center justify-center font-bold text-gray-300 group-hover:border-white transition-all peer-checked:bg-[#ffbe00] peer-checked:text-black peer-checked:border-[#ffbe00] peer-checked:font-black peer-checked:scale-105">
+                                            {size}
+                                        </div>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Input Form */}
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Nama Punggung (Max 12)</label>
+                                <input 
+                                    type="text" 
+                                    value={playerName} 
+                                    onChange={e => setPlayerName(e.target.value.toUpperCase())} 
+                                    maxLength={12} 
+                                    placeholder="CONTOH: KEVIN.S" 
+                                    className="w-full bg-[#151515] border border-white/20 rounded-xl px-5 py-4 text-lg font-bold text-white placeholder-gray-500 focus:border-[#ffbe00] focus:ring-1 focus:ring-[#ffbe00] focus:outline-none transition uppercase tracking-widest" 
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Nomor WhatsApp</label>
+                                <input 
+                                    type="tel" 
+                                    value={whatsAppNumber} 
+                                    onChange={e => setWhatsAppNumber(e.target.value)} 
+                                    placeholder="08xxxxxxxxxx" 
+                                    className="w-full bg-[#151515] border border-white/20 rounded-xl px-5 py-4 text-lg font-bold text-white placeholder-gray-500 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none transition" 
+                                />
+                            </div>
+                             <div>
+                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Nama Club (Opsional)</label>
+                                <input 
+                                    type="text" 
+                                    value={clubName} 
+                                    onChange={e => setClubName(e.target.value.toUpperCase())} 
+                                    placeholder="PB JARUM" 
+                                    className="w-full bg-[#151515] border border-white/20 rounded-xl px-5 py-4 text-lg font-bold text-white placeholder-gray-500 focus:border-[#ffbe00] focus:ring-1 focus:ring-[#ffbe00] focus:outline-none transition uppercase tracking-widest" 
                                 />
                             </div>
                         </div>
-                    </div>
 
-                    {/* RIGHT: ORDER FORM & SIZE CHART */}
-                    <div className="space-y-6">
-                        
-                        {/* NEW SIZE CHART (UPDATED DATA) */}
-                        <Card className="bg-[#151515] border-white/5 p-6 rounded-[2rem]">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-2 text-white">
-                                    <Ruler className="w-5 h-5 text-[#ffbe00]" />
-                                    <h3 className="font-bold">Size Chart</h3>
-                                </div>
-                                <span className="text-xs text-gray-500">Unisex Regular Fit (CM)</span>
-                            </div>
-                            
-                            <div className="grid grid-cols-5 gap-3">
-                                {sizeChartData.map((item) => (
-                                    <div key={item.size} className="bg-[#0a0a0a] border border-white/10 rounded-xl py-3 flex flex-col items-center justify-center group hover:border-[#ffbe00]/50 transition-colors cursor-default">
-                                        {/* Size Label */}
-                                        <span className="text-[#ffbe00] font-black text-xl mb-2">{item.size}</span>
-                                        
-                                        {/* Measurements */}
-                                        <div className="flex items-center gap-2 text-xs text-gray-400">
-                                            <div className="flex items-center gap-1" title="Lebar Dada">
-                                                <ArrowRightLeft className="w-3 h-3" />
-                                                <span className="font-bold text-white">{item.width}</span>
-                                            </div>
-                                            <span className="text-gray-600">x</span>
-                                            <div className="flex items-center gap-1" title="Panjang Badan">
-                                                <MoveVertical className="w-3 h-3" />
-                                                <span className="font-bold text-white">{item.length}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            <p className="text-[10px] text-gray-500 mt-3 text-center">
-                                *Lebar Dada x Panjang Badan. Toleransi 1-2 cm.
-                            </p>
-                        </Card>
-
-                        {/* Order Input Card */}
-                        <Card className="bg-[#151515] border-white/5 p-8 rounded-[2rem] relative overflow-hidden">
-                            <div className="space-y-8 relative z-10">
-                                
-                                {/* 1. Data Pemesan (Wajib) */}
-                                <div className="space-y-4 pb-6 border-b border-white/5">
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <div className="h-6 w-1 bg-[#ffbe00] rounded-full"></div>
-                                        <h4 className="text-sm font-bold text-white uppercase tracking-wider">Kontak Pemesan</h4>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        <div className="space-y-2">
-                                            <Label className="text-gray-400 text-xs">Nama Lengkap</Label>
-                                            <div className="relative">
-                                                <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                                                <Input 
-                                                    value={senderName}
-                                                    onChange={(e) => setSenderName(e.target.value)}
-                                                    placeholder="Nama Kamu"
-                                                    className="bg-[#0a0a0a] border-white/10 pl-10 text-white h-12 rounded-xl focus:border-[#ffbe00]"
-                                                    disabled={!!existingOrder}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-gray-400 text-xs">WhatsApp (Aktif)</Label>
-                                            <div className="relative">
-                                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                                                <Input 
-                                                    value={senderPhone}
-                                                    onChange={(e) => setSenderPhone(e.target.value)}
-                                                    placeholder="0812..."
-                                                    type="tel"
-                                                    className="bg-[#0a0a0a] border-white/10 pl-10 text-white h-12 rounded-xl focus:border-[#ffbe00]"
-                                                    disabled={!!existingOrder}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* 2. Detail Jersey */}
-                                <div className="space-y-5">
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <div className="h-6 w-1 bg-[#ca1f3d] rounded-full"></div>
-                                        <h4 className="text-sm font-bold text-white uppercase tracking-wider">Detail Custom</h4>
-                                    </div>
-                                    
-                                    <div className="space-y-3">
-                                        <Label className="text-white font-bold flex items-center gap-2">
-                                            <Shirt className="w-4 h-4 text-[#ffbe00]" /> Pilih Ukuran
-                                        </Label>
-                                        <Select value={size} onValueChange={setSize} disabled={!!existingOrder}>
-                                            <SelectTrigger className="bg-[#0a0a0a] border-white/10 h-14 text-white text-lg font-bold rounded-xl focus:ring-[#ffbe00]">
-                                                <SelectValue placeholder="Pilih Size Sesuai Chart" />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
-                                                {sizeChartData.map(item => (
-                                                    <SelectItem key={item.size} value={item.size}>
-                                                        Size {item.size} ({item.width}x{item.length})
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    <div className="space-y-3">
-                                        <Label className="text-white font-bold flex items-center gap-2">
-                                            <User className="w-4 h-4 text-[#ffbe00]" /> Nama Punggung
-                                        </Label>
-                                        <Input 
-                                            value={customName}
-                                            onChange={(e) => setCustomName(e.target.value.toUpperCase().slice(0, 12))}
-                                            placeholder="NICKNAME"
-                                            className="bg-[#0a0a0a] border-white/10 h-14 text-white text-lg font-black uppercase tracking-widest rounded-xl focus:border-[#ffbe00]"
-                                            disabled={!!existingOrder}
-                                        />
-                                        <p className="text-[10px] text-gray-500">*Maksimal 12 karakter kapital.</p>
-                                    </div>
-
-                                     <div className="space-y-3">
-                                        <Label className="text-white font-bold flex items-center gap-2">
-                                            <User className="w-4 h-4 text-gray-500" /> Nama Club / PB (Opsional)
-                                        </Label>
-                                        <Input 
-                                            value={clubName}
-                                            onChange={(e) => setClubName(e.target.value.toUpperCase().slice(0, 15))}
-                                            placeholder="PB INDONESIA"
-                                            className="bg-[#0a0a0a] border-white/10 h-14 text-white text-lg font-bold uppercase rounded-xl focus:border-[#ffbe00]"
-                                            disabled={!!existingOrder}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Submit Button */}
-                                {status === 'authenticated' && existingOrder ? (
-                                    <Button className="w-full h-14 bg-gray-800 text-gray-500 font-bold rounded-xl border border-white/5 cursor-not-allowed" disabled>
-                                        <CheckCircle2 className="w-5 h-5 mr-2" /> SUDAH DIKLAIM
-                                    </Button>
-                                ) : (
-                                    <Button 
-                                        onClick={handleOrder} 
-                                        disabled={isLoading}
-                                        className="w-full h-14 bg-gradient-to-r from-[#ffbe00] to-[#ca1f3d] hover:from-[#ffbe00]/90 hover:to-[#ca1f3d]/90 text-white font-black text-lg rounded-xl shadow-[0_0_20px_rgba(255,190,0,0.3)] hover:scale-105 transition-transform"
-                                    >
-                                        {isLoading ? <Loader2 className="w-6 h-6 animate-spin"/> : <><Save className="w-5 h-5 mr-2" /> KIRIM PESANAN</>}
-                                    </Button>
-                                )}
-                            </div>
-                        </Card>
-
-                        {/* Note */}
-                        <div className="flex items-start gap-3 px-2 opacity-70">
-                            <div className="w-5 h-5 rounded-full bg-[#ffbe00]/10 flex items-center justify-center mt-0.5">
-                                <span className="text-[10px] text-[#ffbe00] font-bold">i</span>
-                            </div>
-                            <p className="text-xs text-gray-500 leading-relaxed">
-                                Setelah mengirim pesanan, mohon tunggu konfirmasi dari Admin melalui WhatsApp untuk detail pembayaran dan produksi.
-                            </p>
+                        {/* Action Button */}
+                        <div className="pt-8 border-t border-white/10 pb-12">
+                            <Button 
+                                onClick={handleClaim} 
+                                disabled={isLoading}
+                                className="w-full bg-white text-black py-5 rounded-[1.5rem] font-black text-xl hover:bg-[#ffbe00] transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,190,0,0.6)] hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 group h-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isLoading ? <Loader2 className="w-6 h-6 animate-spin"/> : <><span>KONFIRMASI PESANAN</span><ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" /></>}
+                            </Button>
+                            <p className="text-center text-[10px] text-gray-500 mt-4">Dengan memesan, Anda setuju dengan Syarat & Ketentuan BadminTour.</p>
                         </div>
 
                     </div>
                 </div>
             </div>
-        </div>
+
+            {/* SUCCESS MODAL */}
+            <div className={cn(
+                "fixed inset-0 bg-black/95 backdrop-blur-md z-[70] flex flex-col items-center justify-center p-6 text-center transition-opacity duration-500",
+                isClaimed ? "flex opacity-100 visible" : "hidden opacity-0 invisible"
+            )}>
+                <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mb-6 animate-bounce shadow-[0_0_40px_rgba(34,197,94,0.4)]">
+                    <Check className="w-12 h-12 text-white" strokeWidth={3} />
+                </div>
+                <h2 className="text-4xl font-black text-white mb-2 uppercase italic tracking-tighter">Order Received!</h2>
+                <p className="text-gray-400 mb-8 max-w-xs mx-auto text-sm leading-relaxed">Terima kasih! Admin kami akan menghubungi WhatsApp kamu ({whatsAppNumber}) untuk konfirmasi.</p>
+
+                <div className="bg-white/5 p-4 rounded-xl border border-white/10 mb-8 w-full max-w-xs relative overflow-hidden group cursor-pointer hover:bg-white/10 transition">
+                    <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#ffbe00]"></div>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Kode Pesanan</p>
+                    <p className="text-2xl font-mono font-bold text-white tracking-widest group-hover:tracking-[0.2em] transition-all">{orderId}</p>
+                </div>
+
+                <Link href="/" className="px-8 py-4 rounded-full border border-white/20 text-white font-bold text-sm hover:bg-white hover:text-black transition uppercase tracking-widest">
+                    Kembali ke Home
+                </Link>
+            </div>
+
+            {/* SIZE CHART MODAL */}
+            <div id="sizeChartModal" className={cn("fixed inset-0 z-[60] flex items-center justify-center p-4 transition-opacity duration-300", isSizeChartOpen ? 'opacity-100 visible' : 'opacity-0 invisible')} onClick={toggleSizeChart}>
+                <div className="absolute inset-0 bg-black/90 backdrop-blur-sm"></div>
+                <div className={cn("bg-[#1A1A1A] w-full max-w-sm rounded-[2rem] border border-white/10 shadow-2xl relative z-10 overflow-hidden transform transition-all duration-300", isSizeChartOpen ? 'scale-100' : 'scale-95')} onClick={(e) => e.stopPropagation()}>
+                    <div className="bg-[#ffbe00] p-6 flex justify-between items-center">
+                        <h3 className="text-black font-black text-2xl uppercase tracking-tighter">📏 Size Chart</h3>
+                        <button onClick={toggleSizeChart} className="text-black bg-black/10 p-2 rounded-full hover:bg-black/20"><X className="w-5 h-5" /></button>
+                    </div>
+                    <div className="p-6">
+                        <p className="text-xs text-gray-400 mb-6 text-center uppercase tracking-widest font-bold">Unisex Regular Fit (CM)</p>
+                        <div className="space-y-2">
+                            <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10"><span className="font-bold text-[#ffbe00] w-8">S</span> <span className="text-white">47 x 67</span></div>
+                            <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10"><span className="font-bold text-[#ffbe00] w-8">M</span> <span className="text-white">50 x 70</span></div>
+                            <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10"><span className="font-bold text-[#ffbe00] w-8">L</span> <span className="text-white">52 x 72</span></div>
+                            <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10"><span className="font-bold text-[#ffbe00] w-8">XL</span> <span className="text-white">54 x 74</span></div>
+                            <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10"><span className="font-bold text-[#ffbe00] w-8">XXL</span> <span className="text-white">56 x 77</span></div>
+                        </div>
+                        <p className="text-[10px] text-gray-500 mt-4 text-center">*Lebar Dada x Panjang Badan</p>
+                    </div>
+                </div>
+            </div>
+        </>
     );
 }
