@@ -13,11 +13,9 @@ export default function MerchDropLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className="scroll-smooth">
-        <body className='font-sans bg-bad-dark text-white selection:bg-bad-yellow selection:text-black'>
-            {children}
-            <Toaster />
-        </body>
-    </html>
+    <>
+        {children}
+        <Toaster />
+    </>
   );
 }
