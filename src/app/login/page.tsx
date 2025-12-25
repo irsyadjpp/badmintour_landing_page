@@ -7,27 +7,72 @@ import { useRouter } from 'next/navigation';
 import { KeyRound, ArrowRight, Chrome } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-import { signIn, useSession } from 'next-auth/react'; // Import NextAuth
+import { signIn, useSession } from 'next-auth/react'; 
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { data: session } = useSession(); // Cek status session
+  const { data: session, status } = useSession(); // Cek status session
   
-  // State untuk Input PIN
   const [pin, setPin] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Redirect otomatis jika sudah login
+  // --- LOGIC REDIRECT BERDASARKAN ROLE ---
   useEffect(() => {
-    if (session?.user?.role === 'superadmin') {
-        router.push('/superadmin/dashboard');
-    } else if (session?.user?.role === 'member') {
-        router.push('/member/dashboard');
+    if (status === 'authenticated' && session?.user) {
+        const role = session.user.role;
+        
+        // Mapping Role ke Halaman
+        if (role === 'superadmin') {
+            router.push('/superadmin/dashboard');
+        } else if (role === 'admin') {
+            router.push('/admin/dashboard');
+        } else if (role === 'host') {
+            router.push('/host/dashboard'); // Pastikan halaman host sudah ada
+        } else {
+            router.push('/member/dashboard'); // Default member
+        }
     }
-  }, [session, router]);
+  }, [session, status, router]);
 
-  // --- LOGIC: PIN LOGIN (Credentials) ---
+  const handleGoogleLogin = async () => {
+      setIsLoading(true);
+      // Callback URL dikosongkan agar logika useEffect di atas yang menangani redirect
+      // atau set callbackUrl ke '/' agar middleware/session handle sisanya
+      await signIn('google', { redirect: false }); 
+  };
+  
+  // ... (Sisa kode PIN Login tetap sama, pastikan handlePinSubmit juga redirect sesuai role) ...
+  
+  // Bagian Handle PIN submit yg diperbaiki redirectnya:
+  const handlePinSubmit = async (fullPin: string) => {
+    setIsLoading(true);
+    const result = await signIn('credentials', {
+        pin: fullPin,
+        redirect: false, 
+    });
+
+    if (result?.error) {
+        toast({
+            title: "Login Gagal",
+            description: "PIN Salah.",
+            variant: "destructive"
+        });
+        setPin(['', '', '', '', '', '']); 
+        setIsLoading(false);
+    } else {
+        // Berhasil, useEffect di atas akan menangani redirect karena session berubah
+        toast({ title: "Welcome Superadmin", className: "bg-[#ffbe00] text-black" });
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !pin[index] && index > 0) {
+      const prevInput = document.getElementById(`pin-${index - 1}`);
+      prevInput?.focus();
+    }
+  };
+
   const handlePinChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
 
@@ -43,55 +88,12 @@ export default function LoginPage() {
     
     // Auto-submit
     if (index === 5 && value) {
-      handlePinSubmit(newPin.join(''));
+        handlePinSubmit(newPin.join(''));
     }
   };
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !pin[index] && index > 0) {
-      const prevInput = document.getElementById(`pin-${index - 1}`);
-      prevInput?.focus();
-    }
-  };
 
-  const handlePinSubmit = async (fullPin: string) => {
-    setIsLoading(true);
-    
-    // Menggunakan NextAuth Credentials Provider
-    const result = await signIn('credentials', {
-        pin: fullPin,
-        redirect: false, // Kita handle redirect manual biar bisa kasih Toast
-    });
-
-    if (result?.error) {
-        toast({
-            title: "Login Gagal",
-            description: "PIN tidak ditemukan atau akses ditolak.",
-            variant: "destructive"
-        });
-        setPin(['', '', '', '', '', '']); 
-        document.getElementById('pin-0')?.focus();
-    } else {
-        // Berhasil (Redirect ditangani oleh useEffect di atas atau manual disini)
-        toast({
-            title: "God Mode Access",
-            description: "Welcome back, Superadmin.",
-            className: "bg-[#ffbe00] text-black font-bold border-none"
-        });
-        // Router push akan otomatis terjadi karena session berubah
-    }
-    
-    setIsLoading(false);
-  };
-
-  // --- LOGIC: GOOGLE LOGIN ---
-  const handleGoogleLogin = async () => {
-      setIsLoading(true);
-      // Panggil Sign In Google dari NextAuth
-      await signIn('google', { callbackUrl: '/member/dashboard' });
-      // Tidak perlu logic toast disini karena akan redirect otomatis ke Google
-  };
-
+  // ... (Return JSX Tampilan Login tetap sama) ...
   return (
     <main className="min-h-screen w-full flex items-center justify-center bg-[#121212] relative overflow-hidden font-sans text-white p-4">
         
@@ -99,18 +101,11 @@ export default function LoginPage() {
         <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-[#ffbe00]/10 rounded-full blur-[100px] pointer-events-none"></div>
 
         <div className="w-full max-w-md relative z-10">
-            
             {/* Header */}
             <div className="text-center mb-10">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#1A1A1A] border border-white/10 mb-6 shadow-2xl group relative overflow-hidden">
                     <div className="relative w-10 h-10 group-hover:scale-110 transition-transform duration-300">
-                        <Image 
-                            src="/images/logo.png" 
-                            alt="BadminTour Logo"
-                            fill
-                            className="object-contain"
-                            priority
-                        />
+                        <Image src="/images/logo.png" alt="BadminTour Logo" fill className="object-contain" priority />
                     </div>
                 </div>
                 <h1 className="text-4xl font-black tracking-tighter mb-2">BADMINTOUR<span className="text-[#ffbe00]">.</span></h1>
@@ -126,11 +121,11 @@ export default function LoginPage() {
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 text-center">Metode Cepat</p>
                     <Button 
                         onClick={handleGoogleLogin}
-                        disabled={isLoading}
+                        disabled={isLoading || status === 'loading'}
                         className="w-full h-14 bg-white text-black hover:bg-gray-200 font-bold rounded-xl flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg"
                     >
                         <Chrome className="w-5 h-5 text-[#ca1f3d]" />
-                        Masuk dengan Google
+                        {isLoading ? "Memproses..." : "Masuk dengan Google"}
                     </Button>
                 </div>
 
@@ -145,7 +140,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* 2. Metode PIN */}
-                <div>
+                 <div>
                     <div className="flex items-center justify-center gap-2 mb-6">
                         <KeyRound className="w-4 h-4 text-[#ffbe00]" />
                         <span className="text-xs font-bold text-[#ffbe00] uppercase tracking-wider">Masuk dengan PIN</span>
@@ -184,10 +179,7 @@ export default function LoginPage() {
                 </div>
 
             </div>
-
-            <p className="text-center text-[10px] font-bold text-gray-600 mt-8 uppercase tracking-widest">
-                &copy; {new Date().getFullYear()} BadminTour
-            </p>
+            <p className="text-center text-[10px] font-bold text-gray-600 mt-8 uppercase tracking-widest">&copy; {new Date().getFullYear()} BadminTour</p>
         </div>
     </main>
   );
