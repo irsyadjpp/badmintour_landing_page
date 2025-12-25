@@ -1,7 +1,10 @@
+'use client';
+
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Repeat, Zap, CalendarClock } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import Link from 'next/link';
 
 export default function HeroSection() {
   const heroImage = PlaceHolderImages.find((img) => img.id === 'hero-player');
@@ -25,10 +28,10 @@ export default function HeroSection() {
             
             {/* Main Typography */}
             <h1 className="font-heading text-5xl sm:text-7xl lg:text-8xl font-black tracking-tighter text-foreground leading-[0.9]">
-              BADMINTOUR <br />
+              STOP WACANA, <br />
               <span className="relative inline-block mt-2">
                 <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary to-accent">
-                  COMMUNITY HUB.
+                  AYO MABAR.
                 </span>
                 {/* Dekorasi Garis Bawah */}
                 <svg className="absolute w-full h-3 -bottom-1 left-0 text-accent -z-0" viewBox="0 0 100 10" preserveAspectRatio="none">
@@ -38,17 +41,21 @@ export default function HeroSection() {
             </h1>
 
             <p className="max-w-2xl text-muted-foreground text-lg md:text-xl font-medium leading-relaxed">
-              Gak perlu ribet atur jadwal. Di sini kamu bisa booking slot Mabar, upgrade skill lewat Drilling, atau uji mental di Fun Match. Suasana santai, mainnya tetap kompetitif. Newbie sampai Advance, gas terus!
+              Gak perlu ribet atur jadwal. Di sini kamu bisa join Mabar, upgrade skill lewat Drilling, atau uji mental di Fun Match. Suasana santai, mainnya tetap kompetitif. Newbie sampai Advance, gas terus!
             </p>
 
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center pt-4">
-              <Button size="lg" className="h-14 rounded-full px-10 text-lg font-bold bg-primary text-white hover:bg-primary/90 hover:scale-105 transition-all shadow-xl shadow-primary/20">
-                GAS MABAR 🏸
-              </Button>
-              <Button size="lg" variant="secondary" className="h-14 rounded-full px-10 text-lg font-bold bg-secondary hover:bg-secondary/80 text-foreground border border-border/50">
-                CEK KELAS DRILLING
-              </Button>
+              <Link href="/#schedule">
+                <Button size="lg" className="h-14 rounded-full px-10 text-lg font-bold bg-primary text-white hover:bg-primary/90 hover:scale-105 transition-all shadow-xl shadow-primary/20">
+                  GAS JOIN MABAR 🏸
+                </Button>
+              </Link>
+              <Link href="/#services">
+                <Button size="lg" variant="secondary" className="h-14 rounded-full px-10 text-lg font-bold bg-secondary hover:bg-secondary/80 text-foreground border border-border/50">
+                  LIHAT KELAS DRILLING
+                </Button>
+              </Link>
             </div>
         </div>
 

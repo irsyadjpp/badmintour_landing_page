@@ -1,8 +1,11 @@
+'use client';
+
 import { Card } from '@/components/ui/card';
 import { Trophy, Target, Users, ArrowUpRight, Sparkles } from 'lucide-react'; 
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function FeaturesSection() {
   const imgMabar = PlaceHolderImages.find((img) => img.id === 'feature-mabar');
@@ -10,7 +13,7 @@ export default function FeaturesSection() {
   const imgDrilling = PlaceHolderImages.find((img) => img.id === 'feature-coaching');
 
   return (
-    <section id="services" className="w-full py-24 bg-muted/50">
+    <section id="services" className="w-full py-24 bg-background dark:bg-black">
       <div className="container px-4">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-end mb-16">
@@ -19,12 +22,14 @@ export default function FeaturesSection() {
               Our <span className="text-primary">Ecosystem</span>
             </h2>
             <p className="text-xl text-muted-foreground font-medium max-w-lg">
-              Bukan sekadar lapangan. Kami membangun ekosistem badminton modern untuk semua level pemain.
+              Bukan sekadar lapangan. Kami membangun ekosistem badminton modern untuk semua level pemain, dari pemula hingga pro.
             </p>
           </div>
-          <Button variant="link" className="text-foreground font-bold text-xl p-0 hover:text-primary transition-colors decoration-2 underline-offset-8">
-            Explore All Services <ArrowUpRight className="ml-2 w-6 h-6" />
-          </Button>
+          <Link href="#schedule">
+            <Button variant="link" className="text-foreground font-bold text-xl p-0 hover:text-primary transition-colors decoration-2 underline-offset-8">
+              Lihat Semua Jadwal <ArrowUpRight className="ml-2 w-6 h-6" />
+            </Button>
+          </Link>
         </div>
 
         {/* BENTO GRID MD3 */}
@@ -52,13 +57,15 @@ export default function FeaturesSection() {
                     Cari keringat bareng circle baru. Fun game santai, kalah menang yang penting happy. Slot terbatas tiap harinya!
                 </p>
                 <div className="mt-8 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                    <Button className="rounded-full bg-white text-black hover:bg-white/90 font-bold">Gabung Group WA</Button>
+                    <a href="https://chat.whatsapp.com/KpM0wI5Akx05thwMSrlr01" target="_blank">
+                        <Button className="rounded-full bg-white text-black hover:bg-white/90 font-bold">Gabung Group WA</Button>
+                    </a>
                 </div>
              </div>
           </Card>
 
           {/* Card 2: Tournament (Vertical) */}
-          <Card className="group relative overflow-hidden rounded-[2.5rem] border-0 bg-white shadow-xl flex flex-col">
+          <Card className="group relative overflow-hidden rounded-[2.5rem] border bg-card shadow-xl flex flex-col">
              <div className="absolute top-0 right-0 p-40 bg-primary/5 rounded-full blur-3xl" />
              
              <div className="p-10 flex-1 flex flex-col z-10">
@@ -99,16 +106,18 @@ export default function FeaturesSection() {
                 </p>
                 
                 <div className="mt-auto pt-8">
-                     <Button className="w-full rounded-full bg-black text-white h-12 font-bold hover:scale-105 transition-transform">
-                        Cek Paket Latihan
-                    </Button>
+                    <Link href="#schedule">
+                         <Button className="w-full rounded-full bg-black text-white h-12 font-bold hover:scale-105 transition-transform">
+                            Lihat Jadwal Drilling
+                        </Button>
+                    </Link>
                 </div>
              </div>
           </Card>
 
            {/* Card 4: Stats (Wide) */}
-           <Card className="group relative overflow-hidden rounded-[2.5rem] border-4 border-white bg-zinc-100 md:col-span-2 flex items-center p-8 md:p-12 shadow-lg">
-              <div className="absolute right-0 top-0 h-full w-1/2 bg-gradient-to-l from-white to-transparent opacity-50 pointer-events-none" />
+           <Card className="group relative overflow-hidden rounded-[2.5rem] border-4 border-white bg-zinc-100 md:col-span-2 flex items-center p-8 md:p-12 shadow-lg dark:bg-zinc-900 dark:border-zinc-800">
+              <div className="absolute right-0 top-0 h-full w-1/2 bg-gradient-to-l from-white to-transparent opacity-50 pointer-events-none dark:from-zinc-900" />
               
               <div className="grid grid-cols-2 md:grid-cols-4 w-full gap-8">
                  <div className="text-center md:text-left">
@@ -120,14 +129,14 @@ export default function FeaturesSection() {
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Members</p>
                  </div>
                  <div className="col-span-2 flex items-center justify-center md:justify-end">
-                    <div className="bg-white p-4 rounded-2xl shadow-sm flex items-center gap-3 border border-zinc-200">
+                    <div className="bg-white dark:bg-black/50 p-4 rounded-2xl shadow-sm flex items-center gap-3 border border-zinc-200 dark:border-zinc-800">
                         <div className="flex -space-x-3">
                             {[1,2,3].map(i => (
-                                <div key={i} className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white" />
+                                <div key={i} className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white dark:border-black/50" />
                             ))}
                         </div>
                         <div className="text-left">
-                            <p className="font-bold text-sm leading-none">Join Them</p>
+                            <p className="font-bold text-sm leading-none text-foreground">Join The Fun</p>
                             <p className="text-xs text-muted-foreground">Mulai karirmu disini.</p>
                         </div>
                     </div>

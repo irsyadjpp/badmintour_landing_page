@@ -2,6 +2,7 @@
 import { MapPin, Clock, ArrowRight, Zap, CalendarDays, Users, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 
 // Mock Data: Lokasi disesuaikan dengan GOR Wartawan Bandung & GOR Bulutangkis Garandiri
 const upcomingSessions = [
@@ -18,7 +19,7 @@ const upcomingSessions = [
     tags: ['🔥 Hot Session', '⚡ Fast Game'],
     isHot: true,
     status: 'Sisa 2 Slot',
-    btnText: 'Book Fast'
+    btnText: 'Join Mabar' // REVISI
   },
   {
     id: 2,
@@ -33,7 +34,7 @@ const upcomingSessions = [
     tags: ['🎓 Coach Pro', '🏸 Shuttlecock Inc.'],
     isHot: false,
     status: 'Available',
-    btnText: 'Amankan Slot'
+    btnText: 'Daftar Drilling' // REVISI
   },
   {
     id: 3,
@@ -54,7 +55,7 @@ const upcomingSessions = [
 
 export default function EventsSection() {
   return (
-    <section id="schedule" className="w-full py-20 bg-zinc-50 dark:bg-black/50 relative overflow-hidden">
+    <section id="schedule" className="w-full py-20 bg-background dark:bg-black/95 relative overflow-hidden">
       
       <div className="container px-4 md:px-6 relative z-10">
         
@@ -63,22 +64,24 @@ export default function EventsSection() {
             <div className="max-w-2xl">
                 <div className="flex items-center gap-2 mb-2">
                     <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
-                    <span className="text-xs font-bold tracking-widest uppercase text-red-500">Live Booking</span>
+                    <span className="text-xs font-bold tracking-widest uppercase text-red-500">Live Schedule</span>
                 </div>
                 <h2 className="text-4xl md:text-5xl font-black tracking-tighter uppercase mb-3 leading-none">
                     Jadwal <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-orange-500">Terdekat</span>
                 </h2>
                 <p className="text-muted-foreground text-lg font-medium">
-                    Jangan sampai kehabisan slot! Pilih sesi yang available di GOR favoritmu.
+                    Jangan sampai kehabisan slot! Pilih sesi yang available di GOR favoritmu dan langsung join.
                 </p>
             </div>
             <div className="flex gap-3">
-                <Button variant="outline" className="rounded-full h-12 px-6 font-bold border-2 hover:bg-zinc-100">
+                <Button variant="outline" className="rounded-full h-12 px-6 font-bold border-2 hover:bg-zinc-100 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:bg-zinc-800">
                     Filter Level
                 </Button>
-                <Button className="rounded-full h-12 px-6 font-bold bg-black text-white hover:bg-primary shadow-lg">
-                    Lihat Semua Jadwal <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
+                <Link href="/login">
+                  <Button className="rounded-full h-12 px-6 font-bold bg-black text-white hover:bg-primary shadow-lg dark:bg-white dark:text-black dark:hover:bg-gray-200">
+                      Lihat Semua Jadwal <ArrowRight className="ml-2 w-4 h-4" />
+                  </Button>
+                </Link>
             </div>
         </div>
 
@@ -88,7 +91,7 @@ export default function EventsSection() {
             <div key={session.id} className="group relative">
                 
                 {/* Card Container */}
-                <div className="relative flex flex-col md:flex-row items-center bg-white dark:bg-zinc-900 border border-border rounded-[2rem] p-3 hover:border-primary/40 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                <div className="relative flex flex-col md:flex-row items-center bg-card border rounded-[2rem] p-3 hover:border-primary/40 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
                     
                     {/* 1. Time Indicator (Left) */}
                     <div className={`flex flex-col items-center justify-center p-4 rounded-[1.5rem] w-full md:w-36 shrink-0 md:h-32 relative overflow-hidden ${session.isHot ? 'bg-primary text-white' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'}`}>
@@ -148,11 +151,11 @@ export default function EventsSection() {
                         </div>
 
                         <Button 
-                            className={`w-full h-12 rounded-xl font-bold shadow-md transition-all active:scale-95 flex justify-between px-4 ${session.status === 'Full Booked' ? 'bg-zinc-200 text-zinc-400 hover:bg-zinc-200 cursor-not-allowed' : 'bg-black text-white hover:bg-primary'}`}
+                            className={`w-full h-12 rounded-xl font-bold shadow-md transition-all active:scale-95 flex justify-between px-4 ${session.status === 'Full Booked' ? 'bg-zinc-200 text-zinc-400 hover:bg-zinc-200 cursor-not-allowed dark:bg-zinc-800 dark:text-zinc-500' : 'bg-black text-white hover:bg-primary dark:bg-white dark:text-black dark:hover:bg-gray-200'}`}
                             disabled={session.status === 'Full Booked'}
                         >
                             <span>{session.btnText}</span>
-                            <span className="bg-white/20 px-2 py-0.5 rounded text-xs ml-2">{session.price}</span>
+                            <span className="bg-white/20 dark:bg-black/20 px-2 py-0.5 rounded text-xs ml-2">{session.price}</span>
                         </Button>
                     </div>
 

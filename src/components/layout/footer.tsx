@@ -38,39 +38,39 @@ export default function Footer() {
           <div className="grid grid-cols-2 gap-8 text-sm">
             <div>
               <h4 className="font-bold text-accent mb-4 uppercase tracking-widest">
-                Explore
+                Main
               </h4>
               <ul className="space-y-3 text-gray-400">
                 <li>
-                  <a href="#services" className="hover:text-white transition">
-                    Cari Lawan Sparring
+                  <a href="#schedule" className="hover:text-white transition">
+                    Cari Jadwal Mabar
                   </a>
                 </li>
                 <li>
                   <a href="#schedule" className="hover:text-white transition">
-                    Jadwal Mabar Minggu Ini
+                    Tantang Tim Lain (Sparring)
                   </a>
                 </li>
                 <li>
                   <a href="#services" className="hover:text-white transition">
-                    Kelas Drilling Pemula
+                    Daftar Kelas Drilling
                   </a>
                 </li>
                 <li>
                   <a href="#" className="hover:text-white transition">
-                    Dokumentasi & Highlight
+                    Turnamen Komunitas
                   </a>
                 </li>
               </ul>
             </div>
             <div>
               <h4 className="font-bold text-accent mb-4 uppercase tracking-widest">
-                Community
+                Komunitas
               </h4>
               <ul className="space-y-3 text-gray-400">
-                <li>
+                 <li>
                   <a href="#" className="hover:text-white transition">
-                    Aturan Main (Rules)
+                    Hall of Fame
                   </a>
                 </li>
                 <li>
@@ -78,9 +78,9 @@ export default function Footer() {
                     Jadi Member VIP
                   </a>
                 </li>
-                <li>
-                  <a href="#" className="hover:text-white transition">
-                    Merchandise (Soon)
+                 <li>
+                  <a href="/jersey" className="hover:text-white transition">
+                    Official Merchandise
                   </a>
                 </li>
                 <li>
