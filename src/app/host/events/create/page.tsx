@@ -38,12 +38,13 @@ export default function CreateEventPage() {
         toast({
             title: "Event Created! 🎉",
             description: "Jadwal mabar berhasil diterbitkan.",
-            className: "bg-green-600 text-white border-none"
+            className: "bg-[#ca1f3d] text-white border-none"
         });
     };
 
     return (
-        <div className="space-y-8 pb-20 max-w-4xl mx-auto">
+        // FIX: Hapus 'max-w-4xl mx-auto' agar layout full-width rata kiri seperti dashboard
+        <div className="space-y-8 pb-20">
             {/* Header */}
             <div className="flex items-center gap-4">
                 <Link href="/host/events">
@@ -70,22 +71,22 @@ export default function CreateEventPage() {
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <Label className="text-gray-400">Judul Event</Label>
-                                <Input placeholder="Contoh: Mabar Rebo Kelabu" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl" />
+                                <Input placeholder="Contoh: Mabar Rebo Kelabu" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label className="text-gray-400">Tanggal</Label>
-                                    <Input type="date" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl" />
+                                    <Input type="date" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-gray-400">Jam Mulai</Label>
-                                    <Input type="time" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl" />
+                                    <Input type="time" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-gray-400">Lokasi / Court</Label>
                                 <Select>
-                                    <SelectTrigger className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl">
+                                    <SelectTrigger className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:ring-[#ca1f3d]">
                                         <SelectValue placeholder="Pilih Lapangan" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
@@ -106,11 +107,11 @@ export default function CreateEventPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label className="text-gray-400">Harga Normal (Rp)</Label>
-                                    <Input type="number" placeholder="40000" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl" />
+                                    <Input type="number" placeholder="40000" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-gray-400">Total Slot</Label>
-                                    <Input type="number" placeholder="12" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl" />
+                                    <Input type="number" placeholder="12" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
                                 </div>
                             </div>
 
@@ -123,18 +124,18 @@ export default function CreateEventPage() {
                                         </Label>
                                         <p className="text-[10px] text-gray-500">Aktifkan harga Early Bird atau Last Minute.</p>
                                     </div>
-                                    <Switch checked={isDynamicPrice} onCheckedChange={setIsDynamicPrice} />
+                                    <Switch checked={isDynamicPrice} onCheckedChange={setIsDynamicPrice} className="data-[state=checked]:bg-[#ffbe00]" />
                                 </div>
 
                                 {isDynamicPrice && (
                                     <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
                                         <div className="space-y-2">
                                             <Label className="text-[#ffbe00] text-xs uppercase font-bold">Early Bird Price</Label>
-                                            <Input type="number" placeholder="30000" className="bg-[#151515] border-yellow-500/20 text-white h-10 rounded-lg" />
+                                            <Input type="number" placeholder="30000" className="bg-[#151515] border-[#ffbe00]/20 text-white h-10 rounded-lg focus:border-[#ffbe00]" />
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-[#ffbe00] text-xs uppercase font-bold">Limit (First X User)</Label>
-                                            <Input type="number" placeholder="5" className="bg-[#151515] border-yellow-500/20 text-white h-10 rounded-lg" />
+                                            <Input type="number" placeholder="5" className="bg-[#151515] border-[#ffbe00]/20 text-white h-10 rounded-lg focus:border-[#ffbe00]" />
                                         </div>
                                     </div>
                                 )}
@@ -153,14 +154,14 @@ export default function CreateEventPage() {
                             <h3 className={`text-sm font-bold flex items-center gap-2 ${isSkillLocked ? 'text-[#ca1f3d]' : 'text-gray-400'}`}>
                                 <Lock className="w-4 h-4" /> Skill Lock
                             </h3>
-                            <Switch checked={isSkillLocked} onCheckedChange={setIsSkillLocked} className="data-[state=checked]:bg-red-500"/>
+                            <Switch checked={isSkillLocked} onCheckedChange={setIsSkillLocked} className="data-[state=checked]:bg-[#ca1f3d]"/>
                         </div>
                         <p className="text-xs text-gray-500 mb-4">
-                            Jika aktif, member di bawah level ini <span className="text-red-400 font-bold">DILARANG</span> join.
+                            Jika aktif, member di bawah level ini <span className="text-[#ca1f3d] font-bold">DILARANG</span> join.
                         </p>
                         {isSkillLocked && (
                             <Select defaultValue="Intermediate">
-                                <SelectTrigger className="bg-[#0a0a0a] border-red-500/30 text-white h-10 rounded-lg">
+                                <SelectTrigger className="bg-[#0a0a0a] border-[#ca1f3d]/30 text-white h-10 rounded-lg">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
@@ -176,9 +177,9 @@ export default function CreateEventPage() {
                     <Card className="bg-[#151515] border-white/5 p-6 rounded-[2rem]">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-sm font-bold text-gray-400 flex items-center gap-2">
-                                <ListChecks className="w-4 h-4 text-purple-500" /> Waitlist System
+                                <ListChecks className="w-4 h-4 text-[#ffbe00]" /> Waitlist System
                             </h3>
-                            <Switch checked={isWaitlist} onCheckedChange={setIsWaitlist} className="data-[state=checked]:bg-purple-500"/>
+                            <Switch checked={isWaitlist} onCheckedChange={setIsWaitlist} className="data-[state=checked]:bg-[#ffbe00]"/>
                         </div>
                         <p className="text-xs text-gray-500">
                             {isWaitlist 
