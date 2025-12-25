@@ -1,61 +1,114 @@
-import NextAuth from "next-auth";
+import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { db } from "@/lib/firebase-admin";
 
-const handler = NextAuth({
+export const authOptions: NextAuthOptions = {
   providers: [
-    // 1. Google Provider (Otomatis jadi Member)
+    // 1. Google Provider (Login Member/Host)
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
     
-    // 2. PIN Provider (Otomatis jadi Superadmin)
+    // 2. PIN Provider (Login Superadmin Darurat)
     CredentialsProvider({
       name: "PIN",
       credentials: {
         pin: { label: "PIN", type: "password" }
       },
       async authorize(credentials) {
-        // Logika Validasi PIN Superadmin
         if (credentials?.pin === "113125") {
           return {
-            id: "superadmin",
+            id: "superadmin-master",
             name: "Superadmin",
-            email: "admin@badmintour.com",
-            role: "superadmin", // Set Role Disini
-            image: "https://ui-avatars.com/api/?name=Super+Admin&background=ffbe00&color=000"
+            email: "superadmin@badmintour.com",
+            image: "https://ui-avatars.com/api/?name=Super+Admin&background=ffbe00&color=000",
+            role: "superadmin" 
           };
         }
-        return null; // Login Gagal
+        return null; 
       }
     })
   ],
   callbacks: {
-    // Masukkan role ke dalam Token JWT
-    async jwt({ token, user, account }) {
-      if (user) {
-        // Jika login pakai Google (account.type === 'oauth'), set role member
-        if (account?.provider === 'google') {
-            token.role = 'member';
-        } else {
-            // Jika login pakai PIN (Credentials), ambil role dari object user di atas
-            token.role = user.role;
+    // A. Saat User Sign In (Google)
+    async signIn({ user, account }) {
+      if (account?.provider === "google") {
+        try {
+          // Referensi ke dokumen user di Firestore
+          const userRef = db.collection("users").doc(user.id);
+          const doc = await userRef.get();
+
+          if (!doc.exists) {
+            // Jika user belum ada, buat data baru dengan role 'member'
+            await userRef.set({
+              uid: user.id,
+              name: user.name,
+              email: user.email,
+              image: user.image,
+              role: "member", // Default role
+              createdAt: new Date().toISOString(),
+              status: "active"
+            });
+            console.log(`[AUTH] New user created: ${user.email}`);
+          }
+          return true;
+        } catch (error) {
+          console.error("[AUTH] Error saving to Firestore:", error);
+          return false; // Tolak login jika database error
         }
       }
+      return true; // Allow PIN login
+    },
+
+    // B. Membuat Token JWT
+    async jwt({ token, user }) {
+      // 1. Initial Sign In
+      if (user) {
+        token.id = user.id;
+        // Jika login PIN, role sudah ada di object user
+        if (user.role === 'superadmin') {
+            token.role = 'superadmin';
+        }
+      }
+
+      // 2. Fetch Role Terbaru dari Firestore (PENTING)
+      // Ini memastikan role user selalu sinkron dengan database
+      if (!token.role || token.role !== 'superadmin') { 
+         try {
+            const uid = token.sub || token.id; 
+            if(uid) {
+                const userDoc = await db.collection("users").doc(uid).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    token.role = userData?.role || "member";
+                }
+            }
+         } catch (error) {
+             console.error("[AUTH] Error fetching role:", error);
+         }
+      }
+
       return token;
     },
-    // Teruskan role dari Token ke Session agar bisa dibaca di frontend
+
+    // C. Meneruskan data ke Session (Client Side)
     async session({ session, token }) {
-      if (session?.user) {
-        session.user.role = token.role;
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as string;
       }
       return session;
     }
   },
   pages: {
-    signIn: '/login', // Halaman login custom kita
+    signIn: '/login',
+  },
+  session: {
+    strategy: "jwt",
   }
-});
+};
 
+const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
