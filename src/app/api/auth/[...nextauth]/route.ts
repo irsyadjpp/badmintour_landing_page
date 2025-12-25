@@ -79,6 +79,7 @@ export const authOptions: NextAuthOptions = {
               return {
                 id: userDoc.id,
                 name: userData.name, // Full Name
+                nickname: userData.nickname, // Pastikan ini dikirim
                 email: userData.email,
                 image: userData.image,
                 role: userData.role || "member",
@@ -144,10 +145,12 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         if (user.role) token.role = user.role;
+        // Simpan nickname ke token saat pertama kali login
+        if (user.nickname) token.nickname = user.nickname;
       }
 
-      // Fetch Role & Status Terbaru dari DB
-      if (!token.role || !token.status) { 
+      // Fetch Data Terbaru dari DB (jika user refresh halaman)
+      if (!token.role || !token.nickname) { 
          try {
             const uid = token.sub || token.id; 
             if(uid) {
@@ -156,6 +159,7 @@ export const authOptions: NextAuthOptions = {
                     const userData = userDoc.data();
                     token.role = userData?.role || "member";
                     token.status = userData?.status || "active";
+                    token.nickname = userData?.nickname; // Ambil nickname dari DB
                 }
             }
          } catch (error) {
@@ -169,7 +173,10 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
-        (session.user as any).status = token.status; 
+        (session.user as any).status = token.status;
+        
+        // Teruskan nickname ke session client-side
+        session.user.nickname = token.nickname as string;
       }
       return session;
     }

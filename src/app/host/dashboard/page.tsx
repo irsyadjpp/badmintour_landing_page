@@ -45,12 +45,14 @@ export default function HostDashboard() {
                 <Avatar className="w-20 h-20 border-4 border-[#1A1A1A] shadow-xl">
                     <AvatarImage src={session?.user?.image || ""} />
                     <AvatarFallback className="bg-[#ca1f3d] text-white font-black text-2xl">
-                        {session?.user?.name?.charAt(0) || "H"}
+                        {/* Gunakan inisial dari Nickname */}
+                        {session?.user?.nickname?.charAt(0) || session?.user?.name?.charAt(0) || "H"}
                     </AvatarFallback>
                 </Avatar>
                 <div>
                     <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-white">
-                        {session?.user?.name || 'Host'}
+                        {/* UPDATE: Tampilkan Nickname, fallback ke Name jika kosong */}
+                        {session?.user?.nickname || session?.user?.name || 'Host'}
                     </h1>
                     <div className="flex items-center gap-3 mt-1">
                         <Badge variant="outline" className="text-[#ffbe00] border-[#ffbe00]/30 bg-[#ffbe00]/10 text-[10px] uppercase tracking-widest font-bold">
