@@ -6,7 +6,8 @@ import {
     Wallet,
     Box,
     LogOut,
-    ClipboardList
+    ClipboardList,
+    Sparkles
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -19,6 +20,7 @@ export default function AdminSidebar() {
     const navItems = [
         { href: "/admin/dashboard", icon: LayoutDashboard, label: "Overview" },
         { href: "/admin/orders", icon: ClipboardList, label: "Jersey Orders" },
+        { href: "/admin/gamification", icon: Sparkles, label: "Gamification" },
         { href: "/admin/members", icon: Users, label: "Members" },
         { href: "/admin/events", icon: Calendar, label: "Events" },
         { href: "/admin/finance", icon: Wallet, label: "Finance" },
