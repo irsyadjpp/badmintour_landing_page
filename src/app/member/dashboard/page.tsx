@@ -64,7 +64,7 @@ export default function MemberDashboard() {
   return (
     <div className="space-y-8 pb-10">
         
-        {/* 1. HEADER SECTION */}
+        {/* 1. HEADER SECTION (Simplified) */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-[#151515] p-6 rounded-[2rem] border border-white/5 relative overflow-hidden">
             {/* Background Decoration */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#ffbe00]/5 rounded-full blur-[80px] pointer-events-none"></div>
@@ -94,14 +94,11 @@ export default function MemberDashboard() {
                 </div>
             </div>
 
+            {/* Tombol Sign Out dihapus karena sudah ada di sidebar */}
+            {/* Tombol Booking tetap ada sebagai Call to Action utama */}
             <div className="flex gap-3 w-full md:w-auto relative z-10">
-                <Link href="/" className="flex-1 md:flex-none">
-                    <Button variant="outline" className="w-full h-12 rounded-xl border-white/10 hover:bg-white/5 text-gray-400 font-bold">
-                        <LogOut className="w-4 h-4 mr-2" /> Sign Out
-                    </Button>
-                </Link>
-                <Link href="/booking" className="flex-1 md:flex-none">
-                    <Button className="w-full h-12 rounded-xl bg-[#ffbe00] text-black hover:bg-yellow-400 font-black shadow-[0_0_20px_rgba(255,190,0,0.4)] hover:scale-105 transition-transform">
+                <Link href="/booking" className="w-full md:w-auto">
+                    <Button className="w-full md:w-auto h-12 px-8 rounded-xl bg-[#ffbe00] text-black hover:bg-yellow-400 font-black shadow-[0_0_20px_rgba(255,190,0,0.4)] hover:scale-105 transition-transform">
                         <CalendarDays className="w-4 h-4 mr-2" /> BOOK COURT
                     </Button>
                 </Link>
@@ -292,5 +289,3 @@ export default function MemberDashboard() {
     </div>
   );
 }
-
-    
