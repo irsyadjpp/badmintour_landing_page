@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -57,7 +58,8 @@ export default function TermsPage() {
                         
                         <div className="pt-8 px-4">
                             <Link href="/">
-                                <Button variant="outline" className="w-full border-white/10 hover:bg-white text-white hover:text-black rounded-xl gap-2 font-bold h-12">
+                                {/* UPDATE: Menambahkan bg-transparent dan border yang lebih jelas */}
+                                <Button className="w-full bg-transparent border border-white/20 text-white hover:bg-white hover:text-black rounded-xl gap-2 font-bold h-12 transition-all">
                                     <ChevronLeft className="w-4 h-4"/> Back to Home
                                 </Button>
                             </Link>
@@ -250,3 +252,6 @@ function BanCard({ text }: { text: string }) {
         </div>
     )
 }
+
+
+    
