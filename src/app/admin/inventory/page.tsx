@@ -8,9 +8,10 @@ import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
 
+// REVISI: Mock Host sebagai Person (Admin Lapangan)
 const hostAvatars = [
-    { name: 'Host GOR Koni', src: 'https://ui-avatars.com/api/?name=Host+Koni&background=0D0D0D&color=fff', stock: 2, status: 'OK' },
-    { name: 'Host GOR LPKIA', src: 'https://ui-avatars.com/api/?name=Host+LPKIA&background=random', stock: 1, status: 'Low' },
+    { name: 'Host Andi', src: 'https://ui-avatars.com/api/?name=Andi&background=0D0D0D&color=fff', stock: 2, status: 'OK' },
+    { name: 'Host Budi', src: 'https://ui-avatars.com/api/?name=Budi&background=random', stock: 1, status: 'Low' },
 ];
 
 export default function InventoryPage() {
@@ -35,6 +36,7 @@ export default function InventoryPage() {
 
                 <TabsContent value="shuttlecock" className="mt-8 space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Gudang Utama */}
                         <div className="bg-[#1A1A1A] p-8 rounded-[2rem] border border-white/5 shadow-2xl relative overflow-hidden group">
                             <div className="absolute right-0 top-0 w-32 h-32 bg-white/5 rounded-bl-[4rem] -mr-4 -mt-4 transition-all group-hover:bg-white/10"></div>
                             <div className="relative z-10">
@@ -75,9 +77,11 @@ export default function InventoryPage() {
                             </div>
                         </div>
 
+                        {/* Stok di Tangan Host */}
                         <div className="bg-[#1A1A1A] p-8 rounded-[2rem] border border-white/5 shadow-2xl relative overflow-hidden group">
                             <div className="absolute right-0 top-0 w-32 h-32 bg-bad-yellow/10 rounded-bl-[4rem] -mr-4 -mt-4 transition-all group-hover:bg-bad-yellow/20"></div>
                             <div className="relative z-10">
+                                {/* REVISI: Label */}
                                 <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Di Tangan Host</p>
                                 <div className="flex items-baseline gap-2">
                                     <span className="text-6xl font-jersey text-bad-yellow">5</span>
@@ -100,8 +104,9 @@ export default function InventoryPage() {
                                                             <SelectValue placeholder="Pilih Host" />
                                                         </SelectTrigger>
                                                         <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
-                                                            <SelectItem value="koni">Host GOR Koni</SelectItem>
-                                                            <SelectItem value="lpkia">Host GOR LPKIA</SelectItem>
+                                                            {/* REVISI: Nama Host */}
+                                                            <SelectItem value="andi">Host Andi (Koni)</SelectItem>
+                                                            <SelectItem value="budi">Host Budi (LPKIA)</SelectItem>
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
@@ -117,6 +122,7 @@ export default function InventoryPage() {
                             </div>
                         </div>
                         
+                        {/* Estimasi Habis */}
                         <div className="bg-[#121212] text-white p-8 rounded-[2rem] border border-white/5 shadow-xl relative overflow-hidden">
                             <div className="absolute right-0 top-0 w-32 h-32 bg-white/5 rounded-bl-[4rem] -mr-4 -mt-4"></div>
                             <div className="relative z-10">
@@ -130,6 +136,7 @@ export default function InventoryPage() {
                         </div>
                     </div>
 
+                    {/* Table Host Stocks */}
                     <div className="bg-[#1A1A1A] rounded-[2.5rem] border border-white/5 overflow-hidden shadow-sm">
                         <div className="p-6 border-b border-white/5 flex justify-between items-center">
                             <h3 className="font-black text-lg text-white">Posisi Stok Host</h3>
@@ -153,6 +160,7 @@ export default function InventoryPage() {
                     </div>
                 </TabsContent>
 
+                {/* Tab Jersey tetap sama ... */}
                 <TabsContent value="jersey" className="mt-8 space-y-8">
                      <div className="bg-[#1A1A1A] rounded-[2.5rem] p-8 border border-white/5 shadow-xl relative overflow-hidden flex flex-col md:flex-row gap-8 items-center">
                         <div className="relative w-full md:w-1/3 aspect-square bg-[#121212] rounded-[2rem] flex items-center justify-center overflow-hidden group border border-white/5">

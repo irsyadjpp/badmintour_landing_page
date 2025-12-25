@@ -4,10 +4,8 @@ import { useState } from 'react';
 import { 
     Search, 
     Filter, 
-    MoreVertical, 
     Shield, 
     ShieldAlert, 
-    KeyRound, 
     Trash2, 
     UserCog, 
     CheckCircle2, 
@@ -24,7 +22,6 @@ import {
     SheetTitle,
     SheetDescription,
     SheetFooter,
-    SheetClose
 } from '@/components/ui/sheet';
 import {
     Select,
@@ -51,10 +48,10 @@ interface User {
     joinedAt: string;
 }
 
-// --- Mock Data ---
+// --- Mock Data (Updated: Host adalah Orang/Admin Mabar) ---
 const initialUsers: User[] = [
     { id: 'U-001', name: 'Irsyad JPP', email: 'irsyad@badmintour.com', role: 'superadmin', status: 'active', avatar: 'https://ui-avatars.com/api/?name=Irsyad&background=ffbe00&color=000', joinedAt: '2023-01-01' },
-    { id: 'U-002', name: 'Budi Santoso', email: 'budi@gor-koni.com', role: 'host', status: 'active', avatar: 'https://ui-avatars.com/api/?name=Budi&background=random', joinedAt: '2023-05-12' },
+    { id: 'U-002', name: 'Budi Santoso', email: 'budi.mabar@gmail.com', role: 'host', status: 'active', avatar: 'https://ui-avatars.com/api/?name=Budi&background=random', joinedAt: '2023-05-12' },
     { id: 'U-003', name: 'Siti Aminah', email: 'siti@gmail.com', role: 'member', status: 'active', avatar: 'https://ui-avatars.com/api/?name=Siti&background=random', joinedAt: '2023-06-20' },
     { id: 'U-004', name: 'Kevin Sanjaya', email: 'kevin@admin.com', role: 'admin', status: 'active', avatar: 'https://ui-avatars.com/api/?name=Kevin&background=random', joinedAt: '2023-02-15' },
     { id: 'U-005', name: 'Trouble Maker', email: 'spam@bot.com', role: 'member', status: 'banned', avatar: 'https://ui-avatars.com/api/?name=T&background=red&color=fff', joinedAt: '2023-08-01' },
@@ -98,23 +95,19 @@ export default function UserManagementPage() {
         setSelectedUser(user);
         setEditRole(user.role);
         setEditStatus(user.status);
-        setNewPassword(''); // Reset password field
+        setNewPassword('');
         setIsSheetOpen(true);
     };
 
     const handleSaveChanges = () => {
         if (!selectedUser) return;
 
-        // Simulasi Update ke Backend
         const updatedUsers = users.map(u => 
             u.id === selectedUser.id ? { ...u, role: editRole, status: editStatus } : u
         );
-        
         setUsers(updatedUsers);
         
-        // Cek jika ada reset password
         if (newPassword) {
-            console.log(`Password for ${selectedUser.email} reset to: ${newPassword}`);
             toast({
                 title: "Security Update",
                 description: `Password untuk ${selectedUser.name} berhasil direset.`,
@@ -127,7 +120,6 @@ export default function UserManagementPage() {
                 className: "bg-[#ffbe00] border-none text-black"
             });
         }
-
         setIsSheetOpen(false);
     };
 
@@ -145,7 +137,6 @@ export default function UserManagementPage() {
         setNewPassword(randomPass);
     }
 
-    // Filter Logic
     const filteredUsers = users.filter(user => 
         user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -201,7 +192,6 @@ export default function UserManagementPage() {
                         key={user.id} 
                         className="group relative bg-[#151515] hover:bg-[#1A1A1A] border border-white/5 hover:border-[#ffbe00]/30 rounded-[2rem] p-4 transition-all duration-300 flex flex-col md:flex-row items-center gap-4 md:gap-6"
                     >
-                        {/* Avatar & Basic Info */}
                         <div className="flex items-center gap-4 w-full md:w-auto flex-1">
                             <Avatar className="w-12 h-12 border-2 border-[#1A1A1A] group-hover:border-[#ffbe00] transition-colors">
                                 <AvatarImage src={user.avatar} />
@@ -216,14 +206,12 @@ export default function UserManagementPage() {
                             </div>
                         </div>
 
-                        {/* Role Badge */}
                         <div className="w-full md:w-auto flex justify-between md:justify-center items-center gap-4 min-w-[150px]">
                             <Badge variant="outline" className={`rounded-lg px-3 py-1.5 uppercase text-[10px] font-black tracking-widest ${getRoleBadgeColor(user.role)}`}>
                                 {getRoleIcon(user.role)} {user.role}
                             </Badge>
                         </div>
 
-                        {/* Actions */}
                         <div className="w-full md:w-auto flex justify-end">
                             <Button 
                                 onClick={() => openManageUser(user)}
@@ -236,7 +224,7 @@ export default function UserManagementPage() {
                 ))}
             </div>
 
-            {/* --- SHEET MANAGEMENT (Side Panel) --- */}
+            {/* --- SHEET MANAGEMENT --- */}
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                 <SheetContent className="bg-[#0a0a0a] border-l border-white/10 text-white sm:max-w-md w-full p-0 flex flex-col h-full">
                     {selectedUser && (
@@ -256,14 +244,13 @@ export default function UserManagementPage() {
                                     <Badge className={`${selectedUser.status === 'active' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'} border-0`}>
                                         {selectedUser.status}
                                     </Badge>
-                                    <Badge variant="outline" className="text-gray-500 border-white/10">Joined: {selectedUser.joinedAt}</Badge>
                                 </div>
                             </SheetHeader>
 
                             <ScrollArea className="flex-1 p-8">
                                 <div className="space-y-8">
                                     
-                                    {/* 1. ROLE MANAGEMENT */}
+                                    {/* 1. ROLE MANAGEMENT (Updated Description) */}
                                     <div className="space-y-4">
                                         <h4 className="text-xs font-bold text-[#ffbe00] uppercase tracking-widest flex items-center gap-2">
                                             <Shield className="w-4 h-4"/> Role Assignment
@@ -274,23 +261,25 @@ export default function UserManagementPage() {
                                                     <SelectValue placeholder="Pilih Role" />
                                                 </SelectTrigger>
                                                 <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
-                                                    <SelectItem value="member">Member (User Biasa)</SelectItem>
-                                                    <SelectItem value="host">Host (Pengelola GOR)</SelectItem>
-                                                    <SelectItem value="admin">Admin (Staff)</SelectItem>
-                                                    <SelectItem value="superadmin" className="text-[#ffbe00] font-bold">Superadmin (God Mode)</SelectItem>
+                                                    <SelectItem value="member">Member</SelectItem>
+                                                    <SelectItem value="host">Host</SelectItem> {/* REVISI: Gunakan Host Saja */}
+                                                    <SelectItem value="admin">Admin</SelectItem>
+                                                    <SelectItem value="superadmin" className="text-[#ffbe00] font-bold">Superadmin</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
+                                        {/* REVISI: Penjelasan Definisi Host */}
                                         <p className="text-[10px] text-gray-500 leading-relaxed">
-                                            *Superadmin memiliki akses penuh ke sistem & database. <br/>
-                                            *Admin hanya bisa mengelola user dan event.
+                                            *Superadmin: Akses penuh (God Mode). <br/>
+                                            *Admin: Staff back-office & manajemen. <br/>
+                                            *Host: Admin Mabar / Drilling (Petugas Lapangan).
                                         </p>
                                     </div>
 
-                                    {/* 2. SECURITY (Reset Password) */}
+                                    {/* 2. SECURITY */}
                                     <div className="space-y-4">
                                         <h4 className="text-xs font-bold text-red-400 uppercase tracking-widest flex items-center gap-2">
-                                            <KeyRound className="w-4 h-4"/> Emergency Reset
+                                            <RefreshCcw className="w-4 h-4"/> Emergency Reset
                                         </h4>
                                         <div className="space-y-2">
                                             <label className="text-xs text-gray-500 font-bold">New Password</label>
@@ -298,7 +287,7 @@ export default function UserManagementPage() {
                                                 <Input 
                                                     value={newPassword}
                                                     onChange={(e) => setNewPassword(e.target.value)}
-                                                    placeholder="Masukkan password baru..."
+                                                    placeholder="Set password baru..."
                                                     className="bg-[#1A1A1A] border-white/10 text-white rounded-xl h-12 font-mono"
                                                 />
                                                 <Button 
@@ -306,16 +295,10 @@ export default function UserManagementPage() {
                                                     variant="outline" 
                                                     size="icon" 
                                                     className="h-12 w-12 rounded-xl border-white/10 hover:bg-white/5 text-gray-400"
-                                                    title="Generate Random"
                                                 >
                                                     <RefreshCcw className="w-4 h-4"/>
                                                 </Button>
                                             </div>
-                                            {newPassword && (
-                                                <p className="text-[10px] text-green-500 font-bold animate-pulse">
-                                                    Password akan diubah saat tombol Simpan ditekan.
-                                                </p>
-                                            )}
                                         </div>
                                     </div>
 
@@ -349,11 +332,11 @@ export default function UserManagementPage() {
                                     variant="ghost" 
                                     className="flex-1 h-12 rounded-xl text-red-500 hover:text-red-400 hover:bg-red-500/10 font-bold"
                                 >
-                                    <Trash2 className="w-4 h-4 mr-2"/> Hapus User
+                                    <Trash2 className="w-4 h-4 mr-2"/> Hapus
                                 </Button>
                                 <Button 
                                     onClick={handleSaveChanges}
-                                    className="flex-[2] h-12 rounded-xl bg-[#ffbe00] text-black hover:bg-yellow-400 font-black shadow-[0_0_20px_rgba(255,190,0,0.3)]"
+                                    className="flex-[2] h-12 rounded-xl bg-[#ffbe00] text-black hover:bg-yellow-400 font-black"
                                 >
                                     Simpan Perubahan
                                 </Button>
