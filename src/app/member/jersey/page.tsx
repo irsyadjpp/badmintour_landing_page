@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ShoppingBag, Check, ArrowRight, Info, X, Shirt, Lock } from 'lucide-react';
+import { ChevronLeft, ShoppingBag, Check, ArrowRight, Info, X, Shirt, Lock, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
