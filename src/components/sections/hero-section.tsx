@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Trophy, Sparkles } from 'lucide-react';
+import { Repeat, Zap, CalendarClock } from 'lucide-react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function HeroSection() {
@@ -11,7 +11,7 @@ export default function HeroSection() {
       {/* Background Gradients */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl -z-10" />
       
-      {/* Container otomatis rata tengah berkat perbaikan tailwind.config.ts */}
+      {/* Container */}
       <div className="container px-4 md:px-6 relative z-10">
         
         {/* CENTER ALIGNED CONTENT */}
@@ -23,7 +23,7 @@ export default function HeroSection() {
               Basecamp-nya Anak Badminton Bandung
             </div>
             
-            {/* Main Typography - Besar & Rapat (Gen-Z Style) */}
+            {/* Main Typography */}
             <h1 className="font-heading text-5xl sm:text-7xl lg:text-8xl font-black tracking-tighter text-foreground leading-[0.9]">
               BADMINTOUR <br />
               <span className="relative inline-block mt-2">
@@ -58,47 +58,74 @@ export default function HeroSection() {
                {heroImage && (
                 <Image
                   src={heroImage.imageUrl}
-                  alt="Badmintour Tournament Bandung"
+                  alt="Badmintour Mabar Rutin"
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                   priority
                 />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
               
-              {/* Floating Content inside Image */}
+              {/* Floating Content inside Image (UPDATED: Recurring Theme) */}
               <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 text-white text-left">
-                  <div className="flex items-center gap-3 mb-2">
-                      <div className="bg-accent text-black p-2 rounded-xl">
-                          <Trophy className="w-5 h-5" />
+                  <div className="flex items-center gap-3 mb-3">
+                      <div className="bg-primary text-white p-2 rounded-xl animate-pulse">
+                          <Repeat className="w-5 h-5" />
                       </div>
-                      <span className="font-bold text-accent tracking-wider uppercase text-sm">Upcoming Major Event</span>
+                      <span className="font-bold text-white tracking-wider uppercase text-xs md:text-sm bg-white/20 backdrop-blur-md px-3 py-1 rounded-lg border border-white/10">
+                          Jadwal Rutin Mingguan
+                      </span>
                   </div>
-                  <p className="text-2xl md:text-4xl font-black font-heading">Bandung Open Championship 2026</p>
+                  <p className="text-2xl md:text-5xl font-black font-heading leading-tight">
+                      Mabar Setiap Hari <br/>
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-white">
+                          Senin s/d Minggu
+                      </span>
+                  </p>
               </div>
             </div>
 
-            {/* Dekorasi Floating (Opsional) */}
-            <div className="absolute -top-6 -right-4 md:-right-8 rotate-6 bg-white p-4 rounded-3xl shadow-xl border border-zinc-100 hidden md:block animate-float">
-                <div className="flex items-center gap-3">
-                    <div className="bg-green-100 p-2 rounded-full text-green-600">
-                        <Sparkles className="w-6 h-6" />
+            {/* Dekorasi Floating (UPDATED: Next Session Status) */}
+            <div className="absolute -top-6 -right-4 md:-right-8 rotate-3 bg-white p-4 rounded-3xl shadow-xl border border-zinc-100 hidden md:block animate-float">
+                <div className="flex items-center gap-4">
+                    <div className="bg-orange-100 p-3 rounded-2xl text-orange-600">
+                        <CalendarClock className="w-8 h-8" />
                     </div>
                     <div className="text-left">
-                        <p className="text-xs font-bold text-muted-foreground uppercase">Prize Pool</p>
-                        <p className="text-xl font-black text-foreground">IDR 50 Juta</p>
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Next Session</p>
+                        </div>
+                        <p className="text-xl font-black text-foreground leading-none">Tonight 19:00</p>
+                        <p className="text-xs font-bold text-primary mt-1">Sisa 2 Slot!</p>
                     </div>
                 </div>
             </div>
+            
+            {/* Dekorasi Floating Kiri (New: Level Info) */}
+             <div className="absolute -bottom-8 -left-4 md:-left-8 -rotate-2 bg-black text-white p-4 rounded-3xl shadow-2xl border border-zinc-800 hidden md:block animate-float delay-700">
+                <div className="flex items-center gap-3">
+                    <div className="bg-zinc-800 p-2 rounded-full text-accent">
+                        <Zap className="w-5 h-5" />
+                    </div>
+                    <div className="text-left">
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase">Level</p>
+                        <p className="text-sm font-black">Newbie - Intermediate</p>
+                    </div>
+                </div>
+            </div>
+
         </div>
       </div>
 
       {/* Marquee Text */}
-      <div className="mt-20 -rotate-1 bg-accent border-y-4 border-black py-4 overflow-hidden relative z-20 shadow-lg">
+      <div className="mt-24 -rotate-1 bg-accent border-y-4 border-black py-4 overflow-hidden relative z-20 shadow-lg">
         <div className="flex animate-marquee whitespace-nowrap">
             {[...Array(10)].map((_, i) => (
                 <div key={i} className="flex items-center mx-4">
-                    <span className="text-3xl md:text-5xl font-black text-black italic tracking-tighter">MABAR SANTAI • COMPETITIVE FUN • NEWBIE WELCOME • DRILLING PROGRAM • SPARRING SESSION • NO DRAMA JUST SWEAT • BANDUNG BADMINTON</span>
+                    <span className="text-3xl md:text-5xl font-black text-black italic tracking-tighter">
+                        MABAR SETIAP HARI • PAGI SIANG MALAM • GOR BANDUNG • COACHING CLINIC • FUN MATCH WEEKEND •
+                    </span>
                 </div>
             ))}
         </div>
