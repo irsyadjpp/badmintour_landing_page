@@ -5,18 +5,13 @@ import { db } from "@/lib/firebase-admin";
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    // 1. Google Provider (Login Member/Host)
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
-    
-    // 2. PIN Provider (Login Superadmin Darurat)
     CredentialsProvider({
       name: "PIN",
-      credentials: {
-        pin: { label: "PIN", type: "password" }
-      },
+      credentials: { pin: { label: "PIN", type: "password" } },
       async authorize(credentials) {
         if (credentials?.pin === "113125") {
           return {
@@ -36,46 +31,53 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         try {
-          // Referensi ke dokumen user di Firestore
           const userRef = db.collection("users").doc(user.id);
           const doc = await userRef.get();
 
           if (!doc.exists) {
-            // Jika user belum ada, buat data baru dengan role 'member'
+            // User BARU: Buat data & set status active
             await userRef.set({
               uid: user.id,
               name: user.name,
               email: user.email,
               image: user.image,
-              role: "member", // Default role
+              role: "member",
+              status: "active", // Default active
               createdAt: new Date().toISOString(),
-              status: "active"
             });
-            console.log(`[AUTH] New user created: ${user.email}`);
+          } else {
+            // User LAMA: Cek Status
+            const userData = doc.data();
+            
+            // LOGIC UTAMA: Jika status tidak active, tolak login
+            if (userData?.status && userData.status !== 'active') {
+                // Return URL khusus untuk redirect ke halaman error/aktivasi
+                // NextAuth akan melempar user ke URL ini
+                return `/login?error=AccountInactive`; 
+            }
           }
           return true;
         } catch (error) {
-          console.error("[AUTH] Error saving to Firestore:", error);
-          return false; // Tolak login jika database error
+          console.error("Auth Error:", error);
+          return false;
         }
       }
-      return true; // Allow PIN login
+      return true;
     },
 
-    // B. Membuat Token JWT
-    async jwt({ token, user }) {
-      // 1. Initial Sign In
-      if (user) {
-        token.id = user.id;
-        // Jika login PIN, role sudah ada di object user
-        if (user.role === 'superadmin') {
-            token.role = 'superadmin';
-        }
+    async jwt({ token, user, trigger, session }) {
+      // Update session real-time jika ada perubahan di client
+      if (trigger === "update" && session?.name) {
+          token.name = session.name;
       }
 
-      // 2. Fetch Role Terbaru dari Firestore (PENTING)
-      // Ini memastikan role user selalu sinkron dengan database
-      if (!token.role || token.role !== 'superadmin') { 
+      if (user) {
+        token.id = user.id;
+        if (user.role) token.role = user.role;
+      }
+
+      // Fetch Role & Status Terbaru
+      if (!token.role || !token.status) { 
          try {
             const uid = token.sub || token.id; 
             if(uid) {
@@ -83,27 +85,34 @@ export const authOptions: NextAuthOptions = {
                 if (userDoc.exists) {
                     const userData = userDoc.data();
                     token.role = userData?.role || "member";
+                    token.status = userData?.status || "active";
+                    
+                    // Force logout via token jika status berubah jadi inactive di tengah jalan
+                    if(token.status !== 'active') {
+                        // Tidak bisa force logout direct disini, tapi bisa kita handle di middleware atau client
+                    }
                 }
             }
          } catch (error) {
-             console.error("[AUTH] Error fetching role:", error);
+             console.error("JWT Error:", error);
          }
       }
-
       return token;
     },
 
-    // C. Meneruskan data ke Session (Client Side)
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
+        // Tambahkan status ke session agar bisa dibaca client
+        (session.user as any).status = token.status; 
       }
       return session;
     }
   },
   pages: {
     signIn: '/login',
+    error: '/login', // Redirect error kembali ke login page untuk kita handle custom
   },
   session: {
     strategy: "jwt",
