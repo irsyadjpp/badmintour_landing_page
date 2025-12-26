@@ -170,26 +170,30 @@ export default function JerseyDropPage() {
 
             <div className="flex flex-col lg:flex-row min-h-screen bg-[#0a0a0a]">
                 
-                {/* LEFT: IMAGE PREVIEW */}
+                {/* LEFT: IMAGE PREVIEW (ANIMATED & CLEAN) */}
                 <div className="lg:w-1/2 relative bg-[#121212] flex items-center justify-center p-8 lg:sticky lg:top-0 lg:h-screen overflow-hidden border-b lg:border-b-0 lg:border-r border-white/10">
-                    <div className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] bg-[#ca1f3d]/10 blur-[120px] rounded-full"></div>
-                    <div className="absolute bottom-[-20%] left-[-20%] w-[80%] h-[80%] bg-[#ffbe00]/5 blur-[120px] rounded-full"></div>
+                    {/* Background Ambience (More dynamic pulse) */}
+                    <div className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] bg-[#ca1f3d]/20 blur-[120px] rounded-full animate-[pulse_8s_infinite]"></div>
+                    <div className="absolute bottom-[-20%] left-[-20%] w-[80%] h-[80%] bg-[#ffbe00]/10 blur-[120px] rounded-full animate-[pulse_10s_infinite]"></div>
 
-                    <div className="relative w-full max-w-md aspect-square z-10 group">
+                    <div className="relative w-full max-w-md aspect-square z-10 group perspective-1000">
+                        {/* ANIMASI JERSEY BARU:
+                            1. animate-[pulse_4s...]: Efek "bernapas" lambat.
+                            2. drop-shadow-[...]: Shadow besar berwarna kuning (MD3 High Elevation Glow).
+                            3. group-hover:scale-110: Membesar saat di-hover.
+                            4. group-hover:drop-shadow-[...]: Shadow berubah jadi merah saat hover (Dynamic).
+                        */}
                         <Image 
                             src="/images/jersey-season-1.png" 
                             alt="Jersey Preview" 
                             width={1000} 
                             height={1000} 
-                            className="w-full h-full object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-105" 
+                            className="w-full h-full object-contain transition-all duration-500 animate-[pulse_4s_cubic-bezier(0.4,0,0.6,1)_infinite] drop-shadow-[0_20px_50px_rgba(255,190,0,0.4)] group-hover:scale-110 group-hover:drop-shadow-[0_30px_70px_rgba(202,31,61,0.5)]" 
                             priority
                         />
-                         {/* Live Preview Nama Punggung di Gambar */}
-                         <div className="absolute top-1/3 left-0 right-0 text-center pointer-events-none opacity-80 mix-blend-overlay">
-                             <h2 className="text-white/50 font-black text-4xl tracking-[0.2em]">{nameOption === 'A' ? generatedOptions.A : generatedOptions.B || 'NAME'}</h2>
-                        </div>
                         
-                        <div className="absolute top-4 left-4 bg-black/60 backdrop-blur border border-white/10 px-4 py-2 rounded-xl">
+                        {/* Badge (Tetap ada) */}
+                        <div className="absolute top-4 left-4 bg-black/60 backdrop-blur border border-white/10 px-4 py-2 rounded-xl z-20">
                             <p className="text-[10px] text-gray-300 uppercase font-bold tracking-widest">Season 1</p>
                             <p className="text-white font-black text-lg">Official Kit</p>
                         </div>
@@ -396,3 +400,4 @@ export default function JerseyDropPage() {
         </>
     );
 }
+```
