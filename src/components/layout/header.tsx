@@ -193,28 +193,31 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-3 z-20">
-          {isAdmin && (
-            <Link href="/admin/dashboard">
-              <Button variant="destructive" className="rounded-full gap-2 shadow-lg animate-pulse hover:animate-none">
-                <LayoutDashboard className="w-4 h-4"/> Admin Panel
-              </Button>
-            </Link>
-          )}
+            {/* --- TOMBOL KHUSUS ADMIN --- */}
+            {isAdmin && (
+                <Link href="/admin/dashboard">
+                    <Button className="bg-[#ca1f3d] hover:bg-[#a01830] text-white font-bold rounded-full gap-2 shadow-[0_0_15px_rgba(202,31,61,0.4)] h-9 text-xs animate-pulse hover:animate-none">
+                        <LayoutDashboard className="w-3 h-3" />
+                        Admin Panel
+                    </Button>
+                </Link>
+            )}
 
-          {!session && (
-            <Link
-                href="/login"
-                id="btn-login"
-                className={cn(
-                  'rounded-full text-sm font-black hover:scale-105 transition-all duration-300 shadow-lg whitespace-nowrap',
-                  isScrolled
-                    ? 'bg-white text-black px-6 py-2'
-                    : 'bg-primary text-white px-7 py-3'
-                )}
-              >
-                LOGIN
-              </Link>
-          )}
+            {/* Jika tidak login, tampilkan tombol Login */}
+            {!session && (
+                <Link
+                    href="/login"
+                    id="btn-login"
+                    className={cn(
+                    'rounded-full text-sm font-black hover:scale-105 transition-all duration-300 shadow-lg whitespace-nowrap',
+                    isScrolled
+                        ? 'bg-white text-black px-6 py-2'
+                        : 'bg-primary text-white px-7 py-3'
+                    )}
+                >
+                    LOGIN
+                </Link>
+            )}
           
           {/* MOBILE MENU TOGGLE (SHEET) */}
           <div className="lg:hidden">
