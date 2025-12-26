@@ -97,17 +97,16 @@ export default function AdminSidebar() {
             {/* Footer */}
             <div className="p-2 border-t border-transparent w-full mt-auto space-y-2">
                 
-                {/* --- Tombol Kembali ke Landing Page --- */}
-                <Link href="/" className="block">
+                {/* --- Tombol Beralih ke Member Dashboard --- */}
+                <Link href="/member/dashboard" className="block">
                     <Button 
                         variant="outline" 
-                        title="Back to Landing Page"
+                        title="Switch to Player Mode"
                         className="w-full h-12 justify-center border-white/10 bg-[#151515] hover:bg-white/10 text-gray-300 hover:text-white gap-3 rounded-2xl font-bold text-xs group"
                     >
                         <ArrowLeft className="w-4 h-4 text-gray-400 group-hover:-translate-x-1 transition-transform" />
                     </Button>
                 </Link>
-                {/* ----------------------------------------- */}
 
                 {/* Logout */}
                 <Button 
