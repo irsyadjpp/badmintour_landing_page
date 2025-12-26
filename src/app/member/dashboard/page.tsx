@@ -1,7 +1,8 @@
 'use client';
 
+// ... (IMPORT LAIN TETAP SAMA) ...
 import { useSession } from 'next-auth/react';
-import { Trophy, CalendarDays, Clock, MapPin, QrCode, ArrowRight, Ticket, Swords, Dumbbell, UserCog, Users, Medal, SearchX, Shirt } from 'lucide-react';
+import { Trophy, CalendarDays, Clock, MapPin, QrCode, ArrowRight, Ticket, Swords, Dumbbell, UserCog, Users, Medal, SearchX, Shirt, Download } from 'lucide-react'; // Tambah Download
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -10,7 +11,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import DashboardSkeleton from '@/components/dashboard/dashboard-skeleton';
-// Import Modal untuk View QR
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import QRCode from "react-qr-code";
 
@@ -23,8 +23,8 @@ export default function MemberDashboard() {
   const [jerseyOrders, setJerseyOrders] = useState<any[]>([]);
   const [selectedQr, setSelectedQr] = useState<string | null>(null);
 
+  // ... (USE EFFECT FETCH DATA TETAP SAMA) ...
   useEffect(() => {
-    // Fetch Data
     const fetchData = async () => {
         try {
             const res = await fetch('/api/member/jersey');
@@ -41,12 +41,87 @@ export default function MemberDashboard() {
 
   if (status === "loading" || isLoading) return <DashboardSkeleton />;
 
+  // --- LOGIC DOWNLOAD QR (Reusable) ---
+  const handleDownloadQR = (orderId: string) => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        // PERHATIAN: Di Dashboard, QR mungkin ada di dalam modal.
+        // Kita target ID khusus di modal dashboard
+        const svgElement = document.getElementById("dashboard-qr-svg");
+
+        if (!ctx || !svgElement) return;
+
+        canvas.width = 1080;
+        canvas.height = 1350;
+
+        // Background
+        ctx.fillStyle = "#151515";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Logo
+        const logoImg = new window.Image();
+        logoImg.src = "/images/logo.png";
+        logoImg.crossOrigin = "anonymous";
+
+        logoImg.onload = () => {
+            // Draw Logo
+            const logoWidth = 200;
+            const logoHeight = (logoImg.height / logoImg.width) * logoWidth;
+            const logoX = (canvas.width - logoWidth) / 2;
+            ctx.drawImage(logoImg, logoX, 150, logoWidth, logoHeight);
+
+            // Draw Text
+            ctx.font = "bold 60px sans-serif";
+            ctx.fillStyle = "#FFFFFF";
+            ctx.textAlign = "center";
+            ctx.fillText("BADMINTOUR", canvas.width / 2, 150 + logoHeight + 80);
+
+            ctx.font = "40px sans-serif";
+            ctx.fillStyle = "#FFBE00";
+            ctx.fillText("OFFICIAL JERSEY ORDER", canvas.width / 2, 150 + logoHeight + 140);
+
+            // Draw QR
+            const svgData = new XMLSerializer().serializeToString(svgElement);
+            const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+            const url = URL.createObjectURL(svgBlob);
+            const qrImg = new window.Image();
+
+            qrImg.onload = () => {
+                const qrBoxSize = 600;
+                const qrBoxX = (canvas.width - qrBoxSize) / 2;
+                const qrBoxY = 600;
+                
+                ctx.fillStyle = "#FFFFFF";
+                ctx.fillRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize);
+                
+                const padding = 50;
+                ctx.drawImage(qrImg, qrBoxX + padding, qrBoxY + padding, qrBoxSize - (padding*2), qrBoxSize - (padding*2));
+                URL.revokeObjectURL(url);
+
+                ctx.font = "bold 50px monospace";
+                ctx.fillStyle = "#FFFFFF";
+                ctx.fillText(orderId, canvas.width / 2, qrBoxY + qrBoxSize + 100);
+
+                ctx.font = "30px sans-serif";
+                ctx.fillStyle = "#888888";
+                ctx.fillText("Scan this code at pickup location", canvas.width / 2, canvas.height - 100);
+
+                const link = document.createElement("a");
+                link.download = `JERSEY-ORDER-${orderId}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            };
+            qrImg.src = url;
+        };
+  };
+
   return (
     <div className="space-y-8 pb-20">
         
-        {/* HEADER */}
+        {/* ... (HEADER & SECTIONS LAIN TETAP SAMA) ... */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-[#151515] p-6 rounded-[2rem] border border-white/5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#ffbe00]/5 rounded-full blur-[80px] pointer-events-none"></div>
+             {/* ... content header ... */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#ffbe00]/5 rounded-full blur-[80px] pointer-events-none"></div>
             <div className="flex items-center gap-5 relative z-10">
                 <Avatar className="w-20 h-20 border-4 border-[#1A1A1A] shadow-xl">
                     <AvatarImage src={session?.user?.image || ""} />
@@ -60,7 +135,7 @@ export default function MemberDashboard() {
                     </div>
                 </div>
             </div>
-            <div className="flex gap-3 w-full md:w-auto relative z-10">
+             <div className="flex gap-3 w-full md:w-auto relative z-10">
                 <Link href="/member/profile" className="w-full md:w-auto">
                     <Button className="w-full md:w-auto h-12 px-8 rounded-xl bg-[#ffbe00] text-black hover:bg-yellow-400 font-black shadow-[0_0_20px_rgba(255,190,0,0.4)] hover:scale-105 transition-transform">
                         <UserCog className="w-4 h-4 mr-2" /> LENGKAPI PROFILE
@@ -69,7 +144,7 @@ export default function MemberDashboard() {
             </div>
         </header>
 
-        {/* SECTION BARU: MY JERSEY ORDERS */}
+        {/* SECTION JERSEY ORDERS */}
         <section>
             <div className="flex items-center justify-between mb-3 px-2">
                 <h3 className="text-lg font-black text-white flex items-center gap-2">
@@ -84,6 +159,7 @@ export default function MemberDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {jerseyOrders.map((order) => (
                         <div key={order.orderId} className="bg-[#151515] p-4 rounded-[2rem] border border-white/5 flex justify-between items-center group hover:border-[#ca1f3d]/30 transition-all">
+                            {/* ... Content Card Sama ... */}
                             <div className="flex items-center gap-4">
                                 <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center relative overflow-hidden">
                                     <Image src="/images/jersey-season-1.png" width={50} height={50} alt="Jersey" className="object-contain" />
@@ -111,9 +187,9 @@ export default function MemberDashboard() {
                 </div>
             )}
         </section>
-
-        {/* GAME MODE SELECTION */}
-        <section>
+        
+        {/* ... (SECTIONS LAIN TETAP SAMA) ... */}
+         <section>
             <div className="flex items-center justify-between mb-4 px-2">
                 <h3 className="text-lg font-black text-white flex items-center gap-2"><Swords className="w-5 h-5 text-[#ffbe00]" /> CHOOSE YOUR GAME</h3>
             </div>
@@ -125,8 +201,7 @@ export default function MemberDashboard() {
             </div>
         </section>
         
-        {/* ACTIVE TICKET SECTION */}
-        <section>
+         <section>
             <div className="flex items-center justify-between mb-3 px-2">
                 <h3 className="text-lg font-black text-white flex items-center gap-2"><Ticket className="w-5 h-5 text-[#ffbe00]" /> UPCOMING SESSION</h3>
             </div>
@@ -173,7 +248,7 @@ export default function MemberDashboard() {
             )}
         </section>
 
-        {/* MODAL VIEW QR CODE */}
+        {/* MODAL VIEW QR CODE (UPDATED WITH DOWNLOAD BUTTON) */}
         <Dialog open={!!selectedQr} onOpenChange={(open) => !open && setSelectedQr(null)}>
             <DialogContent className="bg-[#1A1A1A] border-white/10 text-white sm:max-w-xs rounded-3xl">
                 <DialogHeader>
@@ -182,7 +257,9 @@ export default function MemberDashboard() {
                 <div className="bg-white p-6 rounded-2xl mx-auto my-4 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
                     {selectedQr && (
                          <div style={{ height: "auto", margin: "0 auto", maxWidth: 200, width: "100%" }}>
+                            {/* Tambahkan ID di sini untuk dashboard */}
                             <QRCode
+                                id="dashboard-qr-svg"
                                 size={180}
                                 style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                                 value={selectedQr}
@@ -191,7 +268,15 @@ export default function MemberDashboard() {
                         </div>
                     )}
                 </div>
-                <p className="text-center font-mono font-bold text-white text-lg tracking-widest">{selectedQr}</p>
+                <p className="text-center font-mono font-bold text-white text-lg tracking-widest mb-4">{selectedQr}</p>
+                
+                {/* BUTTON DOWNLOAD */}
+                <Button 
+                    onClick={() => selectedQr && handleDownloadQR(selectedQr)} 
+                    className="w-full rounded-xl bg-[#151515] border border-white/20 text-white hover:bg-[#ffbe00] hover:text-black font-bold"
+                >
+                    <Download className="w-4 h-4 mr-2" /> Download Ticket
+                </Button>
             </DialogContent>
         </Dialog>
 
