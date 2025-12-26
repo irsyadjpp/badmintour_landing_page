@@ -23,8 +23,8 @@ export async function POST(req: Request) {
     }
 
     // Validasi Server-Side untuk Nama Punggung (Double Check)
-    if (backName.length > 12 || !/^[A-Z]+$/.test(backName)) {
-        return NextResponse.json({ error: "Format Nama Punggung salah (Max 12 Huruf, A-Z, Tanpa Spasi)." }, { status: 400 });
+    if (backName.length > 12 || !/^[A-Z\s]+$/.test(backName)) {
+        return NextResponse.json({ error: "Format Nama Punggung salah (Max 12 Huruf, A-Z)." }, { status: 400 });
     }
 
     const orderData = {
@@ -49,6 +49,7 @@ export async function POST(req: Request) {
     }
 
     // SKENARIO 2: PUBLIC / ALL -> Simpan ke Central Orders
+    // Gunakan senderPhone sebagai unik ID sementara jika guest
     const orderId = `ORD-${Date.now()}-${senderPhone.slice(-4)}`;
     await db.collection("jersey_orders").doc(orderId).set(orderData);
 
@@ -62,10 +63,19 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return NextResponse.json({ order: null });
+    
+    // Jika tidak login, kembalikan null order
+    if (!session?.user?.id) {
+        return NextResponse.json({ order: null });
+    }
 
     try {
         const doc = await db.collection("users").doc(session.user.id).get();
         const data = doc.data();
+        
         return NextResponse.json({ order: data?.jerseyOrder || null });
-    } catch (
+    } catch (error) {
+        console.error("[JERSEY_GET_ERROR]", error);
+        return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
+    }
+}
