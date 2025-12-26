@@ -10,15 +10,6 @@ import { ChevronLeft, ArrowRight, Shirt, X, Check, Loader2, User, Ruler, Lock } 
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
-// --- DATA SIZE CHART BARU ---
-const sizeChartData = [
-    { size: 'S', width: 47, length: 67 },
-    { size: 'M', width: 50, length: 70 },
-    { size: 'L', width: 52, length: 72 },
-    { size: 'XL', width: 54, length: 74 },
-    { size: 'XXL', width: 56, length: 77 },
-];
-
 export default function JerseyDropPage() {
     const { data: session } = useSession();
     const router = useRouter();
@@ -374,5 +365,3 @@ export default function JerseyDropPage() {
         </>
     );
 }
-
-```
