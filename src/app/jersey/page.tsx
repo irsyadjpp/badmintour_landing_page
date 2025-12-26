@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ArrowRight, Ruler, X, Check, Loader2, Lock, RefreshCw } from 'lucide-react';
+import { ChevronLeft, ArrowRight, Shirt, X, Check, Loader2, User, Ruler, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
@@ -58,7 +58,7 @@ export default function JerseyDropPage() {
         }
     }, [session]);
 
-    // --- ALGORITMA GENERATE OPSI NAMA ---
+    // --- ALGORITMA SMART NAME GENERATOR ---
     useEffect(() => {
         const generateOptions = (name: string) => {
             if (!name) return { A: '', B: '' };
