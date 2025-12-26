@@ -5,7 +5,7 @@ import {
     Calendar,
     Wallet,
     Box,
-    ClipboardList,
+    Shirt, // Changed from ClipboardList
     Sparkles,
     Search,
     Trophy,
@@ -25,7 +25,7 @@ export default function AdminSidebar() {
         { href: "/admin/events", icon: Calendar, label: "Sessions" },
         { href: "/admin/tournaments", icon: Trophy, label: "Tournaments" },
         { href: "/admin/finance", icon: Wallet, label: "Finance" },
-        { href: "/admin/orders", icon: ClipboardList, label: "Orders" },
+        { href: "/admin/jersey", icon: Shirt, label: "Jersey Orders" }, // Updated from /admin/orders
         { href: "/admin/inventory", icon: Box, label: "Inventory" },
         { href: "/admin/gamification", icon: Sparkles, label: "Gamification" },
     ];
