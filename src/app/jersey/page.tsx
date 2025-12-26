@@ -15,10 +15,13 @@ export default function JerseyDropPage() {
     const router = useRouter();
     const { toast } = useToast();
 
-    // STATE
+    // --- STATE ---
     const [quantity, setQuantity] = useState(1);
     const [selectedSize, setSelectedSize] = useState('L');
-    const [playerName, setPlayerName] = useState('');
+    
+    // DATA INPUTS
+    const [fullName, setFullName] = useState(''); // Nama Lengkap (Pemesan)
+    const [backName, setBackName] = useState(''); // Nama Punggung (Cetak)
     const [whatsAppNumber, setWhatsAppNumber] = useState('');
     
     // UI State
@@ -29,53 +32,83 @@ export default function JerseyDropPage() {
 
     const basePrice = 150000;
 
-    // Hitung Harga (1 Gratis, sisanya bayar)
+    // --- LOGIC ---
+
+    // Hitung Harga
     const totalPrice = useMemo(() => {
         const paidQty = Math.max(0, quantity - 1);
         return paidQty * basePrice;
     }, [quantity]);
 
+    // Handle Quantity
     const updateQty = (change: number) => {
         setQuantity(prev => {
             const newQty = prev + change;
             if (newQty < 1) return 1;
-            if (newQty > 10) return 10; // Limit
+            if (newQty > 10) return 10;
             return newQty;
         });
     };
 
-    // Pre-fill jika login
+    // Pre-fill Data jika Login
     useEffect(() => {
         if (session?.user) {
+            setFullName(session.user.name || '');
             // @ts-ignore
             const nick = session.user.nickname || session.user.name?.split(" ")[0];
-            if (nick) setPlayerName(nick.toUpperCase());
+            // Format Backname otomatis saat load (Remove space, max 12)
+            if (nick) {
+                const cleanNick = nick.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 12);
+                setBackName(cleanNick);
+            }
         }
     }, [session]);
 
+    // Validasi Nama Punggung (Strict)
+    const handleBackNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let val = e.target.value.toUpperCase();
+        
+        // 1. Hanya huruf A-Z (Hapus angka, spasi, simbol)
+        val = val.replace(/[^A-Z]/g, '');
+
+        // 2. Max 12 Karakter
+        if (val.length > 12) {
+            val = val.slice(0, 12);
+            toast({
+                title: "Maksimal 12 Karakter",
+                description: "Sesuai standar BWF & Komunitas, nama punggung maksimal 12 huruf.",
+                className: "bg-[#ca1f3d] text-white border-none",
+                duration: 2000
+            });
+        }
+        setBackName(val);
+    };
+
+    // Submit Order
     const handleClaim = async () => {
-        // Validasi
-        if (!playerName) {
-            toast({ title: "Data Kurang", description: "Mohon isi nama punggung.", variant: "destructive" });
+        if (!fullName) {
+            toast({ title: "Data Kurang", description: "Nama Lengkap wajib diisi.", variant: "destructive" });
+            return;
+        }
+        if (!backName) {
+            toast({ title: "Data Kurang", description: "Nama Punggung wajib diisi.", variant: "destructive" });
             return;
         }
         if (!whatsAppNumber) {
-            toast({ title: "Data Kurang", description: "Nomor WhatsApp wajib diisi untuk konfirmasi.", variant: "destructive" });
+            toast({ title: "Data Kurang", description: "Nomor WhatsApp wajib diisi.", variant: "destructive" });
             return;
         }
 
         setIsLoading(true);
 
         try {
-            // Kirim ke API Backend
             const res = await fetch('/api/member/jersey', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     size: selectedSize,
-                    customName: playerName,
-                    clubName: 'BADMINTOUR', // OTOMATIS TERISI
-                    senderName: session?.user?.name || playerName, 
+                    backName: backName, // Nama Punggung
+                    fullName: fullName, // Nama Pemesan
                     senderPhone: whatsAppNumber,
                     quantity: quantity
                 })
@@ -92,7 +125,7 @@ export default function JerseyDropPage() {
         } catch (error) {
             toast({ 
                 title: "Error", 
-                description: "Terjadi kesalahan saat menyimpan pesanan. Coba lagi nanti.", 
+                description: "Terjadi kesalahan saat menyimpan pesanan.", 
                 variant: "destructive" 
             });
         } finally {
@@ -104,15 +137,13 @@ export default function JerseyDropPage() {
     const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
 
     const priceNote = useMemo(() => {
-        if (totalPrice === 0) {
-            return "✨ Selamat! Kamu berhak mendapatkan 1 Jersey Gratis.";
-        }
+        if (totalPrice === 0) return "✨ Selamat! Kamu berhak mendapatkan 1 Jersey Gratis.";
         return `ℹ️ Info Tagihan: 1 Pcs Gratis + ${quantity - 1} Pcs Berbayar (@150k)`;
     }, [totalPrice, quantity]);
 
     return (
         <>
-            {/* HEADER NAVIGATION */}
+            {/* HEADER */}
             <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex justify-between items-center pointer-events-none">
                 <Link href="/" className="pointer-events-auto w-12 h-12 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition border border-white/10 text-white">
                     <ChevronLeft className="w-6 h-6" />
@@ -124,14 +155,12 @@ export default function JerseyDropPage() {
 
             <div className="flex flex-col lg:flex-row min-h-screen bg-[#0a0a0a]">
                 
-                {/* LEFT: IMAGE PREVIEW (CLEAN) */}
+                {/* LEFT: IMAGE PREVIEW */}
                 <div className="lg:w-1/2 relative bg-[#121212] flex items-center justify-center p-8 lg:sticky lg:top-0 lg:h-screen overflow-hidden border-b lg:border-b-0 lg:border-r border-white/10">
-                    {/* Background Ambience */}
                     <div className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] bg-[#ca1f3d]/10 blur-[120px] rounded-full"></div>
                     <div className="absolute bottom-[-20%] left-[-20%] w-[80%] h-[80%] bg-[#ffbe00]/5 blur-[120px] rounded-full"></div>
 
                     <div className="relative w-full max-w-md aspect-square z-10 group">
-                        {/* Jersey Image tanpa Overlay Text */}
                         <Image 
                             src="/images/jersey-season-1.png" 
                             alt="Jersey Preview" 
@@ -140,8 +169,6 @@ export default function JerseyDropPage() {
                             className="w-full h-full object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-105" 
                             priority
                         />
-
-                        {/* Badge Season */}
                         <div className="absolute top-4 left-4 bg-black/60 backdrop-blur border border-white/10 px-4 py-2 rounded-xl">
                             <p className="text-[10px] text-gray-300 uppercase font-bold tracking-widest">Season 1</p>
                             <p className="text-white font-black text-lg">Official Kit</p>
@@ -153,7 +180,7 @@ export default function JerseyDropPage() {
                 <div className="lg:w-1/2 bg-[#0a0a0a] relative flex flex-col">
                     <div className="flex-1 p-6 md:p-12 lg:p-16 space-y-10 max-w-2xl mx-auto w-full pt-24 lg:pt-16">
 
-                        {/* Title Section */}
+                        {/* Title */}
                         <div>
                             <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none mb-4 text-white">
                                 Claim Your <br /><span className="text-[#ffbe00]">Legacy.</span>
@@ -162,37 +189,30 @@ export default function JerseyDropPage() {
                                 <span className="bg-green-500/20 text-green-500 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wide border border-green-500/30">
                                     Free Claim Available
                                 </span>
-                                <p className="text-gray-300 text-sm font-medium">Khusus member terdaftar & publik.</p>
                             </div>
                         </div>
 
-                        {/* Quantity & Price Card */}
+                        {/* Quantity & Price */}
                         <div className="bg-[#151515] p-5 rounded-[1.5rem] border border-white/10">
                             <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Jumlah Pesanan</label>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center bg-black/30 rounded-xl p-1 border border-white/10">
-                                    <button onClick={() => updateQty(-1)} className="w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center hover:bg-white/20 transition text-xl font-bold text-white">-</button>
+                                    <button onClick={() => updateQty(-1)} className="w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center text-white font-bold hover:bg-white/10">-</button>
                                     <input type="number" value={quantity} readOnly className="w-16 bg-transparent text-center font-black text-2xl outline-none text-white" />
-                                    <button onClick={() => updateQty(1)} className="w-12 h-12 bg-white text-black rounded-lg flex items-center justify-center hover:bg-gray-200 transition text-xl font-bold">+</button>
+                                    <button onClick={() => updateQty(1)} className="w-12 h-12 bg-white text-black rounded-lg flex items-center justify-center font-bold hover:bg-gray-200">+</button>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">Estimasi Harga</p>
                                     <div>
                                         {totalPrice === 0 ? (
-                                            <>
-                                                <span className="text-3xl font-black text-[#ffbe00]">FREE</span>
-                                                <span className="text-sm text-gray-500 line-through decoration-[#ca1f3d] ml-1">Rp 150k</span>
-                                            </>
+                                            <span className="text-3xl font-black text-[#ffbe00]">FREE</span>
                                         ) : (
                                             <span className="text-3xl font-black text-white">Rp {totalPrice.toLocaleString('id-ID')}</span>
                                         )}
                                     </div>
                                 </div>
                             </div>
-                            <div className={cn(
-                                "mt-3 pt-3 border-t border-white/5 text-[11px] font-bold italic",
-                                totalPrice === 0 ? "text-green-500" : "text-gray-400"
-                            )}>
+                            <div className={cn("mt-3 pt-3 border-t border-white/5 text-[11px] font-bold italic", totalPrice === 0 ? "text-green-500" : "text-gray-400")}>
                                 {priceNote}
                             </div>
                         </div>
@@ -202,8 +222,7 @@ export default function JerseyDropPage() {
                             <div className="flex justify-between items-end mb-4">
                                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest">Pilih Ukuran</label>
                                 <button type="button" onClick={toggleSizeChart} className="text-xs font-bold text-[#ffbe00] hover:text-white transition flex items-center gap-1">
-                                    <Shirt className="w-4 h-4" />
-                                    Lihat Size Chart
+                                    <Ruler className="w-4 h-4" /> Lihat Size Chart
                                 </button>
                             </div>
                             <div className="grid grid-cols-5 gap-3">
@@ -218,19 +237,46 @@ export default function JerseyDropPage() {
                             </div>
                         </div>
 
-                        {/* Input Form (REMOVED CLUB NAME) */}
+                        {/* FORM INPUTS */}
                         <div className="space-y-6">
+                            
+                            {/* 1. Nama Lengkap */}
                             <div>
-                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Nama Punggung (Max 12)</label>
+                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Nama Lengkap (Pemesan)</label>
                                 <input 
                                     type="text" 
-                                    value={playerName} 
-                                    onChange={e => setPlayerName(e.target.value.toUpperCase())} 
-                                    maxLength={12} 
-                                    placeholder="CONTOH: KEVIN.S" 
-                                    className="w-full bg-[#151515] border border-white/20 rounded-xl px-5 py-4 text-lg font-bold text-white placeholder-gray-500 focus:border-[#ffbe00] focus:ring-1 focus:ring-[#ffbe00] focus:outline-none transition uppercase tracking-widest" 
+                                    value={fullName} 
+                                    onChange={e => setFullName(e.target.value)} 
+                                    placeholder="Masukan nama lengkap sesuai KTP/ID" 
+                                    className="w-full bg-[#151515] border border-white/20 rounded-xl px-5 py-4 text-lg font-bold text-white placeholder-gray-600 focus:border-[#ffbe00] focus:ring-1 focus:ring-[#ffbe00] focus:outline-none transition" 
                                 />
                             </div>
+
+                            {/* 2. Nama Punggung (Strict Validation) */}
+                            <div>
+                                <div className="flex justify-between items-center mb-2">
+                                    <label className="block text-xs font-bold text-[#ffbe00] uppercase tracking-widest">
+                                        Nama Punggung (Cetak)
+                                    </label>
+                                    <span className="text-[10px] text-gray-500 font-bold">{backName.length}/12</span>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    value={backName} 
+                                    onChange={handleBackNameChange} 
+                                    maxLength={12} 
+                                    placeholder="KEVIN.S" 
+                                    className="w-full bg-[#151515] border border-[#ffbe00]/50 rounded-xl px-5 py-4 text-2xl font-black text-white placeholder-gray-600 focus:border-[#ffbe00] focus:ring-1 focus:ring-[#ffbe00] focus:outline-none transition uppercase tracking-[0.2em]" 
+                                />
+                                <div className="mt-2 flex gap-2 items-start">
+                                    <div className="w-4 h-4 bg-[#ca1f3d]/10 rounded-full flex items-center justify-center text-[#ca1f3d] shrink-0 text-[10px] font-bold border border-[#ca1f3d]/30">!</div>
+                                    <p className="text-[10px] text-gray-400 leading-tight">
+                                        Wajib huruf kapital A-Z. Tanpa spasi. Tanpa tanda baca (.,-_). Maksimal 12 karakter sesuai standar BWF.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* 3. WhatsApp */}
                             <div>
                                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Nomor WhatsApp</label>
                                 <input 
@@ -238,17 +284,17 @@ export default function JerseyDropPage() {
                                     value={whatsAppNumber} 
                                     onChange={e => setWhatsAppNumber(e.target.value)} 
                                     placeholder="08xxxxxxxxxx" 
-                                    className="w-full bg-[#151515] border border-white/20 rounded-xl px-5 py-4 text-lg font-bold text-white placeholder-gray-500 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none transition" 
+                                    className="w-full bg-[#151515] border border-white/20 rounded-xl px-5 py-4 text-lg font-bold text-white placeholder-gray-600 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none transition" 
                                 />
                             </div>
                         </div>
 
-                        {/* Action Button */}
+                        {/* Submit Button */}
                         <div className="pt-8 border-t border-white/10 pb-12">
                             <Button 
                                 onClick={handleClaim} 
                                 disabled={isLoading}
-                                className="w-full bg-white text-black py-5 rounded-[1.5rem] font-black text-xl hover:bg-[#ffbe00] transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,190,0,0.6)] hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 group h-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full bg-white text-black py-5 rounded-[1.5rem] font-black text-xl hover:bg-[#ffbe00] transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,214,10,0.6)] hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 group h-auto disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isLoading ? <Loader2 className="w-6 h-6 animate-spin"/> : <><span>KONFIRMASI PESANAN</span><ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" /></>}
                             </Button>
@@ -305,3 +351,4 @@ export default function JerseyDropPage() {
         </>
     );
 }
+```

@@ -68,7 +68,4 @@ export async function GET(req: Request) {
         const doc = await db.collection("users").doc(session.user.id).get();
         const data = doc.data();
         return NextResponse.json({ order: data?.jerseyOrder || null });
-    } catch (error) {
-        return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
-    }
-}
+    } catch (
