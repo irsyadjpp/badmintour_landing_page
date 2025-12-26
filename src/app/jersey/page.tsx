@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ArrowRight, Shirt, X, Check, Loader2, User, Ruler, Lock } from 'lucide-react';
+import { ChevronLeft, ArrowRight, Ruler, X, Check, Loader2, Lock, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,10 +20,13 @@ export default function JerseyDropPage() {
     const [selectedSize, setSelectedSize] = useState('L');
     
     // DATA INPUTS
-    const [fullName, setFullName] = useState(''); // Nama Lengkap (Pemesan)
-    const [backName, setBackName] = useState(''); // Nama Punggung (Otomatis)
+    const [fullName, setFullName] = useState(''); 
     const [whatsAppNumber, setWhatsAppNumber] = useState('');
     
+    // LOGIC NAMA PUNGGUNG
+    const [nameOption, setNameOption] = useState<'A' | 'B'>('A'); // A = Depan Full, B = Belakang Full
+    const [generatedOptions, setGeneratedOptions] = useState({ A: '', B: '' });
+
     // UI State
     const [isSizeChartOpen, setIsSizeChartOpen] = useState(false);
     const [isClaimed, setIsClaimed] = useState(false);
@@ -55,48 +58,55 @@ export default function JerseyDropPage() {
         }
     }, [session]);
 
-    // --- ALGORITMA SMART NAME GENERATOR ---
+    // --- ALGORITMA GENERATE OPSI NAMA ---
     useEffect(() => {
-        const generateSmartBackName = (name: string) => {
-            if (!name) return "";
+        const generateOptions = (name: string) => {
+            if (!name) return { A: '', B: '' };
 
-            // 1. Bersihkan Input: Kapital, Hapus Simbol, Split Spasi
-            // Contoh: "Irsyad Jamal Pratama Putra" -> ["IRSYAD", "JAMAL", "PRATAMA", "PUTRA"]
-            const parts = name.trim().toUpperCase().replace(/[^A-Z\s]/g, '').split(/\s+/).filter(p => p.length > 0);
+            // 1. Bersihkan Input (Hapus simbol, ambil huruf & spasi saja)
+            const cleanName = name.trim().toUpperCase().replace(/[^A-Z\s]/g, '');
+            const parts = cleanName.split(/\s+/).filter(p => p.length > 0);
             
-            if (parts.length === 0) return "";
+            if (parts.length === 0) return { A: '', B: '' };
 
-            // Opsi 1: Nama Full (Jika <= 12 Char)
-            // Contoh: "ALVIN" -> "ALVIN"
-            const fullJoined = parts.join('');
-            if (fullJoined.length <= 12) return fullJoined;
+            // Jika cuma 1 kata
+            if (parts.length === 1) {
+                return { A: parts[0], B: parts[0] };
+            }
 
-            // Opsi 2: Nama Depan Full + Inisial Belakang
-            // Contoh: "IRSYAD JAMAL PRATAMA PUTRA" -> "IRSYADJPP" (9 Char) - OK
+            // OPSI A: Nama Depan Full + Inisial Sisa
+            // "IRSYAD JAMAL PRATAMA PUTRA" -> "IRSYAD J P P"
             const first = parts[0];
-            const initialsTail = parts.slice(1).map(p => p[0]).join('');
-            const strategy2 = first + initialsTail;
-            if (strategy2.length <= 12) return strategy2;
+            const initialsTail = parts.slice(1).map(p => p[0]).join(' ');
+            let optionA = `${first} ${initialsTail}`.trim();
 
-            // Opsi 3: Inisial Depan + Nama Belakang Full
-            // Contoh: "MUHAMMAD AL FATIH" -> "MAFATI H" (Terlalu panjang) -> "MFATIH"
+            // OPSI B: Inisial Depan + Nama Belakang Full
+            // "IRSYAD JAMAL PRATAMA PUTRA" -> "I J P PUTRA"
             const last = parts[parts.length - 1];
-            const initialsHead = parts.slice(0, parts.length - 1).map(p => p[0]).join('');
-            const strategy3 = initialsHead + last;
-            if (strategy3.length <= 12) return strategy3;
+            const initialsHead = parts.slice(0, parts.length - 1).map(p => p[0]).join(' ');
+            let optionB = `${initialsHead} ${last}`.trim();
 
-            // Opsi 4: Potong Nama Depan (Fallback Terakhir)
-            // Contoh: "CHRISTOPHER JONATHAN" -> "CHRISTOPHER" (11 Char)
-            return first.slice(0, 12);
+            // Potong jika lebih dari 12 karakter (Aturan Jersey)
+            // Prioritaskan membuang spasi jika kepanjangan, lalu potong huruf
+            if (optionA.length > 12) optionA = optionA.replace(/\s/g, '').slice(0, 12);
+            if (optionB.length > 12) optionB = optionB.replace(/\s/g, '').slice(0, 12);
+
+            return { A: optionA, B: optionB };
         };
 
-        setBackName(generateSmartBackName(fullName));
+        setGeneratedOptions(generateOptions(fullName));
     }, [fullName]);
 
     // Submit Order
     const handleClaim = async () => {
+        const finalBackName = nameOption === 'A' ? generatedOptions.A : generatedOptions.B;
+
         if (!fullName) {
             toast({ title: "Data Kurang", description: "Nama Lengkap wajib diisi.", variant: "destructive" });
+            return;
+        }
+        if (!finalBackName) {
+            toast({ title: "Data Kurang", description: "Nama Punggung kosong.", variant: "destructive" });
             return;
         }
         if (!whatsAppNumber) {
@@ -112,7 +122,7 @@ export default function JerseyDropPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     size: selectedSize,
-                    backName: backName, 
+                    backName: finalBackName, 
                     fullName: fullName, 
                     senderPhone: whatsAppNumber,
                     quantity: quantity
@@ -176,7 +186,7 @@ export default function JerseyDropPage() {
                         />
                          {/* Live Preview Nama Punggung di Gambar */}
                          <div className="absolute top-1/3 left-0 right-0 text-center pointer-events-none opacity-80 mix-blend-overlay">
-                             <h2 className="text-white/50 font-black text-4xl tracking-[0.2em]">{backName || 'NAME'}</h2>
+                             <h2 className="text-white/50 font-black text-4xl tracking-[0.2em]">{nameOption === 'A' ? generatedOptions.A : generatedOptions.B || 'NAME'}</h2>
                         </div>
                         
                         <div className="absolute top-4 left-4 bg-black/60 backdrop-blur border border-white/10 px-4 py-2 rounded-xl">
@@ -227,26 +237,6 @@ export default function JerseyDropPage() {
                             </div>
                         </div>
 
-                        {/* Size Selection */}
-                        <div>
-                            <div className="flex justify-between items-end mb-4">
-                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest">Pilih Ukuran</label>
-                                <button type="button" onClick={toggleSizeChart} className="text-xs font-bold text-[#ffbe00] hover:text-white transition flex items-center gap-1">
-                                    <Ruler className="w-4 h-4" /> Lihat Size Chart
-                                </button>
-                            </div>
-                            <div className="grid grid-cols-5 gap-3">
-                                {sizes.map(size => (
-                                    <label key={size} className="cursor-pointer group">
-                                        <input type="radio" name="size" value={size} checked={selectedSize === size} onChange={() => setSelectedSize(size)} className="peer sr-only" />
-                                        <div className="h-14 rounded-xl border border-white/20 bg-white/5 flex items-center justify-center font-bold text-gray-300 group-hover:border-white transition-all peer-checked:bg-[#ffbe00] peer-checked:text-black peer-checked:border-[#ffbe00] peer-checked:font-black peer-checked:scale-105">
-                                            {size}
-                                        </div>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-
                         {/* FORM INPUTS */}
                         <div className="space-y-6">
                             
@@ -262,44 +252,85 @@ export default function JerseyDropPage() {
                                 />
                             </div>
 
-                            {/* 2. Nama Punggung (Auto & Disabled) */}
-                            <div>
-                                <div className="flex justify-between items-center mb-2">
+                            {/* 2. OPSI NAMA PUNGGUNG (Smart Selector) */}
+                            <div className="bg-[#151515] p-5 rounded-[1.5rem] border border-white/10 space-y-4">
+                                <div className="flex justify-between items-center">
                                     <label className="flex items-center gap-2 text-xs font-bold text-[#ffbe00] uppercase tracking-widest">
-                                        <Lock className="w-3 h-3" /> Nama Punggung (Otomatis)
+                                        <Lock className="w-3 h-3" /> Pilih Nama Punggung
                                     </label>
-                                    <span className="text-[10px] text-gray-500 font-bold">{backName.length}/12</span>
+                                    <RefreshCw className="w-3 h-3 text-gray-500 animate-spin-slow" />
                                 </div>
-                                
-                                <div className="relative">
-                                    <input 
-                                        type="text" 
-                                        value={backName} 
-                                        readOnly
-                                        disabled
-                                        className="w-full bg-black/40 border border-[#ffbe00]/30 rounded-xl px-5 py-4 text-2xl font-black text-gray-300 cursor-not-allowed uppercase tracking-[0.2em] opacity-80" 
-                                    />
-                                    {backName && (
-                                        <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                            <Check className="w-5 h-5 text-green-500" />
-                                        </div>
+
+                                {/* OPSI A: DEPAN + INISIAL */}
+                                <div 
+                                    onClick={() => setNameOption('A')}
+                                    className={cn(
+                                        "p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group",
+                                        nameOption === 'A' 
+                                            ? "border-[#ffbe00] bg-[#ffbe00]/10" 
+                                            : "border-white/5 bg-black/20 hover:border-white/20"
                                     )}
+                                >
+                                    <div>
+                                        <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Opsi 1: Nama Depan + Inisial</p>
+                                        <p className="text-xl font-black text-white tracking-widest">
+                                            {generatedOptions.A || "..."}
+                                        </p>
+                                    </div>
+                                    {nameOption === 'A' && <div className="w-6 h-6 rounded-full bg-[#ffbe00] flex items-center justify-center text-black"><Check className="w-4 h-4" /></div>}
                                 </div>
-                                <div className="mt-2 text-[10px] text-gray-500 leading-tight">
-                                    *Sistem otomatis menyingkat nama sesuai standar BWF (Maks 12 Karakter, Tanpa Spasi).
+
+                                {/* OPSI B: INISIAL + BELAKANG */}
+                                <div 
+                                    onClick={() => setNameOption('B')}
+                                    className={cn(
+                                        "p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group",
+                                        nameOption === 'B' 
+                                            ? "border-[#ffbe00] bg-[#ffbe00]/10" 
+                                            : "border-white/5 bg-black/20 hover:border-white/20"
+                                    )}
+                                >
+                                    <div>
+                                        <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Opsi 2: Inisial + Nama Belakang</p>
+                                        <p className="text-xl font-black text-white tracking-widest">
+                                            {generatedOptions.B || "..."}
+                                        </p>
+                                    </div>
+                                    {nameOption === 'B' && <div className="w-6 h-6 rounded-full bg-[#ffbe00] flex items-center justify-center text-black"><Check className="w-4 h-4" /></div>}
+                                </div>
+
+                                <div className="text-[10px] text-gray-500 leading-tight pt-2 border-t border-white/5">
+                                    *Sistem otomatis menyingkat nama sesuai standar BWF (Maks 12 Karakter). Pilih salah satu yang Anda sukai.
                                 </div>
                             </div>
 
-                            {/* 3. WhatsApp */}
-                            <div>
-                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Nomor WhatsApp</label>
-                                <input 
-                                    type="tel" 
-                                    value={whatsAppNumber} 
-                                    onChange={e => setWhatsAppNumber(e.target.value)} 
-                                    placeholder="08xxxxxxxxxx" 
-                                    className="w-full bg-[#151515] border border-white/20 rounded-xl px-5 py-4 text-lg font-bold text-white placeholder-gray-600 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none transition" 
-                                />
+                            {/* 3. Size & WA */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <div className="flex justify-between items-end mb-2">
+                                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest">Ukuran</label>
+                                        <button type="button" onClick={toggleSizeChart} className="text-[10px] font-bold text-[#ffbe00] hover:text-white flex items-center gap-1">
+                                            <Ruler className="w-3 h-3" /> Chart
+                                        </button>
+                                    </div>
+                                    <select 
+                                        value={selectedSize} 
+                                        onChange={(e) => setSelectedSize(e.target.value)}
+                                        className="w-full bg-[#151515] border border-white/20 rounded-xl px-4 py-4 text-lg font-bold text-white focus:border-[#ffbe00] focus:ring-1 focus:ring-[#ffbe00] focus:outline-none transition appearance-none"
+                                    >
+                                        {sizes.map(s => <option key={s} value={s}>{s}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">WhatsApp</label>
+                                    <input 
+                                        type="tel" 
+                                        value={whatsAppNumber} 
+                                        onChange={e => setWhatsAppNumber(e.target.value)} 
+                                        placeholder="08xxxxxxxxxx" 
+                                        className="w-full bg-[#151515] border border-white/20 rounded-xl px-5 py-4 text-lg font-bold text-white placeholder-gray-600 focus:border-green-500 focus:ring-1 focus:ring-green-500 focus:outline-none transition" 
+                                    />
+                                </div>
                             </div>
                         </div>
 
@@ -365,3 +396,5 @@ export default function JerseyDropPage() {
         </>
     );
 }
+
+```
