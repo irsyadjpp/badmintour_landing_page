@@ -7,34 +7,48 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     const body = await req.json();
-    const { size, customName, clubName, senderName, senderPhone } = body;
+    
+    // Destructure field baru
+    const { 
+        size, 
+        backName, // Nama Punggung (Max 12 Char)
+        fullName, // Nama Lengkap Pemesan
+        senderPhone,
+        quantity 
+    } = body;
 
-    if (!size || !customName || !senderName || !senderPhone) {
-      return NextResponse.json({ error: "Data tidak lengkap (Nama/WA/Size/Custom Name wajib)" }, { status: 400 });
+    // Validasi Kelengkapan
+    if (!size || !backName || !fullName || !senderPhone) {
+      return NextResponse.json({ error: "Data tidak lengkap. Nama Lengkap, Nama Punggung, WA, dan Size wajib diisi." }, { status: 400 });
+    }
+
+    // Validasi Server-Side untuk Nama Punggung (Double Check)
+    if (backName.length > 12 || !/^[A-Z]+$/.test(backName)) {
+        return NextResponse.json({ error: "Format Nama Punggung salah (Max 12 Huruf, A-Z, Tanpa Spasi)." }, { status: 400 });
     }
 
     const orderData = {
       size,
-      customName,
-      clubName: clubName || "-",
-      senderName,
+      backName,      // Field khusus cetak jersey
+      senderName: fullName, // Field admin/logistik
+      clubName: 'BADMINTOUR',
       senderPhone,
+      quantity: quantity || 1,
       orderedAt: new Date().toISOString(),
-      status: "pending", // pending, processing, shipped
+      status: "pending",
       season: "Season 1 - 2026",
       isMember: !!session?.user?.id,
       userId: session?.user?.id || null
     };
 
-    // SKENARIO 1: MEMBER (Login) -> Simpan di User Profile & Orders Collection
+    // SKENARIO 1: MEMBER (Login) -> Update Profile
     if (session?.user?.id) {
         await db.collection("users").doc(session.user.id).update({
             jerseyOrder: orderData
         });
     }
 
-    // SKENARIO 2: PUBLIC / ALL -> Simpan ke Central Orders Collection
-    // Gunakan senderPhone + timestamp sebagai ID unik sederhana
+    // SKENARIO 2: PUBLIC / ALL -> Simpan ke Central Orders
     const orderId = `ORD-${Date.now()}-${senderPhone.slice(-4)}`;
     await db.collection("jersey_orders").doc(orderId).set(orderData);
 
@@ -46,10 +60,8 @@ export async function POST(req: Request) {
   }
 }
 
-// GET tetap cek session untuk menampilkan status "Claimed" bagi member
 export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
-    // Jika tidak login, kembalikan null order (bukan error 401)
     if (!session?.user?.id) return NextResponse.json({ order: null });
 
     try {
