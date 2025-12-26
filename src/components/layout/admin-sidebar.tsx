@@ -1,40 +1,72 @@
 'use client';
-import {
-    LayoutDashboard,
-    Users,
-    Calendar,
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import { signOut, useSession } from 'next-auth/react';
+import { doc, onSnapshot } from 'firebase/firestore'; // Firestore Client Functions
+import { db } from '@/lib/firebase'; // Pastikan ini mengarah ke Config Firebase Client Anda
+import { 
+    LayoutDashboard, 
+    Users, 
+    Calendar, 
+    Settings, 
+    LogOut,
+    Shirt, 
+    Trophy,
+    UserCircle,
     Wallet,
     Box,
-    Shirt, // Changed from ClipboardList
-    Sparkles,
-    Search,
-    Trophy,
-    LogOut,
-} from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
+    Sparkles
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { signOut } from "next-auth/react";
-import { Button } from "../ui/button";
+
+const navItems = [
+    { href: "/admin/dashboard", icon: LayoutDashboard, label: "Overview" },
+    { href: "/admin/members", icon: Users, label: "Members" },
+    { href: "/admin/events", icon: Calendar, label: "Sessions" },
+    { href: "/admin/tournaments", icon: Trophy, label: "Tournaments" },
+    { href: "/admin/finance", icon: Wallet, label: "Finance" },
+    { href: "/admin/jersey", icon: Shirt, label: "Jersey Orders" },
+    { href: "/admin/inventory", icon: Box, label: "Inventory" },
+    { href: "/admin/gamification", icon: Sparkles, label: "Gamification" },
+];
+
 
 export default function AdminSidebar() {
     const pathname = usePathname();
-
-    const navItems = [
-        { href: "/admin/dashboard", icon: LayoutDashboard, label: "Overview" },
-        { href: "/admin/members", icon: Users, label: "Members" },
-        { href: "/admin/events", icon: Calendar, label: "Sessions" },
-        { href: "/admin/tournaments", icon: Trophy, label: "Tournaments" },
-        { href: "/admin/finance", icon: Wallet, label: "Finance" },
-        { href: "/admin/jersey", icon: Shirt, label: "Jersey Orders" }, // Updated from /admin/orders
-        { href: "/admin/inventory", icon: Box, label: "Inventory" },
-        { href: "/admin/gamification", icon: Sparkles, label: "Gamification" },
-    ];
+    const { data: session } = useSession();
     
+    // State untuk Data Profile dari Firestore
+    const [adminProfile, setAdminProfile] = useState({
+        name: '',
+        image: '',
+        role: 'Admin'
+    });
+
+    // FETCH DATA REAL-TIME DARI FIRESTORE
+    useEffect(() => {
+        if (session?.user?.id) {
+            // Menggunakan onSnapshot agar jika foto diubah, sidebar langsung update
+            const unsub = onSnapshot(doc(db, "users", session.user.id), (docSnapshot) => {
+                if (docSnapshot.exists()) {
+                    const data = docSnapshot.data();
+                    setAdminProfile({
+                        name: data.name || session.user?.name || 'Admin',
+                        image: data.image || session.user?.image || '', // Prioritas gambar dari DB
+                        role: data.role || 'Admin'
+                    });
+                }
+            });
+
+            return () => unsub(); // Cleanup listener
+        }
+    }, [session]);
+
     const handleLogout = async () => {
-        // Ini akan menghapus cookie session dan redirect ke halaman login
         await signOut({ callbackUrl: '/login' });
     };
 
@@ -42,17 +74,10 @@ export default function AdminSidebar() {
         <aside className="fixed top-4 bottom-4 left-4 z-50 w-20 flex flex-col items-center py-8 bg-black/20 backdrop-blur-xl border border-white/10 rounded-[3rem] shadow-2xl text-white transition-all duration-300 hover:bg-black/30 hover:border-white/20">
             <TooltipProvider delayDuration={0}>
                 
-                {/* Search Trigger */}
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <button className="p-3 mb-6 text-white/40 hover:text-white transition-all hover:scale-110 hover:bg-white/5 rounded-full">
-                            <Search className="w-5 h-5" />
-                        </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="ml-4 bg-[#1A1A1A] text-white border-white/10 text-xs font-bold">
-                        Search
-                    </TooltipContent>
-                </Tooltip>
+                {/* Logo Area */}
+                <div className="p-3 mb-6 rounded-2xl bg-[#ca1f3d]/80 text-white shadow-[0_0_15px_rgba(202,31,61,0.5)]">
+                     <Trophy className="w-5 h-5" />
+                </div>
     
                 {/* Navigation Items */}
                 <nav className="flex-1 flex flex-col gap-4 w-full items-center justify-center">
@@ -66,13 +91,12 @@ export default function AdminSidebar() {
                                         className={cn(
                                             "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 relative group",
                                             isActive 
-                                                ? "bg-bad-yellow text-black shadow-[0_0_20px_rgba(250,204,21,0.4)] scale-110" // Active: Neon Yellow & Glow
-                                                : "text-white/40 hover:bg-white/10 hover:text-white hover:scale-105" // Inactive: Ghost
+                                                ? "bg-bad-yellow text-black shadow-[0_0_20px_rgba(250,204,21,0.4)] scale-110"
+                                                : "text-white/40 hover:bg-white/10 hover:text-white hover:scale-105"
                                         )}
                                     >
                                         <item.icon className={cn("w-5 h-5", isActive && "fill-current")} />
                                         
-                                        {/* Dot Indicator untuk item aktif (Opsional, menambah detail) */}
                                         {isActive && (
                                             <span className="absolute -right-1 top-1 w-2 h-2 bg-white rounded-full border border-black/10"></span>
                                         )}
@@ -90,13 +114,19 @@ export default function AdminSidebar() {
                 <Tooltip>
                     <TooltipTrigger asChild>
                         <button onClick={handleLogout} className="w-10 h-10 rounded-full bg-white/5 border border-white/10 overflow-hidden mt-6 hover:border-bad-red/50 transition-all duration-300 hover:shadow-[0_0_15px_rgba(248,113,113,0.3)]">
-                            <Image 
-                                src="https://ui-avatars.com/api/?name=Admin&background=random" 
-                                alt="Admin" 
-                                width={40} 
-                                height={40} 
-                                className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity"
-                            />
+                            {adminProfile.image ? (
+                                <Image 
+                                    src={adminProfile.image} 
+                                    alt="Admin" 
+                                    width={40} 
+                                    height={40} 
+                                    className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity"
+                                />
+                            ) : (
+                                <div className="w-full h-full bg-[#151515] flex items-center justify-center text-gray-400">
+                                   <UserCircle className="w-6 h-6" />
+                                </div>
+                            )}
                         </button>
                     </TooltipTrigger>
                     <TooltipContent side="right" className="ml-4 bg-bad-red text-white border-bad-red text-xs font-bold">
