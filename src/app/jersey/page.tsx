@@ -6,22 +6,31 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ArrowRight, Shirt, X, Check, Loader2, User, Ruler } from 'lucide-react';
+import { ChevronLeft, ArrowRight, Shirt, X, Check, Loader2, User, Ruler, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+
+// --- DATA SIZE CHART BARU ---
+const sizeChartData = [
+    { size: 'S', width: 47, length: 67 },
+    { size: 'M', width: 50, length: 70 },
+    { size: 'L', width: 52, length: 72 },
+    { size: 'XL', width: 54, length: 74 },
+    { size: 'XXL', width: 56, length: 77 },
+];
 
 export default function JerseyDropPage() {
     const { data: session } = useSession();
     const router = useRouter();
     const { toast } = useToast();
 
-    // --- STATE ---
+    // STATE
     const [quantity, setQuantity] = useState(1);
     const [selectedSize, setSelectedSize] = useState('L');
     
     // DATA INPUTS
     const [fullName, setFullName] = useState(''); // Nama Lengkap (Pemesan)
-    const [backName, setBackName] = useState(''); // Nama Punggung (Cetak)
+    const [backName, setBackName] = useState(''); // Nama Punggung (Otomatis)
     const [whatsAppNumber, setWhatsAppNumber] = useState('');
     
     // UI State
@@ -32,15 +41,13 @@ export default function JerseyDropPage() {
 
     const basePrice = 150000;
 
-    // --- LOGIC ---
-
     // Hitung Harga
     const totalPrice = useMemo(() => {
         const paidQty = Math.max(0, quantity - 1);
         return paidQty * basePrice;
     }, [quantity]);
 
-    // Handle Quantity
+    // Update Qty
     const updateQty = (change: number) => {
         setQuantity(prev => {
             const newQty = prev + change;
@@ -52,46 +59,53 @@ export default function JerseyDropPage() {
 
     // Pre-fill Data jika Login
     useEffect(() => {
-        if (session?.user) {
-            setFullName(session.user.name || '');
-            // @ts-ignore
-            const nick = session.user.nickname || session.user.name?.split(" ")[0];
-            // Format Backname otomatis saat load (Remove space, max 12)
-            if (nick) {
-                const cleanNick = nick.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 12);
-                setBackName(cleanNick);
-            }
+        if (session?.user?.name) {
+            setFullName(session.user.name.toUpperCase());
         }
     }, [session]);
 
-    // Validasi Nama Punggung (Strict)
-    const handleBackNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        let val = e.target.value.toUpperCase();
-        
-        // 1. Hanya huruf A-Z (Hapus angka, spasi, simbol)
-        val = val.replace(/[^A-Z]/g, '');
+    // --- ALGORITMA SMART NAME GENERATOR ---
+    useEffect(() => {
+        const generateSmartBackName = (name: string) => {
+            if (!name) return "";
 
-        // 2. Max 12 Karakter
-        if (val.length > 12) {
-            val = val.slice(0, 12);
-            toast({
-                title: "Maksimal 12 Karakter",
-                description: "Sesuai standar BWF & Komunitas, nama punggung maksimal 12 huruf.",
-                className: "bg-[#ca1f3d] text-white border-none",
-                duration: 2000
-            });
-        }
-        setBackName(val);
-    };
+            // 1. Bersihkan Input: Kapital, Hapus Simbol, Split Spasi
+            // Contoh: "Irsyad Jamal Pratama Putra" -> ["IRSYAD", "JAMAL", "PRATAMA", "PUTRA"]
+            const parts = name.trim().toUpperCase().replace(/[^A-Z\s]/g, '').split(/\s+/).filter(p => p.length > 0);
+            
+            if (parts.length === 0) return "";
+
+            // Opsi 1: Nama Full (Jika <= 12 Char)
+            // Contoh: "ALVIN" -> "ALVIN"
+            const fullJoined = parts.join('');
+            if (fullJoined.length <= 12) return fullJoined;
+
+            // Opsi 2: Nama Depan Full + Inisial Belakang
+            // Contoh: "IRSYAD JAMAL PRATAMA PUTRA" -> "IRSYADJPP" (9 Char) - OK
+            const first = parts[0];
+            const initialsTail = parts.slice(1).map(p => p[0]).join('');
+            const strategy2 = first + initialsTail;
+            if (strategy2.length <= 12) return strategy2;
+
+            // Opsi 3: Inisial Depan + Nama Belakang Full
+            // Contoh: "MUHAMMAD AL FATIH" -> "MAFATI H" (Terlalu panjang) -> "MFATIH"
+            const last = parts[parts.length - 1];
+            const initialsHead = parts.slice(0, parts.length - 1).map(p => p[0]).join('');
+            const strategy3 = initialsHead + last;
+            if (strategy3.length <= 12) return strategy3;
+
+            // Opsi 4: Potong Nama Depan (Fallback Terakhir)
+            // Contoh: "CHRISTOPHER JONATHAN" -> "CHRISTOPHER" (11 Char)
+            return first.slice(0, 12);
+        };
+
+        setBackName(generateSmartBackName(fullName));
+    }, [fullName]);
 
     // Submit Order
     const handleClaim = async () => {
         if (!fullName) {
             toast({ title: "Data Kurang", description: "Nama Lengkap wajib diisi.", variant: "destructive" });
-            return;
-        }
-        if (!backName) {
-            toast({ title: "Data Kurang", description: "Nama Punggung wajib diisi.", variant: "destructive" });
             return;
         }
         if (!whatsAppNumber) {
@@ -107,8 +121,8 @@ export default function JerseyDropPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     size: selectedSize,
-                    backName: backName, // Nama Punggung
-                    fullName: fullName, // Nama Pemesan
+                    backName: backName, 
+                    fullName: fullName, 
                     senderPhone: whatsAppNumber,
                     quantity: quantity
                 })
@@ -169,6 +183,11 @@ export default function JerseyDropPage() {
                             className="w-full h-full object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-105" 
                             priority
                         />
+                         {/* Live Preview Nama Punggung di Gambar */}
+                         <div className="absolute top-1/3 left-0 right-0 text-center pointer-events-none opacity-80 mix-blend-overlay">
+                             <h2 className="text-white/50 font-black text-4xl tracking-[0.2em]">{backName || 'NAME'}</h2>
+                        </div>
+                        
                         <div className="absolute top-4 left-4 bg-black/60 backdrop-blur border border-white/10 px-4 py-2 rounded-xl">
                             <p className="text-[10px] text-gray-300 uppercase font-bold tracking-widest">Season 1</p>
                             <p className="text-white font-black text-lg">Official Kit</p>
@@ -240,39 +259,43 @@ export default function JerseyDropPage() {
                         {/* FORM INPUTS */}
                         <div className="space-y-6">
                             
-                            {/* 1. Nama Lengkap */}
+                            {/* 1. Nama Lengkap (Editable) */}
                             <div>
-                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Nama Lengkap (Pemesan)</label>
+                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Nama Lengkap (Sesuai KTP)</label>
                                 <input 
                                     type="text" 
                                     value={fullName} 
-                                    onChange={e => setFullName(e.target.value)} 
-                                    placeholder="Masukan nama lengkap sesuai KTP/ID" 
-                                    className="w-full bg-[#151515] border border-white/20 rounded-xl px-5 py-4 text-lg font-bold text-white placeholder-gray-600 focus:border-[#ffbe00] focus:ring-1 focus:ring-[#ffbe00] focus:outline-none transition" 
+                                    onChange={e => setFullName(e.target.value.toUpperCase())} 
+                                    placeholder="IRSYAD JAMAL PRATAMA PUTRA" 
+                                    className="w-full bg-[#151515] border border-white/20 rounded-xl px-5 py-4 text-lg font-bold text-white placeholder-gray-600 focus:border-[#ffbe00] focus:ring-1 focus:ring-[#ffbe00] focus:outline-none transition uppercase" 
                                 />
                             </div>
 
-                            {/* 2. Nama Punggung (Strict Validation) */}
+                            {/* 2. Nama Punggung (Auto & Disabled) */}
                             <div>
                                 <div className="flex justify-between items-center mb-2">
-                                    <label className="block text-xs font-bold text-[#ffbe00] uppercase tracking-widest">
-                                        Nama Punggung (Cetak)
+                                    <label className="flex items-center gap-2 text-xs font-bold text-[#ffbe00] uppercase tracking-widest">
+                                        <Lock className="w-3 h-3" /> Nama Punggung (Otomatis)
                                     </label>
                                     <span className="text-[10px] text-gray-500 font-bold">{backName.length}/12</span>
                                 </div>
-                                <input 
-                                    type="text" 
-                                    value={backName} 
-                                    onChange={handleBackNameChange} 
-                                    maxLength={12} 
-                                    placeholder="KEVIN.S" 
-                                    className="w-full bg-[#151515] border border-[#ffbe00]/50 rounded-xl px-5 py-4 text-2xl font-black text-white placeholder-gray-600 focus:border-[#ffbe00] focus:ring-1 focus:ring-[#ffbe00] focus:outline-none transition uppercase tracking-[0.2em]" 
-                                />
-                                <div className="mt-2 flex gap-2 items-start">
-                                    <div className="w-4 h-4 bg-[#ca1f3d]/10 rounded-full flex items-center justify-center text-[#ca1f3d] shrink-0 text-[10px] font-bold border border-[#ca1f3d]/30">!</div>
-                                    <p className="text-[10px] text-gray-400 leading-tight">
-                                        Wajib huruf kapital A-Z. Tanpa spasi. Tanpa tanda baca (.,-_). Maksimal 12 karakter sesuai standar BWF.
-                                    </p>
+                                
+                                <div className="relative">
+                                    <input 
+                                        type="text" 
+                                        value={backName} 
+                                        readOnly
+                                        disabled
+                                        className="w-full bg-black/40 border border-[#ffbe00]/30 rounded-xl px-5 py-4 text-2xl font-black text-gray-300 cursor-not-allowed uppercase tracking-[0.2em] opacity-80" 
+                                    />
+                                    {backName && (
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                            <Check className="w-5 h-5 text-green-500" />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="mt-2 text-[10px] text-gray-500 leading-tight">
+                                    *Sistem otomatis menyingkat nama sesuai standar BWF (Maks 12 Karakter, Tanpa Spasi).
                                 </div>
                             </div>
 
@@ -305,7 +328,7 @@ export default function JerseyDropPage() {
                 </div>
             </div>
 
-            {/* SUCCESS MODAL */}
+            {/* SUCCESS MODAL (Tetap sama) */}
             <div className={cn(
                 "fixed inset-0 bg-black/95 backdrop-blur-md z-[70] flex flex-col items-center justify-center p-6 text-center transition-opacity duration-500",
                 isClaimed ? "flex opacity-100 visible" : "hidden opacity-0 invisible"
@@ -327,7 +350,7 @@ export default function JerseyDropPage() {
                 </Link>
             </div>
 
-            {/* SIZE CHART MODAL */}
+            {/* SIZE CHART MODAL (Tetap sama) */}
             <div id="sizeChartModal" className={cn("fixed inset-0 z-[60] flex items-center justify-center p-4 transition-opacity duration-300", isSizeChartOpen ? 'opacity-100 visible' : 'opacity-0 invisible')} onClick={toggleSizeChart}>
                 <div className="absolute inset-0 bg-black/90 backdrop-blur-sm"></div>
                 <div className={cn("bg-[#1A1A1A] w-full max-w-sm rounded-[2rem] border border-white/10 shadow-2xl relative z-10 overflow-hidden transform transition-all duration-300", isSizeChartOpen ? 'scale-100' : 'scale-95')} onClick={(e) => e.stopPropagation()}>
@@ -352,4 +375,4 @@ export default function JerseyDropPage() {
     );
 }
 
-    
+```
