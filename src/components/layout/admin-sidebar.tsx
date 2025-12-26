@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import Image from 'next/image'; // Import Image
 import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
-import { doc, onSnapshot } from 'firebase/firestore'; // Firestore Client Functions
-import { db } from '@/lib/firebase'; // Pastikan ini mengarah ke Config Firebase Client Anda
+import { doc, onSnapshot } from 'firebase/firestore'; 
+import { db } from '@/lib/firebase'; 
 import { 
     LayoutDashboard, 
     Users, 
