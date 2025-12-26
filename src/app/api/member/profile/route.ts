@@ -1,63 +1,56 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/firebase-admin";
 
-export async function POST(req: Request) {
+export async function PUT(req: Request) {
   try {
-    // 1. Cek Sesi Login
     const session = await getServerSession(authOptions);
-    if (!session || !session.user?.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 2. Ambil Data dari Body Request
-    const data = await req.json();
-    const { phoneNumber, domicile, jerseySize, skillLevel, fullName } = data;
+    const body = await req.json();
+    const { phoneNumber, nickname } = body;
 
-    // 3. Validasi Sederhana
-    if (!fullName || !phoneNumber) {
-      return NextResponse.json({ error: "Nama dan No WA wajib diisi" }, { status: 400 });
+    // Validasi sederhana
+    if (!phoneNumber) {
+        return NextResponse.json({ error: "Nomor HP wajib diisi" }, { status: 400 });
     }
 
-    // 4. Update Firestore
-    // Kita gunakan ID user dari session (pastikan di authOptions session callback mengembalikan ID)
-    // Jika session.user.id tidak ada, fallback cari by email (opsional, tapi lebih aman pakai ID)
-    const userId = session.user.id; 
-    
-    if (userId) {
-        await db.collection("users").doc(userId).set({
-            name: fullName, // Update display name juga
-            phoneNumber,
-            domicile,
-            jerseySize,
-            skillLevel,
-            updatedAt: new Date().toISOString(),
-            isProfileComplete: true
-        }, { merge: true }); // Merge agar data lain (email, role) tidak hilang
-    
-        return NextResponse.json({ success: true, message: "Profil berhasil disimpan" });
-    } else {
-        return NextResponse.json({ error: "User ID not found in session" }, { status: 400 });
+    // 1. CEK DUPLIKASI (Pairing Logic)
+    // Pastikan nomor HP belum dipakai oleh User ID lain
+    const duplicateCheck = await db.collection("users")
+        .where("phoneNumber", "==", phoneNumber)
+        .get();
+
+    let isDuplicate = false;
+    duplicateCheck.forEach(doc => {
+        if (doc.id !== session.user.id) {
+            isDuplicate = true;
+        }
+    });
+
+    if (isDuplicate) {
+        return NextResponse.json({ 
+            error: "Nomor WhatsApp ini sudah terhubung dengan akun lain." 
+        }, { status: 409 });
     }
+
+    // 2. UPDATE PROFILE (Lakukan Pairing)
+    await db.collection("users").doc(session.user.id).update({
+        phoneNumber: phoneNumber,
+        nickname: nickname || session.user.nickname, // Update nickname sekalian jika ada
+        updatedAt: new Date().toISOString()
+    });
+
+    return NextResponse.json({ 
+        success: true, 
+        message: "Profile updated. Akun berhasil ditautkan." 
+    });
 
   } catch (error) {
-    console.error("[PROFILE_API_ERROR]", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error("Profile Update Error:", error);
+    return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
   }
-}
-
-// Handler untuk mengambil data profil saat halaman dimuat
-export async function GET(req: Request) {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    try {
-        const doc = await db.collection("users").doc(session.user.id).get();
-        if (!doc.exists) return NextResponse.json({ empty: true });
-        
-        return NextResponse.json(doc.data());
-    } catch (error) {
-        return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
-    }
 }

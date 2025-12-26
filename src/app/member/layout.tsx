@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import MemberSidebar from '@/components/layout/member-sidebar';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: 'Member Area | BadminTour',
@@ -29,6 +30,7 @@ export default function MemberLayout({
             {children}
           </div>
        </main>
+       <Toaster />
     </div>
   );
 }

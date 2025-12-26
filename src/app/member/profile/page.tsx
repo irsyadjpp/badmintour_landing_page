@@ -2,171 +2,150 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { useForm } from 'react-hook-form';
-import { User, Phone, MapPin, Save, Shirt, Trophy, Loader2, Camera } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { User, Phone, Save, Loader2, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { Card } from '@/components/ui/card';
 
-type ProfileFormValues = {
-    fullName: string;
-    phoneNumber: string;
-    domicile: string;
-    jerseySize: string;
-    skillLevel: string;
-};
-
-export default function MemberProfilePage() {
-    const { data: session } = useSession();
+export default function ProfilePage() {
+    const { data: session, update } = useSession();
+    const router = useRouter();
     const { toast } = useToast();
-    const [isLoading, setIsLoading] = useState(false);
-    const [isFetching, setIsFetching] = useState(true);
     
-    const { register, handleSubmit, setValue } = useForm<ProfileFormValues>();
+    const [isLoading, setIsLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        nickname: '',
+        phoneNumber: ''
+    });
 
-    // Fetch Data Existing saat load
+    // Load data session ke form saat pertama kali buka
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const res = await fetch('/api/member/profile');
-                if (res.ok) {
-                    const data = await res.json();
-                    if (!data.empty) {
-                        setValue("fullName", data.name || session?.user?.name || "");
-                        setValue("phoneNumber", data.phoneNumber || "");
-                        setValue("domicile", data.domicile || "");
-                        setValue("jerseySize", data.jerseySize || "");
-                        setValue("skillLevel", data.skillLevel || "Beginner");
-                    } else {
-                        // Default value dari session jika DB kosong
-                        setValue("fullName", session?.user?.name || "");
-                    }
-                }
-            } catch (err) {
-                console.error("Gagal ambil data profil");
-            } finally {
-                setIsFetching(false);
-            }
-        };
+        if (session?.user) {
+            setFormData({
+                nickname: session.user.nickname || session.user.name?.split(' ')[0] || '',
+                phoneNumber: session.user.phoneNumber || ''
+            });
+        }
+    }, [session]);
 
-        if (session) fetchData();
-    }, [session, setValue]);
-
-    const onSubmit = async (data: ProfileFormValues) => {
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
         setIsLoading(true);
+
         try {
             const res = await fetch('/api/member/profile', {
-                method: 'POST',
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                body: JSON.stringify(formData)
             });
 
-            if (!res.ok) throw new Error("Gagal menyimpan");
+            const data = await res.json();
 
-            toast({
-                title: "Profile Updated",
-                description: "Data profil kamu berhasil disimpan ke database.",
-                className: "bg-green-600 text-white border-none"
-            });
-        } catch (error) {
-            toast({
-                title: "Error",
-                description: "Terjadi kesalahan saat menyimpan data.",
-                variant: "destructive"
+            if (res.ok) {
+                // Update session di client agar data baru langsung terbaca tanpa logout
+                await update({
+                    ...session,
+                    user: {
+                        ...session?.user,
+                        nickname: formData.nickname,
+                        phoneNumber: formData.phoneNumber
+                    }
+                });
+
+                toast({ title: "Berhasil!", description: "Profil berhasil disimpan & ditautkan." });
+                router.refresh();
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (error: any) {
+            toast({ 
+                title: "Gagal Menyimpan", 
+                description: error.message || "Terjadi kesalahan.", 
+                variant: "destructive" 
             });
         } finally {
             setIsLoading(false);
         }
     };
 
-    if (isFetching) {
-        return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="animate-spin text-[#ffbe00]" /></div>;
-    }
-
     return (
-        <div className="space-y-8 pb-20 max-w-4xl mx-auto">
-            <div>
-                <h1 className="text-3xl font-black text-white tracking-tighter mb-2">My Profile</h1>
-                <p className="text-gray-400">Kelola informasi pribadi dan preferensi permainanmu.</p>
+        <div className="min-h-screen pb-20 pt-8 px-6 space-y-8 max-w-xl mx-auto">
+            
+            <div className="text-center">
+                <h1 className="text-3xl font-black text-white">Lengkapi Profil</h1>
+                <p className="text-gray-400 text-sm">Tautkan nomor WhatsApp untuk kemudahan notifikasi & login.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                {/* Avatar Section */}
-                <div className="lg:col-span-4">
-                    <Card className="bg-[#151515] border-white/5 rounded-[2rem] p-6 text-center relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-[#ffbe00]/20 to-transparent"></div>
-                        <div className="relative z-10">
-                            <div className="w-32 h-32 mx-auto relative mb-4 group cursor-pointer">
-                                <Avatar className="w-full h-full border-4 border-[#1A1A1A] shadow-2xl">
-                                    <AvatarImage src={session?.user?.image || ""} />
-                                    <AvatarFallback className="bg-[#ffbe00] text-black text-4xl font-black">
-                                        {session?.user?.name?.charAt(0)}
-                                    </AvatarFallback>
-                                </Avatar>
-                            </div>
-                            <h3 className="text-xl font-bold text-white">{session?.user?.name}</h3>
-                            <p className="text-sm text-gray-500 mb-6">{session?.user?.email}</p>
+            <Card className="bg-[#151515] border-white/10 p-8 rounded-[2rem] shadow-2xl">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    
+                    {/* Avatar Display */}
+                    <div className="flex justify-center mb-6">
+                        <Avatar className="w-24 h-24 border-4 border-[#1A1A1A] shadow-xl">
+                            <AvatarImage src={session?.user?.image || ""} />
+                            <AvatarFallback className="bg-[#ffbe00] text-black font-black text-3xl">
+                                {session?.user?.name?.charAt(0)}
+                            </AvatarFallback>
+                        </Avatar>
+                    </div>
+
+                    {/* Email (Read Only - Sumber Google) */}
+                    <div className="space-y-2">
+                        <Label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Akun Google</Label>
+                        <div className="flex items-center gap-3 bg-black/30 p-4 rounded-xl border border-white/5 opacity-70">
+                            <ShieldCheck className="w-5 h-5 text-green-500" />
+                            <span className="text-white font-mono text-sm truncate">{session?.user?.email}</span>
                         </div>
-                    </Card>
-                </div>
+                    </div>
 
-                {/* Edit Form */}
-                <div className="lg:col-span-8">
-                    <Card className="bg-[#151515] border-white/5 rounded-[2rem]">
-                        <CardHeader>
-                            <CardTitle className="text-white">Personal Information</CardTitle>
-                            <CardDescription>Data ini digunakan untuk verifikasi turnamen dan mabar.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                                <div className="space-y-2">
-                                    <Label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><User className="w-3 h-3"/> Display Name</Label>
-                                    <Input {...register("fullName")} className="bg-[#0a0a0a] border-white/10 h-12 rounded-xl text-white font-bold" />
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <Label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><Phone className="w-3 h-3"/> WhatsApp</Label>
-                                        <Input {...register("phoneNumber")} className="bg-[#0a0a0a] border-white/10 h-12 rounded-xl text-white font-mono" placeholder="0812..." />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><MapPin className="w-3 h-3"/> Domicile</Label>
-                                        <Input {...register("domicile")} className="bg-[#0a0a0a] border-white/10 h-12 rounded-xl text-white" />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-white/5">
-                                    <div className="space-y-2">
-                                        <Label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><Shirt className="w-3 h-3"/> Jersey Size</Label>
-                                        <Select onValueChange={(val) => setValue("jerseySize", val)}>
-                                            <SelectTrigger className="bg-[#0a0a0a] border-white/10 h-12 rounded-xl text-white"><SelectValue placeholder="Pilih Ukuran" /></SelectTrigger>
-                                            <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
-                                                {['S', 'M', 'L', 'XL', 'XXL'].map(size => <SelectItem key={size} value={size}>{size}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2"><Trophy className="w-3 h-3"/> Skill Level</Label>
-                                        <Select onValueChange={(val) => setValue("skillLevel", val)}>
-                                            <SelectTrigger className="bg-[#0a0a0a] border-white/10 h-12 rounded-xl text-white"><SelectValue placeholder="Pilih Level" /></SelectTrigger>
-                                            <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
-                                                <SelectItem value="Beginner">Beginner</SelectItem>
-                                                <SelectItem value="Intermediate">Intermediate</SelectItem>
-                                                <SelectItem value="Advanced">Advanced</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-                                <Button type="submit" disabled={isLoading} className="w-full h-14 bg-[#ffbe00] text-black hover:bg-yellow-400 font-black rounded-xl shadow-lg mt-8">
-                                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin"/> : <Save className="w-5 h-5 mr-2"/>} SIMPAN PERUBAHAN
-                                </Button>
-                            </form>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
+                    {/* Nickname Input */}
+                    <div className="space-y-2">
+                        <Label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Nama Panggilan (Nickname)</Label>
+                        <div className="relative">
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                            <Input 
+                                value={formData.nickname}
+                                onChange={(e) => setFormData({...formData, nickname: e.target.value})}
+                                className="pl-12 bg-[#1A1A1A] border-white/10 h-14 rounded-xl text-white focus:border-[#ffbe00]"
+                                placeholder="Cth: Coach Adi"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Phone Number Input (THE PAIRING FIELD) */}
+                    <div className="space-y-2">
+                        <Label className="text-xs font-bold text-[#ffbe00] uppercase tracking-widest flex items-center gap-2">
+                            Nomor WhatsApp {formData.phoneNumber && <ShieldCheck className="w-3 h-3 text-green-500"/>}
+                        </Label>
+                        <div className="relative">
+                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                            <Input 
+                                type="tel"
+                                value={formData.phoneNumber}
+                                onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
+                                className="pl-12 bg-[#1A1A1A] border-white/10 h-14 rounded-xl text-white focus:border-[#ffbe00] font-mono tracking-wider"
+                                placeholder="08xxxxxxxxxx"
+                            />
+                        </div>
+                        <p className="text-[10px] text-gray-500">
+                            *Nomor ini akan terhubung permanen dengan akun Google di atas.
+                        </p>
+                    </div>
+
+                    <Button 
+                        type="submit" 
+                        disabled={isLoading}
+                        className="w-full h-14 rounded-xl bg-[#ca1f3d] hover:bg-[#a01830] text-white font-black text-lg shadow-lg mt-4"
+                    >
+                        {isLoading ? <Loader2 className="animate-spin" /> : <><Save className="mr-2 w-5 h-5" /> SIMPAN & PAIRING</>}
+                    </Button>
+
+                </form>
+            </Card>
         </div>
     );
 }

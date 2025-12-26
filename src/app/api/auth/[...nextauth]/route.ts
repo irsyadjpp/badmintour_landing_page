@@ -83,7 +83,8 @@ export const authOptions: NextAuthOptions = {
                 email: userData.email,
                 image: userData.image,
                 role: userData.role || "member",
-                status: userData.status
+                status: userData.status,
+                phoneNumber: userData.phoneNumber,
               };
             }
           } catch (error) {
@@ -147,10 +148,12 @@ export const authOptions: NextAuthOptions = {
         if (user.role) token.role = user.role;
         // Simpan nickname ke token saat pertama kali login
         if (user.nickname) token.nickname = user.nickname;
+        // Simpan phone number jika ada saat login pertama
+        if (user.phoneNumber) token.phoneNumber = user.phoneNumber;
       }
 
       // Fetch Data Terbaru dari DB (jika user refresh halaman)
-      if (!token.role || !token.nickname) { 
+      if (!token.phoneNumber) { 
          try {
             const uid = token.sub || token.id; 
             if(uid) {
@@ -160,6 +163,8 @@ export const authOptions: NextAuthOptions = {
                     token.role = userData?.role || "member";
                     token.status = userData?.status || "active";
                     token.nickname = userData?.nickname; // Ambil nickname dari DB
+                    // AMBIL PHONE NUMBER DARI DB
+                    token.phoneNumber = userData?.phoneNumber || ""; 
                 }
             }
          } catch (error) {
@@ -177,6 +182,8 @@ export const authOptions: NextAuthOptions = {
         
         // Teruskan nickname ke session client-side
         session.user.nickname = token.nickname as string;
+        // Teruskan ke client
+        session.user.phoneNumber = token.phoneNumber as string;
       }
       return session;
     }

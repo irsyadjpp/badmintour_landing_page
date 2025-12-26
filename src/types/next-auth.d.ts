@@ -7,6 +7,7 @@ declare module "next-auth" {
       role: string;
       nickname?: string; // Tambahan field nickname
       status?: string;
+      phoneNumber?: string; // Tambahan field
     } & DefaultSession["user"];
   }
 
@@ -15,6 +16,7 @@ declare module "next-auth" {
     nickname?: string; // Tambahan field nickname
     status?: string;
     pin?: string;
+    phoneNumber?: string; // Tambahan field
   }
 }
 
@@ -24,5 +26,6 @@ declare module "next-auth/jwt" {
     role: string;
     nickname?: string; // Tambahan field nickname
     status?: string;
+    phoneNumber?: string; // Tambahan field
   }
 }
