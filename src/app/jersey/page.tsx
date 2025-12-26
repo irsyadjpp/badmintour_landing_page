@@ -396,5 +396,4 @@ export default function JerseyDropPage() {
         </>
     );
 }
-
 ```
