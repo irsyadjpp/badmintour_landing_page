@@ -9,12 +9,15 @@ import {
     Sparkles,
     Search,
     Trophy,
+    LogOut,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { signOut } from "next-auth/react";
+import { Button } from "../ui/button";
 
 export default function AdminSidebar() {
     const pathname = usePathname();
@@ -29,6 +32,11 @@ export default function AdminSidebar() {
         { href: "/admin/inventory", icon: Box, label: "Inventory" },
         { href: "/admin/gamification", icon: Sparkles, label: "Gamification" },
     ];
+    
+    const handleLogout = async () => {
+        // Ini akan menghapus cookie session dan redirect ke halaman login
+        await signOut({ callbackUrl: '/login' });
+    };
 
     return (
         <aside className="fixed top-4 bottom-4 left-4 z-50 w-20 flex flex-col items-center py-8 bg-black/20 backdrop-blur-xl border border-white/10 rounded-[3rem] shadow-2xl text-white transition-all duration-300 hover:bg-black/30 hover:border-white/20">
@@ -81,7 +89,7 @@ export default function AdminSidebar() {
                 {/* Profile / Logout */}
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Link href="/login" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 overflow-hidden mt-6 hover:border-bad-red/50 transition-all duration-300 hover:shadow-[0_0_15px_rgba(248,113,113,0.3)]">
+                        <button onClick={handleLogout} className="w-10 h-10 rounded-full bg-white/5 border border-white/10 overflow-hidden mt-6 hover:border-bad-red/50 transition-all duration-300 hover:shadow-[0_0_15px_rgba(248,113,113,0.3)]">
                             <Image 
                                 src="https://ui-avatars.com/api/?name=Admin&background=random" 
                                 alt="Admin" 
@@ -89,7 +97,7 @@ export default function AdminSidebar() {
                                 height={40} 
                                 className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity"
                             />
-                        </Link>
+                        </button>
                     </TooltipTrigger>
                     <TooltipContent side="right" className="ml-4 bg-bad-red text-white border-bad-red text-xs font-bold">
                         Logout
