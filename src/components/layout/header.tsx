@@ -4,7 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { ChevronDown, Menu, ArrowRight } from 'lucide-react';
+import { ChevronDown, Menu, ArrowRight, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -14,9 +14,13 @@ import {
   SheetTrigger,
   SheetClose
 } from '@/components/ui/sheet';
+import { useSession } from 'next-auth/react';
 
 function MobileMenu() {
     const [isMobileOpen, setIsMobileOpen] = React.useState(false);
+    const { data: session } = useSession();
+    // @ts-ignore
+    const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'superadmin';
 
     return (
         <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
@@ -68,6 +72,13 @@ function MobileMenu() {
                     </div>
 
                      <div className="mt-6 pt-6 border-t border-border">
+                        {isAdmin && (
+                            <SheetClose asChild>
+                                <Link href="/admin/dashboard" className="flex items-center justify-center w-full h-12 rounded-xl text-base font-bold bg-destructive text-white shadow-lg hover:bg-destructive/90 transition mb-2">
+                                    Admin Panel
+                                </Link>
+                            </SheetClose>
+                        )}
                         <SheetClose asChild>
                             <Link href="/login" className="flex items-center justify-center w-full h-12 rounded-xl text-base font-bold bg-primary text-white shadow-lg hover:bg-primary/90 transition">
                                 Login Member
@@ -84,6 +95,10 @@ function MobileMenu() {
 export default function Header() {
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [isClient, setIsClient] = React.useState(false);
+  const { data: session } = useSession();
+
+  // @ts-ignore
+  const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'superadmin';
 
   React.useEffect(() => {
     setIsClient(true);
@@ -103,9 +118,7 @@ export default function Header() {
         id="island"
         className={cn(
           'pointer-events-auto relative flex items-center justify-between transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]',
-          // Tentukan warna teks berdasarkan state scroll
           isScrolled ? 'text-white' : 'text-gray-900',
-          // Logika perubahan shape dari JS user
           isScrolled
             ? 'w-auto max-w-5xl py-3 px-5'
             : 'w-full max-w-7xl py-5 px-6'
@@ -180,18 +193,28 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-3 z-20">
-          <Link
-            href="/login"
-            id="btn-login"
-            className={cn(
-              'rounded-full text-sm font-black hover:scale-105 transition-all duration-300 shadow-lg whitespace-nowrap',
-              isScrolled
-                ? 'bg-white text-black px-6 py-2'
-                : 'bg-primary text-white px-7 py-3'
-            )}
-          >
-            LOGIN
-          </Link>
+          {isAdmin && (
+            <Link href="/admin/dashboard">
+              <Button variant="destructive" className="rounded-full gap-2 shadow-lg animate-pulse hover:animate-none">
+                <LayoutDashboard className="w-4 h-4"/> Admin Panel
+              </Button>
+            </Link>
+          )}
+
+          {!session && (
+            <Link
+                href="/login"
+                id="btn-login"
+                className={cn(
+                  'rounded-full text-sm font-black hover:scale-105 transition-all duration-300 shadow-lg whitespace-nowrap',
+                  isScrolled
+                    ? 'bg-white text-black px-6 py-2'
+                    : 'bg-primary text-white px-7 py-3'
+                )}
+              >
+                LOGIN
+              </Link>
+          )}
           
           {/* MOBILE MENU TOGGLE (SHEET) */}
           <div className="lg:hidden">

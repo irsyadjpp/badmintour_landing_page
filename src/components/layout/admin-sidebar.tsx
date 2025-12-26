@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image'; // Import Image
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { doc, onSnapshot } from 'firebase/firestore'; 
@@ -16,6 +16,7 @@ import {
     Shirt, 
     Trophy,
     UserCircle,
+    ArrowLeft,
     Wallet,
     Box,
     Sparkles
@@ -110,10 +111,20 @@ export default function AdminSidebar() {
                     })}
                 </nav>
 
+                <Link href="/">
+                    <Button 
+                        variant="ghost" 
+                        size="icon"
+                        className="w-10 h-10 rounded-full bg-white/5 text-gray-400 border border-white/10 mt-6 hover:bg-white/10 hover:text-white"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                    </Button>
+                </Link>
+
                 {/* Profile / Logout */}
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <button onClick={handleLogout} className="w-10 h-10 rounded-full bg-white/5 border border-white/10 overflow-hidden mt-6 hover:border-bad-red/50 transition-all duration-300 hover:shadow-[0_0_15px_rgba(248,113,113,0.3)]">
+                        <button onClick={handleLogout} className="w-10 h-10 rounded-full bg-white/5 border border-white/10 overflow-hidden mt-2 hover:border-bad-red/50 transition-all duration-300 hover:shadow-[0_0_15px_rgba(248,113,113,0.3)]">
                             {adminProfile.image ? (
                                 <Image 
                                     src={adminProfile.image} 
