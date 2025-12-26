@@ -3,35 +3,41 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/firebase-admin";
 
+// 1. POST: Simpan Order Baru
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     const body = await req.json();
 
-    // Generate Order ID (Format: JSY-YYYYMMDD-XXXX)
+    // Generate Order ID Unik (JSY-YYYYMMDD-XXXX)
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const orderId = `JSY-${dateStr}-${randomSuffix}`;
 
-    // Tentukan User ID (Jika login pakai ID, jika guest pakai 'public-guest')
+    // Identifikasi User (Member atau Guest)
     const userId = session?.user?.id || "public-guest";
-    const userName = session?.user?.name || body.fullName || "Guest";
+    const userEmail = session?.user?.email || "guest@badmintour.com";
 
     const orderData = {
       orderId: orderId,
       userId: userId,
-      userName: userName,
-      userEmail: session?.user?.email || body.email || "-",
-      items: body.items, // Array of { size, customName, quantity }
-      totalPrice: body.totalPrice,
-      status: "paid", // Asumsi langsung paid untuk MVP
-      paymentMethod: "QRIS", // Mock
-      createdAt: new Date().toISOString(),
-      pickupStatus: "pending", // pending, picked_up
-      whatsapp: body.whatsapp
+      type: session ? 'MEMBER' : 'GUEST',
+      
+      // Data Barang
+      fullName: body.fullName,
+      backName: body.backName,
+      size: body.size,
+      quantity: body.quantity,
+      senderPhone: body.senderPhone,
+      
+      // Status & System
+      status: "pending", // pending -> paid -> processing -> shipped
+      totalPrice: (Math.max(0, body.quantity - 1)) * 150000, // Rumus: (Qty - 1) * 150k
+      orderedAt: new Date().toISOString(),
+      pickupStatus: "pending"
     };
 
-    // Simpan ke Firestore Collection 'jersey_orders'
+    // Simpan ke Firestore
     await db.collection("jersey_orders").doc(orderId).set(orderData);
 
     return NextResponse.json({ 
@@ -46,23 +52,23 @@ export async function POST(req: Request) {
   }
 }
 
-// Tambahan: GET Method untuk mengambil order spesifik user (dipakai di Dashboard Member)
+// 2. GET: Ambil Order User Login (Untuk Member Dashboard)
 export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     try {
         const snapshot = await db.collection("jersey_orders")
             .where("userId", "==", session.user.id)
-            .orderBy("createdAt", "desc")
+            .orderBy("orderedAt", "desc")
             .get();
 
         const orders = snapshot.docs.map(doc => doc.data());
-        return NextResponse.json(orders);
+        return NextResponse.json({ success: true, data: orders });
     } catch (error) {
-        return NextResponse.json({ error: "Fetch failed" }, { status: 500 });
+        return NextResponse.json({ success: false, error: "Fetch failed" }, { status: 500 });
     }
 }

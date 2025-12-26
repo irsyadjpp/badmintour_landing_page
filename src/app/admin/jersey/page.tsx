@@ -25,7 +25,7 @@ export default function AdminJerseyPage() {
                 const res = await fetch('/api/admin/jersey');
                 if (res.ok) {
                     const data = await res.json();
-                    setOrders(data);
+                    if(data.success) setOrders(data.data);
                 }
             } catch (error) {
                 console.error("Error fetching orders:", error);
@@ -37,8 +37,8 @@ export default function AdminJerseyPage() {
     }, []);
 
     const filteredOrders = orders.filter(order => 
-        order.orderId.toLowerCase().includes(search.toLowerCase()) ||
-        order.userName.toLowerCase().includes(search.toLowerCase())
+        (order.orderId || '').toLowerCase().includes(search.toLowerCase()) ||
+        (order.fullName || '').toLowerCase().includes(search.toLowerCase())
     );
 
     return (
@@ -91,15 +91,13 @@ export default function AdminJerseyPage() {
                                 <TableRow key={order.id} className="border-white/5 hover:bg-white/5 transition-colors">
                                     <TableCell className="font-mono font-bold text-[#ffbe00]">{order.orderId}</TableCell>
                                     <TableCell>
-                                        <div className="font-bold text-white">{order.userName}</div>
-                                        <div className="text-xs text-gray-500">{order.whatsapp}</div>
+                                        <div className="font-bold text-white">{order.fullName}</div>
+                                        <div className="text-xs text-gray-500">{order.senderPhone}</div>
                                     </TableCell>
                                     <TableCell>
-                                        {order.items.map((item: any, idx: number) => (
-                                            <div key={idx} className="text-xs text-gray-300">
-                                                Size: <b>{item.size}</b> | Qty: {item.quantity} | "{item.customName || '-'}"
-                                            </div>
-                                        ))}
+                                        <div className="text-xs text-gray-300">
+                                            Size: <b>{order.size}</b> | Qty: {order.quantity} | "{order.backName || '-'}"
+                                        </div>
                                     </TableCell>
                                     <TableCell className="font-bold text-white">Rp {order.totalPrice.toLocaleString('id-ID')}</TableCell>
                                     <TableCell>

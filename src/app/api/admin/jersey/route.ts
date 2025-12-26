@@ -6,19 +6,39 @@ import { db } from "@/lib/firebase-admin";
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    // Cek Role Admin/Superadmin
+    // Security: Cek Role
     if (!["admin", "superadmin"].includes(session?.user?.role as string)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const snapshot = await db.collection("jersey_orders").orderBy("createdAt", "desc").get();
+    // Ambil semua order
+    const snapshot = await db.collection("jersey_orders").orderBy("orderedAt", "desc").get();
     const orders = snapshot.docs.map(doc => ({
-      id: doc.id, // Order ID
+      id: doc.id,
       ...doc.data()
     }));
 
-    return NextResponse.json(orders);
+    return NextResponse.json({ success: true, data: orders });
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch orders" }, { status: 500 });
   }
+}
+
+// Endpoint untuk update status (Opsional, untuk fitur dropdown action di admin)
+export async function PUT(req: Request) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!["admin", "superadmin"].includes(session?.user?.role as string)) {
+             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+        }
+        
+        const body = await req.json();
+        await db.collection("jersey_orders").doc(body.id).update({
+            status: body.status
+        });
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        return NextResponse.json({ error: "Update failed" }, { status: 500 });
+    }
 }
