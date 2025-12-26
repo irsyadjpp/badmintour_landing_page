@@ -1,257 +1,250 @@
+
 'use client';
 
-import { useState } from 'react';
-import { Scanner } from '@yudiel/react-qr-scanner';
-import { 
-    Scan, 
-    Keyboard, 
-    CheckCircle2, 
-    XCircle, 
-    RefreshCw, 
-    Activity
-} from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
+import { useSession } from 'next-auth/react';
+import { QrCode, CheckCircle2, XCircle, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
-export default function HostScanPage() {
-    // --- STATE ---
-    const [scanResult, setScanResult] = useState<'success' | 'error' | null>(null);
-    const [scannedData, setScannedData] = useState<string>("");
-    const [manualCode, setManualCode] = useState("");
-    const [isProcessing, setIsProcessing] = useState(false);
+export default function ScanPage() {
+    const { data: session } = useSession();
+    const { toast } = useToast();
     
-    // Mock Session Data
-    const sessionStats = {
-        name: "Mabar Senin Ceria",
-        checkedIn: 8,
-        total: 12,
-        percentage: (8/12) * 100
-    };
+    // State
+    const [scanResult, setScanResult] = useState<string | null>(null);
+    const [scanData, setScanData] = useState<any>(null); // Data detail order dari API
+    const [status, setStatus] = useState<'idle' | 'scanning' | 'processing' | 'success' | 'error'>('idle');
+    const [errorMessage, setErrorMessage] = useState('');
 
-    // --- AUDIO BEEP LOGIC ---
-    const playBeep = (type: 'success' | 'error') => {
-        const context = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const oscillator = context.createOscillator();
-        const gainNode = context.createGain();
+    const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
-        oscillator.connect(gainNode);
-        gainNode.connect(context.destination);
-
-        if (type === 'success') {
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(880, context.currentTime); // High pitch (A5)
-            oscillator.frequency.exponentialRampToValueAtTime(1760, context.currentTime + 0.1);
-        } else {
-            oscillator.type = 'sawtooth';
-            oscillator.frequency.setValueAtTime(150, context.currentTime); // Low pitch
-            oscillator.frequency.linearRampToValueAtTime(100, context.currentTime + 0.3);
+    // Inisialisasi Scanner
+    useEffect(() => {
+        // Hanya render scanner jika status 'scanning'
+        if (status === 'scanning' && !scannerRef.current) {
+            const scanner = new Html5QrcodeScanner(
+                "reader",
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                /* verbose= */ false
+            );
+            
+            scanner.render(onScanSuccess, onScanFailure);
+            scannerRef.current = scanner;
         }
 
-        gainNode.gain.setValueAtTime(0.5, context.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.3);
+        // Cleanup saat unmount atau stop scanning
+        return () => {
+            if (status !== 'scanning' && scannerRef.current) {
+                scannerRef.current.clear().catch(error => console.error("Failed to clear scanner", error));
+                scannerRef.current = null;
+            }
+        };
+    }, [status]);
 
-        oscillator.start();
-        oscillator.stop(context.currentTime + 0.3);
+    // Callback saat QR Terbaca
+    const onScanSuccess = (decodedText: string, decodedResult: any) => {
+        if (status === 'processing') return; // Cegah double process
+        handleValidation(decodedText);
     };
 
-    // --- VALIDATION LOGIC ---
-    const handleScan = (data: string | null) => {
-        if (data && !isProcessing && !scanResult) {
-            setIsProcessing(true);
-            setScannedData(data);
+    const onScanFailure = (error: any) => {
+        // console.warn(`Code scan error = ${error}`);
+    };
 
-            // SIMULASI VALIDASI API
-            setTimeout(() => {
-                // Contoh Logic: Valid jika diawali "TIC-"
-                const isValid = data.startsWith("TIC-");
-                
-                if (isValid) {
-                    setScanResult('success');
-                    playBeep('success');
-                } else {
-                    setScanResult('error');
-                    playBeep('error');
+    // Fungsi Validasi ke API
+    const handleValidation = async (qrCode: string) => {
+        // Stop scanner sementara
+        if (scannerRef.current) {
+            scannerRef.current.clear();
+            scannerRef.current = null;
+        }
+
+        setScanResult(qrCode);
+        setStatus('processing');
+
+        try {
+            const res = await fetch('/api/admin/jersey/scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ qrData: qrCode })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                setStatus('success');
+                setScanData(data.data);
+                toast({ 
+                    title: "Scan Berhasil", 
+                    description: `Order ${data.data.orderId} dikonfirmasi.`,
+                    className: "bg-green-600 text-white border-none"
+                });
+            } else {
+                setStatus('error');
+                setErrorMessage(data.error);
+                // Jika error double claim, tampilkan detail siapa yang ambil
+                if(data.detail) {
+                    setScanData(data.detail);
                 }
-                setIsProcessing(false);
-            }, 500); 
+                toast({ 
+                    title: "Scan Gagal", 
+                    description: data.error, 
+                    variant: "destructive" 
+                });
+            }
+        } catch (error) {
+            setStatus('error');
+            setErrorMessage("Terjadi kesalahan koneksi server.");
         }
     };
 
     const resetScan = () => {
         setScanResult(null);
-        setScannedData("");
-        setManualCode("");
-        setIsProcessing(false);
-    };
-
-    const handleError = (err: any) => {
-        console.error(err);
-        toast({
-            title: "Camera Error",
-            description: "Pastikan izin kamera aktif dan menggunakan HTTPS.",
-            variant: "destructive"
-        });
+        setScanData(null);
+        setErrorMessage('');
+        setStatus('scanning');
     };
 
     return (
-        <div className="space-y-6 pb-24 max-w-md mx-auto relative min-h-[80vh]">
+        <div className="min-h-screen bg-black text-white p-6 pb-24 md:pl-24 pt-24 max-w-2xl mx-auto">
             
-            {/* 1. HEADER & SESSION MONITOR */}
-            <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-black text-white tracking-tight">Ticket <span className="text-[#ca1f3d]">Scanner</span></h1>
-                        <p className="text-xs text-gray-400">Scan QR Code member di pintu masuk.</p>
-                    </div>
-                    <div className="bg-red-500/10 p-2 rounded-xl animate-pulse">
-                        <Activity className="w-6 h-6 text-[#ca1f3d]" />
-                    </div>
-                </div>
-
-                <Card className="bg-[#151515] border-white/5 p-4 rounded-[1.5rem] relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#ca1f3d]/5 rounded-full blur-3xl pointer-events-none"></div>
-                    <div className="flex justify-between items-end mb-2 relative z-10">
-                        <div>
-                            <p className="text-[10px] text-[#ffbe00] font-bold uppercase tracking-widest mb-1">Active Session</p>
-                            <h3 className="text-white font-bold">{sessionStats.name}</h3>
-                        </div>
-                        <div className="text-right">
-                            <span className="text-2xl font-black text-white">{sessionStats.checkedIn}</span>
-                            <span className="text-sm text-gray-500">/{sessionStats.total}</span>
-                        </div>
-                    </div>
-                    <Progress value={sessionStats.percentage} className="h-3 bg-[#222]" indicatorClassName="bg-gradient-to-r from-[#ca1f3d] to-[#ffbe00]" />
-                    <div className="mt-2 flex justify-between text-[10px] text-gray-500 font-medium">
-                        <span>Check-in Progress</span>
-                        <span>{sessionStats.total - sessionStats.checkedIn} Belum Datang</span>
-                    </div>
-                </Card>
+            {/* Header */}
+            <div className="mb-8 text-center">
+                <h1 className="text-3xl font-black text-white mb-2 flex items-center justify-center gap-3">
+                    <QrCode className="w-8 h-8 text-[#ffbe00]" /> SCANNER
+                </h1>
+                <p className="text-gray-400 text-sm">Gunakan kamera untuk validasi pengambilan Jersey.</p>
             </div>
 
-            {/* 2. SCANNER AREA */}
-            <Tabs defaultValue="camera" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-[#151515] p-1 rounded-xl h-12 mb-6">
-                    <TabsTrigger value="camera" className="data-[state=active]:bg-[#ca1f3d] data-[state=active]:text-white rounded-lg font-bold text-xs">
-                        <Scan className="w-4 h-4 mr-2" /> Live Camera
-                    </TabsTrigger>
-                    <TabsTrigger value="manual" className="data-[state=active]:bg-[#ffbe00] data-[state=active]:text-black rounded-lg font-bold text-xs">
-                        <Keyboard className="w-4 h-4 mr-2" /> Manual Input
-                    </TabsTrigger>
-                </TabsList>
-
-                {/* --- CAMERA TAB --- */}
-                <TabsContent value="camera" className="relative mt-0">
-                    <div className="relative aspect-square bg-black rounded-[2rem] overflow-hidden border-2 border-dashed border-[#333] flex items-center justify-center group shadow-2xl">
-                        
-                        {!scanResult ? (
-                            <div className="w-full h-full relative">
-                                {/* LIBRARY BARU: @yudiel/react-qr-scanner */}
-                                <Scanner
-                                    onScan={(result) => {
-                                        if (result && result.length > 0) {
-                                            handleScan(result[0].rawValue);
-                                        }
-                                    }}
-                                    onError={handleError}
-                                    components={{
-                                        audio: false, // Kita pakai custom audio
-                                        torch: true,
-                                        finder: false // Kita pakai custom overlay
-                                    }}
-                                    styles={{
-                                        container: { width: '100%', height: '100%' },
-                                        video: { width: '100%', height: '100%', objectFit: 'cover' }
-                                    }}
-                                />
-                                
-                                {/* Overlay Scanner Animation */}
-                                <div className="absolute inset-0 border-[40px] border-black/50 pointer-events-none z-10"></div>
-                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-                                    <div className="w-56 h-56 border-2 border-[#ca1f3d] rounded-3xl relative overflow-hidden">
-                                        <div className="absolute top-0 left-0 w-full h-1 bg-[#ca1f3d] shadow-[0_0_20px_#ca1f3d] animate-scan-down"></div>
-                                        {/* Corner Accents */}
-                                        <div className="absolute top-0 left-0 w-4 h-4 border-t-4 border-l-4 border-[#ffbe00]"></div>
-                                        <div className="absolute top-0 right-0 w-4 h-4 border-t-4 border-r-4 border-[#ffbe00]"></div>
-                                        <div className="absolute bottom-0 left-0 w-4 h-4 border-b-4 border-l-4 border-[#ffbe00]"></div>
-                                        <div className="absolute bottom-0 right-0 w-4 h-4 border-b-4 border-r-4 border-[#ffbe00]"></div>
-                                    </div>
-                                </div>
-
-                                {/* DEBUG BUTTONS */}
-                                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-30">
-                                     <Button size="sm" variant="secondary" onClick={() => handleScan("TIC-12345")} className="opacity-50 hover:opacity-100 text-[10px] h-7 bg-white/10 text-white backdrop-blur-md">
-                                        Test Valid
-                                     </Button>
-                                     <Button size="sm" variant="destructive" onClick={() => handleScan("INVALID")} className="opacity-50 hover:opacity-100 text-[10px] h-7">
-                                        Test Fail
-                                     </Button>
-                                </div>
-                            </div>
-                        ) : null}
-
-                        {/* RESULT OVERLAY (VALID) */}
-                        {scanResult === 'success' && (
-                            <div className="absolute inset-0 bg-green-600 flex flex-col items-center justify-center p-6 text-center animate-in zoom-in duration-300 z-50">
-                                <CheckCircle2 className="w-24 h-24 text-white mb-4 drop-shadow-lg" />
-                                <h2 className="text-3xl font-black text-white tracking-tighter mb-1">ACCESS GRANTED</h2>
-                                <p className="text-green-100 font-mono text-lg mb-6">{scannedData}</p>
-                                <div className="bg-white/20 px-4 py-2 rounded-xl mb-6 backdrop-blur-sm">
-                                    <p className="text-white text-xs font-bold uppercase">Valid for: Mabar Senin Ceria</p>
-                                </div>
-                                <Button onClick={resetScan} className="bg-white text-green-700 hover:bg-gray-100 font-black rounded-xl w-full h-12 shadow-xl">
-                                    SCAN NEXT <Scan className="w-4 h-4 ml-2" />
-                                </Button>
-                            </div>
-                        )}
-
-                        {/* RESULT OVERLAY (INVALID) */}
-                        {scanResult === 'error' && (
-                            <div className="absolute inset-0 bg-[#ca1f3d] flex flex-col items-center justify-center p-6 text-center animate-in zoom-in duration-300 z-50">
-                                <XCircle className="w-24 h-24 text-white mb-4 drop-shadow-lg" />
-                                <h2 className="text-3xl font-black text-white tracking-tighter mb-1">ACCESS DENIED</h2>
-                                <p className="text-red-100 font-medium mb-6">Tiket tidak valid atau sudah kadaluarsa.</p>
-                                <Button onClick={resetScan} className="bg-white text-[#ca1f3d] hover:bg-gray-100 font-black rounded-xl w-full h-12 shadow-xl">
-                                    TRY AGAIN <RefreshCw className="w-4 h-4 ml-2" />
-                                </Button>
-                            </div>
-                        )}
+            {/* AREA UTAMA */}
+            <Card className="bg-[#151515] border-white/10 overflow-hidden rounded-[2rem] min-h-[400px] flex flex-col items-center justify-center relative p-6">
+                
+                {/* 1. STATE IDLE: Tombol Mulai */}
+                {status === 'idle' && (
+                    <div className="text-center space-y-6">
+                        <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mx-auto border border-white/10 animate-pulse">
+                            <QrCode className="w-10 h-10 text-gray-500" />
+                        </div>
+                        <p className="text-gray-400 max-w-xs mx-auto">Pastikan pencahayaan cukup dan QR Code terlihat jelas.</p>
+                        <Button 
+                            onClick={() => setStatus('scanning')} 
+                            className="bg-[#ffbe00] text-black font-bold px-8 py-6 rounded-xl hover:bg-yellow-400 text-lg shadow-[0_0_20px_rgba(255,190,0,0.4)]"
+                        >
+                            MULAI SCAN
+                        </Button>
                     </div>
-                    <p className="text-center text-xs text-gray-500 mt-4">Arahkan kamera ke QR Code pada HP Member.</p>
-                </TabsContent>
+                )}
 
-                {/* --- MANUAL INPUT TAB --- */}
-                <TabsContent value="manual">
-                    <Card className="bg-[#151515] border-white/5 p-6 rounded-[2rem] min-h-[300px] flex flex-col justify-center">
-                        <div className="text-center mb-6">
-                            <div className="w-16 h-16 bg-[#ffbe00]/10 text-[#ffbe00] rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Keyboard className="w-8 h-8" />
+                {/* 2. STATE SCANNING: Kamera */}
+                {status === 'scanning' && (
+                    <div className="w-full">
+                        <div id="reader" className="w-full overflow-hidden rounded-xl border-2 border-[#ffbe00]/50 shadow-[0_0_30px_rgba(255,190,0,0.2)]"></div>
+                        <p className="text-center text-xs text-gray-500 mt-4 animate-pulse">Mencari QR Code...</p>
+                        <Button variant="ghost" onClick={() => setStatus('idle')} className="w-full mt-4 text-red-500">Batal</Button>
+                    </div>
+                )}
+
+                {/* 3. STATE PROCESSING */}
+                {status === 'processing' && (
+                    <div className="text-center space-y-4">
+                        <Loader2 className="w-16 h-16 text-[#ffbe00] animate-spin mx-auto" />
+                        <h3 className="text-xl font-bold text-white">Memverifikasi...</h3>
+                        <p className="font-mono text-gray-500">{scanResult}</p>
+                    </div>
+                )}
+
+                {/* 4. STATE SUCCESS: Hasil Data */}
+                {status === 'success' && scanData && (
+                    <div className="w-full text-center space-y-6 animate-in zoom-in duration-300">
+                        <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(34,197,94,0.5)]">
+                            <CheckCircle2 className="w-10 h-10 text-white" />
+                        </div>
+                        
+                        <div>
+                            <h2 className="text-2xl font-black text-white uppercase tracking-tighter">VERIFIKASI SUKSES</h2>
+                            <p className="text-gray-400 text-sm mt-1">Data berhasil disimpan ke database.</p>
+                        </div>
+
+                        <div className="bg-white/5 p-6 rounded-2xl border border-white/10 text-left space-y-3">
+                            <InfoRow label="Order ID" value={scanData.orderId} isMono />
+                            <InfoRow label="Nama Pemesan" value={scanData.fullName || scanData.senderName} />
+                            <InfoRow label="Jersey Name" value={scanData.backName} highlight />
+                            <InfoRow label="Ukuran" value={`${scanData.size} (Qty: ${scanData.quantity})`} />
+                            <div className="pt-3 mt-3 border-t border-white/10 flex justify-between items-center">
+                                <span className="text-xs text-gray-500">Status</span>
+                                <Badge className="bg-green-500 text-white hover:bg-green-600">PICKED UP</Badge>
                             </div>
-                            <h3 className="text-white font-bold text-lg">Input Kode Manual</h3>
-                            <p className="text-xs text-gray-500">Gunakan jika kamera bermasalah.</p>
                         </div>
 
-                        <div className="space-y-4">
-                            <Input 
-                                placeholder="Contoh: TIC-882190" 
-                                className="bg-[#0a0a0a] border-white/10 h-14 text-center text-xl font-mono text-white tracking-widest uppercase rounded-xl focus:border-[#ffbe00]"
-                                value={manualCode}
-                                onChange={(e) => setManualCode(e.target.value)}
-                            />
-                            <Button 
-                                onClick={() => handleScan(manualCode)}
-                                disabled={manualCode.length < 5}
-                                className="w-full h-14 bg-[#ffbe00] hover:bg-yellow-400 text-black font-black rounded-xl shadow-[0_0_20px_rgba(255,190,0,0.3)] transition-all"
-                            >
-                                VERIFIKASI TIKET
-                            </Button>
+                        <Button onClick={resetScan} className="w-full bg-white text-black font-bold h-12 rounded-xl hover:bg-gray-200">
+                            Scan Berikutnya
+                        </Button>
+                    </div>
+                )}
+
+                {/* 5. STATE ERROR */}
+                {status === 'error' && (
+                    <div className="w-full text-center space-y-6 animate-in shake duration-300">
+                        <div className="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(239,68,68,0.5)]">
+                            <XCircle className="w-10 h-10 text-white" />
                         </div>
-                    </Card>
-                </TabsContent>
-            </Tabs>
+                        
+                        <div>
+                            <h2 className="text-2xl font-black text-white uppercase tracking-tighter">VALIDASI GAGAL</h2>
+                            <p className="text-red-400 font-bold text-lg mt-2">{errorMessage}</p>
+                        </div>
+
+                         {/* Jika Error karena sudah diambil, tampilkan info siapa yg ambil */}
+                         {scanData && scanData.scannedByName && (
+                            <div className="bg-red-500/10 p-4 rounded-xl border border-red-500/20 text-sm text-left">
+                                <p className="text-red-300 font-bold mb-1">Riwayat Pengambilan:</p>
+                                <ul className="list-disc list-inside text-gray-400 space-y-1">
+                                    <li>Waktu: <span className="text-white">{new Date(scanData.pickedUpAt).toLocaleString()}</span></li>
+                                    <li>Petugas: <span className="text-white">{scanData.scannedByName}</span></li>
+                                </ul>
+                            </div>
+                        )}
+
+                        <Button onClick={resetScan} className="w-full bg-[#1A1A1A] border border-white/20 text-white font-bold h-12 rounded-xl hover:bg-white/10">
+                            <RefreshCw className="w-4 h-4 mr-2" /> Coba Lagi
+                        </Button>
+                    </div>
+                )}
+
+            </Card>
+
+            {/* Manual Input Fallback (Jika kamera bermasalah) */}
+            {status === 'idle' && (
+                <div className="mt-8 text-center">
+                    <p className="text-xs text-gray-500 mb-2">Kamera bermasalah?</p>
+                    <div className="flex gap-2 max-w-xs mx-auto">
+                        <input 
+                            type="text" 
+                            placeholder="Input ID Manual (JSY-...)" 
+                            className="bg-[#151515] border border-white/10 rounded-lg px-4 py-2 text-white text-sm w-full"
+                            onKeyDown={(e) => {
+                                if(e.key === 'Enter') handleValidation((e.target as HTMLInputElement).value)
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// Helper UI Component
+function InfoRow({ label, value, isMono = false, highlight = false }: any) {
+    return (
+        <div className="flex justify-between items-start">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-0.5">{label}</span>
+            <span className={`text-sm font-bold text-right max-w-[60%] ${isMono ? 'font-mono' : ''} ${highlight ? 'text-[#ffbe00] text-lg' : 'text-white'}`}>
+                {value}
+            </span>
         </div>
     );
 }
