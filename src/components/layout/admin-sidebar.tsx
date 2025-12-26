@@ -16,7 +16,7 @@ import {
     Shirt, 
     Trophy,
     UserCircle,
-    ArrowLeft // ICON BARU UNTUK KEMBALI KE PLAYER MODE
+    ArrowLeft
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -97,10 +97,11 @@ export default function AdminSidebar() {
             {/* Footer */}
             <div className="p-2 border-t border-transparent w-full mt-auto space-y-2">
                 
-                {/* --- FITUR BARU: TOMBOL KE PLAYER MODE --- */}
+                {/* --- Tombol Kembali ke Landing Page --- */}
                 <Link href="/" className="block">
                     <Button 
                         variant="outline" 
+                        title="Back to Landing Page"
                         className="w-full h-12 justify-center border-white/10 bg-[#151515] hover:bg-white/10 text-gray-300 hover:text-white gap-3 rounded-2xl font-bold text-xs group"
                     >
                         <ArrowLeft className="w-4 h-4 text-gray-400 group-hover:-translate-x-1 transition-transform" />
@@ -111,6 +112,7 @@ export default function AdminSidebar() {
                 {/* Logout */}
                 <Button 
                     variant="ghost" 
+                    title="Sign Out"
                     className="w-full h-12 justify-center text-red-500 hover:text-white hover:bg-[#ca1f3d] transition-all duration-300 gap-3 rounded-2xl font-bold group text-xs"
                     onClick={handleLogout}
                 >
