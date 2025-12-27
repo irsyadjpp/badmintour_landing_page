@@ -3,12 +3,9 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Repeat, Zap, CalendarClock } from 'lucide-react';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Link from 'next/link';
 
 export default function HeroSection() {
-  const heroImage = PlaceHolderImages.find((img) => img.id === 'hero-player');
-
   return (
     <section className="relative w-full overflow-hidden pt-28 pb-12 lg:pt-36">
       {/* Background Gradients */}
@@ -62,15 +59,14 @@ export default function HeroSection() {
         {/* Hero Visual - Gambar Lebar di Bawah Teks */}
         <div className="relative w-full max-w-5xl mx-auto mt-8">
             <div className="relative aspect-[16/9] md:aspect-[21/9] overflow-hidden rounded-[2.5rem] bg-zinc-100 border-4 border-white shadow-2xl group">
-               {heroImage && (
-                <Image
-                  src={heroImage.imageUrl}
+               {/* UPDATE: Menggunakan badmintour-hero.webp */}
+               <Image
+                  src="/images/badmintour-hero.webp" 
                   alt="Badmintour Mabar Rutin"
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                   priority
                 />
-              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
               
               {/* Floating Content inside Image (UPDATED: Recurring Theme) */}
