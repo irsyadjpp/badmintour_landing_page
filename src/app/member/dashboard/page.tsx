@@ -220,7 +220,6 @@ export default function MemberDashboard() {
             
             {activeTicket ? (
                 <div className="bg-gradient-to-br from-[#1A1A1A] to-[#0f0f0f] rounded-[2.5rem] border border-white/5 overflow-hidden flex flex-col md:flex-row relative shadow-2xl group">
-                    {/* ... (Tampilan Tiket Sama) ... */}
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#ffbe00] to-orange-500"></div>
                     <div className="p-8 flex-1 relative z-10 flex flex-col justify-between">
                         <div>
@@ -238,7 +237,6 @@ export default function MemberDashboard() {
                         </div>
                     </div>
                     <div className="relative p-8 bg-white text-black flex flex-col items-center justify-center md:w-72 md:border-l-2 md:border-dashed md:border-gray-300">
-                         {/* ... */}
                         <div className="bg-black p-2 rounded-xl mb-4"><QrCode className="w-32 h-32 text-white" /></div>
                         <p className="text-[10px] font-mono text-center uppercase tracking-widest opacity-60">Scan to Play</p>
                         <p className="text-xl font-black font-mono mt-1 tracking-widest">{activeTicket.id}</p>
