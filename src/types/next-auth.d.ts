@@ -5,7 +5,7 @@ declare module "next-auth" {
     user: {
       id: string;
       role: string;
-      nickname?: string; // Tambahan field nickname
+      nickname?: string;
       status?: string;
       phoneNumber?: string; // Tambahan field
     } & DefaultSession["user"];
@@ -13,7 +13,7 @@ declare module "next-auth" {
 
   interface User {
     role: string;
-    nickname?: string; // Tambahan field nickname
+    nickname?: string;
     status?: string;
     pin?: string;
     phoneNumber?: string; // Tambahan field

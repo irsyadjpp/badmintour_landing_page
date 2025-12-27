@@ -153,23 +153,22 @@ export const authOptions: NextAuthOptions = {
       }
 
       // Fetch Data Terbaru dari DB (jika user refresh halaman)
-      if (!token.phoneNumber) { 
-         try {
-            const uid = token.sub || token.id; 
-            if(uid) {
-                const userDoc = await db.collection("users").doc(uid).get();
-                if (userDoc.exists) {
-                    const userData = userDoc.data();
-                    token.role = userData?.role || "member";
-                    token.status = userData?.status || "active";
-                    token.nickname = userData?.nickname; // Ambil nickname dari DB
-                    // AMBIL PHONE NUMBER DARI DB
-                    token.phoneNumber = userData?.phoneNumber || ""; 
-                }
+      // Every time user refreshes/accesses a page, we check the latest data in the DB
+      try {
+        const uid = token.sub || token.id; 
+        if(uid) {
+            const userDoc = await db.collection("users").doc(uid).get();
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                token.role = userData?.role || "member";
+                token.status = userData?.status || "active";
+                token.nickname = userData?.nickname; // Ambil nickname dari DB
+                // AMBIL PHONE NUMBER DARI DB
+                token.phoneNumber = userData?.phoneNumber || ""; 
             }
-         } catch (error) {
-             console.error("JWT Error:", error);
-         }
+        }
+      } catch (error) {
+          console.error("JWT Error:", error);
       }
       return token;
     },
