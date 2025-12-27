@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -35,11 +34,11 @@ export default function CoachSidebar() {
             <aside className="hidden md:flex fixed top-1/2 -translate-y-1/2 left-6 z-50 flex-col items-center py-8 bg-[#151515]/90 backdrop-blur-xl border border-white/10 rounded-[2.5rem] shadow-2xl transition-all duration-300 hover:bg-[#151515] hover:border-[#00f2ea]/30 min-h-[600px]">
                 <TooltipProvider delayDuration={0}>
                     
-                    {/* Brand Logo */}
+                    {/* Brand Logo (Updated) */}
                     <div className="mb-8 relative w-12 h-12 p-2 bg-white/5 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,242,234,0.2)] group overflow-hidden">
                         <div className="relative w-full h-full transition-transform duration-300 group-hover:scale-110">
                             <Image 
-                                src="/images/logo.png" 
+                                src="/images/logo-light.png" 
                                 alt="BadminTour" 
                                 fill 
                                 className="object-contain" 
@@ -50,7 +49,7 @@ export default function CoachSidebar() {
         
                     <nav className="flex-1 flex flex-col gap-4 w-full items-center justify-center px-3">
                         {navItems.map((item) => {
-                            const isActive = pathname === item.href;
+                            const isActive = pathname.startsWith(item.href);
                             return (
                                 <Tooltip key={item.label}>
                                     <TooltipTrigger asChild>
@@ -97,7 +96,7 @@ export default function CoachSidebar() {
             <div className="md:hidden fixed bottom-4 left-4 right-4 z-50">
                 <nav className="flex justify-between items-center bg-[#151515]/95 backdrop-blur-xl border border-white/10 rounded-[2rem] px-6 py-3 shadow-2xl">
                     {[navItems[0], navItems[1], navItems[2], navItems[5]].map((item) => {
-                        const isActive = pathname === item.href;
+                        const isActive = pathname.startsWith(item.href);
                         return (
                             <Link key={item.label} href={item.href} className="flex flex-col items-center gap-1">
                                 <div className={cn(
