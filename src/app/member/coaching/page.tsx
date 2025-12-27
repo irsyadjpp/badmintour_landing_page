@@ -7,6 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
+import { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from "date-fns";
 
 const coaches = [
     { id: 1, name: "Coach Hendra", exp: "10 Tahun", rate: "Rp 150k/jam", rating: 5.0, specialty: "Double Strategy", location: "GOR C-Tra" },
@@ -14,6 +18,25 @@ const coaches = [
 ];
 
 export default function FindCoachPage() {
+    const [selectedCoach, setSelectedCoach] = useState<any>(null);
+    const [date, setDate] = useState<Date | undefined>(new Date());
+    const [isBooking, setIsBooking] = useState(false);
+
+    const handleBook = (coach: any) => {
+        setSelectedCoach(coach);
+    };
+
+    const confirmBooking = async () => {
+        setIsBooking(true);
+        // DISINI LOGIC FETCH API BOOKING KE BACKEND
+        // await fetch('/api/bookings/coach', { ... })
+        setTimeout(() => {
+            setIsBooking(false);
+            setSelectedCoach(null);
+            alert("Booking Request Sent!"); 
+        }, 1000);
+    };
+
     return (
         <div className="space-y-8 pb-20">
             {/* Hero Search */}
@@ -66,7 +89,7 @@ export default function FindCoachPage() {
 
                         <div className="flex items-center justify-between pt-4 border-t border-white/5">
                             <span className="text-lg font-black text-white">{coach.rate}</span>
-                            <Button className="rounded-xl bg-white text-black font-bold hover:bg-gray-200 group-hover:scale-105 transition-transform">
+                            <Button onClick={() => handleBook(coach)} className="rounded-xl bg-white text-black font-bold hover:bg-gray-200 group-hover:scale-105 transition-transform">
                                 Book Now <ChevronRight className="w-4 h-4 ml-1" />
                             </Button>
                         </div>
@@ -84,6 +107,51 @@ export default function FindCoachPage() {
                     </div>
                 </Link>
             </div>
+            
+            {/* MODAL BOOKING */}
+            <Dialog open={!!selectedCoach} onOpenChange={(open) => !open && setSelectedCoach(null)}>
+                <DialogContent className="bg-[#1A1A1A] border-white/10 text-white sm:max-w-md rounded-[2rem]">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-black text-white">Book Session</DialogTitle>
+                        <DialogDescription className="text-gray-400">
+                            Pilih tanggal latihan dengan <span className="text-[#00f2ea] font-bold">{selectedCoach?.name}</span>.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-6 py-4">
+                        {/* Calendar Picker */}
+                        <div className="bg-black/30 p-4 rounded-xl border border-white/5 flex justify-center">
+                            <Calendar
+                                mode="single"
+                                selected={date}
+                                onSelect={setDate}
+                                className="rounded-md border-white/5 text-white"
+                                disabled={(date) => date < new Date()} 
+                            />
+                        </div>
+
+                        {/* Summary */}
+                        <div className="flex justify-between items-center p-4 bg-[#00f2ea]/10 rounded-xl border border-[#00f2ea]/20">
+                            <div>
+                                <p className="text-xs text-[#00f2ea] font-bold uppercase">Selected Date</p>
+                                <p className="font-bold text-white">{date ? format(date, "PPP") : "Pick a date"}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-xs text-[#00f2ea] font-bold uppercase">Total</p>
+                                <p className="font-bold text-white">{selectedCoach?.rate}</p>
+                            </div>
+                        </div>
+
+                        <Button 
+                            onClick={confirmBooking} 
+                            disabled={isBooking || !date}
+                            className="w-full h-12 bg-[#00f2ea] text-black font-black hover:bg-[#00c2bb] rounded-xl"
+                        >
+                            {isBooking ? "Processing..." : "CONFIRM BOOKING"}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
