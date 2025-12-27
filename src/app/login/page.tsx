@@ -21,11 +21,9 @@ function LoginContent() {
     const [isLoading, setIsLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
 
-    // 1. AUTO REDIRECT (Seamless Login)
-    // Jika sesi sudah ada dan valid, user tidak perlu klik apa-apa lagi.
+    // 1. AUTO REDIRECT (Updated Logic)
     useEffect(() => {
         if (status === 'authenticated' && session?.user) {
-            // Cek lagi status di sisi client sebagai double protection
             const userStatus = (session.user as any).status;
             
             if (userStatus === 'inactive') {
@@ -38,6 +36,7 @@ function LoginContent() {
             if (role === 'superadmin') router.push('/superadmin/dashboard');
             else if (role === 'admin') router.push('/admin/dashboard');
             else if (role === 'host') router.push('/host/dashboard');
+            else if (role === 'coach') router.push('/coach/dashboard'); // PERBAIKAN DI SINI
             else router.push('/member/dashboard');
         }
     }, [status, session, router]);
