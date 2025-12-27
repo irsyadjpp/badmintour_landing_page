@@ -32,8 +32,14 @@ export default function MemberDashboard() {
                 const data = await res.json();
                 if(data.success) setJerseyOrders(data.data);
             }
-            // 2. Simulasi Fetch Ticket (Bisa diganti real API nanti)
-            // setActiveTicket({...}) 
+            
+            // 2. Fetch Active Booking (Tiket Mabar)
+            const resTicket = await fetch('/api/member/bookings');
+            const dataTicket = await resTicket.json();
+            if (dataTicket.success && dataTicket.active) {
+                setActiveTicket(dataTicket.active);
+            }
+
         } catch (e) { console.error(e) } 
         finally { setIsLoading(false); }
     };
