@@ -65,9 +65,38 @@ export async function PUT(req: Request) {
         isProfileComplete: true
     });
 
+    // ==========================================
+    // 3. MAGIC PAIRING: MIGRASI HISTORY GUEST
+    // ==========================================
+    
+    // Cari semua booking "GUEST" dengan No HP ini
+    const guestBookingsSnapshot = await db.collection("bookings")
+        .where("phoneNumber", "==", phoneNumber)
+        .where("type", "==", "GUEST") // Hanya ambil yang masih tipe guest
+        .get();
+
+    if (!guestBookingsSnapshot.empty) {
+        const batch = db.batch();
+        let count = 0;
+
+        guestBookingsSnapshot.forEach((doc) => {
+            // Update kepemilikan booking menjadi Member ini
+            batch.update(doc.ref, {
+                userId: session.user.id,
+                type: "MEMBER",
+                userName: session.user.name // Opsional: Update nama sesuai akun Google
+            });
+            count++;
+        });
+
+        await batch.commit();
+        console.log(`[PAIRING] ${count} riwayat mabar berhasil dipindahkan ke user ${session.user.name}`);
+    }
+
+
     return NextResponse.json({ 
         success: true, 
-        message: "Profile berhasil disimpan. Akun Google Anda sekarang tertaut dengan WhatsApp ini." 
+        message: "Profile berhasil disimpan. History mabar lama Anda telah ditautkan!" 
     });
 
   } catch (error) {

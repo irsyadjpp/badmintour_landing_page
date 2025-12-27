@@ -7,51 +7,86 @@ import { FieldValue } from "firebase-admin/firestore";
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return NextResponse.json({ error: "Wajib Login" }, { status: 401 });
+    const body = await req.json();
+    const { eventId, guestName, guestPhone } = body;
 
-    const { eventId } = await req.json();
-    const userRef = db.collection("users").doc(session.user.id);
+    // Tentukan Identitas: Member atau Guest
+    let userId = "guest";
+    let userName = guestName;
+    let userPhone = guestPhone;
+    let userType = "GUEST";
+
+    if (session?.user?.id) {
+        // Jika Login
+        const userDoc = await db.collection("users").doc(session.user.id).get();
+        const userData = userDoc.data();
+        
+        userId = session.user.id;
+        userName = session.user.name;
+        userPhone = userData?.phoneNumber || ""; // Ambil HP dari profile jika ada
+        userType = "MEMBER";
+    } else {
+        // Jika Guest (Validasi Wajib)
+        if (!guestName || !guestPhone) {
+            return NextResponse.json({ error: "Nama dan No WA wajib diisi untuk tamu." }, { status: 400 });
+        }
+    }
+
     const eventRef = db.collection("events").doc(eventId);
 
-    // GUNAKAN TRANSACTION (Penting untuk mencegah rebutan slot / Race Condition)
+    // TRANSAKSI BOOKING
     await db.runTransaction(async (t) => {
         const eventDoc = await t.get(eventRef);
         if (!eventDoc.exists) throw "Event tidak ditemukan";
 
         const eventData = eventDoc.data();
         
-        // 1. Cek Kuota
         if (eventData?.registeredCount >= eventData?.quota) {
             throw "Slot Penuh";
         }
 
-        // 2. Cek apakah user sudah join
-        const bookingId = `BK-${eventId}-${session.user.id}`;
+        // Generate Booking ID
+        // Jika Guest, ID-nya pakai kombinasi Event+HP biar unik dan bisa ditrack
+        const uniqueKey = session?.user?.id || guestPhone; 
+        const bookingId = `BK-${eventId}-${uniqueKey.replace(/[^a-zA-Z0-9]/g, "")}`;
+        
         const bookingRef = db.collection("bookings").doc(bookingId);
         const bookingDoc = await t.get(bookingRef);
 
         if (bookingDoc.exists) throw "Anda sudah terdaftar di event ini";
 
-        // 3. Eksekusi Booking
+        // Simpan Data Booking
         t.set(bookingRef, {
             id: bookingId,
             eventId,
-            userId: session.user.id,
-            userName: session.user.name,
-            status: "CONFIRMED", // Asumsi langsung confirm (Bayar di tempat/Potong saldo nanti)
+            eventTitle: eventData?.title,
+            eventDate: eventData?.date,
+            
+            userId,      // "guest" atau "user_id_asli"
+            userName,
+            phoneNumber: userPhone, // KUNCI PAIRING NANTI
+            type: userType,
+            
+            status: "CONFIRMED",
             bookedAt: new Date().toISOString(),
-            ticketCode: `TIC-${Date.now()}` // Kode untuk QR Scanner
+            ticketCode: `TIC-${Date.now()}`.slice(0, 12),
+            attendance: false
         });
 
-        // 4. Update Event (Increment Count)
+        // Update Counter Event
         t.update(eventRef, {
             registeredCount: FieldValue.increment(1)
         });
     });
 
-    return NextResponse.json({ success: true, message: "Berhasil Join Mabar!" });
+    return NextResponse.json({ 
+        success: true, 
+        message: session?.user?.id ? "Booking Berhasil!" : "Booking Tamu Berhasil! Silahkan datang tepat waktu.",
+        isGuest: !session?.user?.id
+    });
 
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: error || "Booking Failed" }, { status: 400 });
   }
 }
