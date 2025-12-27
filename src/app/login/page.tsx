@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { KeyRound, Chrome, AlertTriangle, ArrowRight } from 'lucide-react';
+import { KeyRound, Chrome, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { signIn, useSession } from 'next-auth/react'; 
@@ -105,7 +106,8 @@ function LoginContent() {
             {/* Header */}
             <div className="text-center mb-10">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#1A1A1A] border border-white/10 mb-6 shadow-2xl group relative overflow-hidden">
-                    <Image src="/images/logo.png" alt="Logo" fill className="object-contain p-2" priority />
+                    {/* UPDATE: Menggunakan logo-light.png */}
+                    <Image src="/images/logo-light.png" alt="Logo" fill className="object-contain p-2" priority />
                 </div>
                 <h1 className="text-4xl font-black tracking-tighter mb-2">BADMINTOUR<span className="text-[#ffbe00]">.</span></h1>
                 <p className="text-gray-400 font-medium">Community Hub & Court Booking</p>
