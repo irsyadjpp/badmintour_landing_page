@@ -9,7 +9,8 @@ import {
     LogOut,
     History,
     Zap,
-    Dumbbell
+    Dumbbell,
+    GraduationCap
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -22,8 +23,8 @@ export default function MemberSidebar() {
 
     const navItems = [
         { href: "/member/dashboard", icon: LayoutGrid, label: "Dashboard" },
-        { href: "/member/mabar", icon: Swords, label: "Cari Mabar & Sparring" },
-        { href: "/member/drilling", icon: Dumbbell, label: "Drilling & Coaching" },
+        { href: "/member/mabar", icon: Swords, label: "Mabar" },
+        { href: "/member/coaching", icon: GraduationCap, label: "Coaching" }, 
         { href: "/member/tournaments", icon: Trophy, label: "Info Turnamen" },
         { href: "/member/tickets", icon: Ticket, label: "Tiket Saya" },
         { href: "/member/history", icon: History, label: "Riwayat Match" },
@@ -44,7 +45,7 @@ export default function MemberSidebar() {
                     {/* Nav Items */}
                     <nav className="flex-1 flex flex-col gap-4 w-full items-center justify-center px-3">
                         {navItems.map((item) => {
-                            const isActive = pathname === item.href;
+                            const isActive = pathname.startsWith(item.href);
                             return (
                                 <Tooltip key={item.label}>
                                     <TooltipTrigger asChild>
@@ -91,8 +92,8 @@ export default function MemberSidebar() {
             {/* MOBILE NAV (Bottom Bar Updated with Labels) */}
             <div className="md:hidden fixed bottom-4 left-4 right-4 z-50">
                 <nav className="flex justify-between items-center bg-[#151515]/95 backdrop-blur-xl border border-white/10 rounded-[2rem] px-6 py-3 shadow-2xl">
-                    {[navItems[0], navItems[1], navItems[3], navItems[6]].map((item) => {
-                        const isActive = pathname === item.href;
+                    {[navItems[0], navItems[1], navItems[2], navItems[6]].map((item) => {
+                        const isActive = pathname.startsWith(item.href);
                         return (
                             <Link 
                                 key={item.label}

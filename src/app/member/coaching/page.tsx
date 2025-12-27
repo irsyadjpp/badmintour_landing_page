@@ -1,11 +1,12 @@
 'use client';
 
-import { Search, Star, MapPin, ChevronRight } from 'lucide-react';
+import { Search, Star, MapPin, ChevronRight, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
+import Link from 'next/link';
 
 const coaches = [
     { id: 1, name: "Coach Hendra", exp: "10 Tahun", rate: "Rp 150k/jam", rating: 5.0, specialty: "Double Strategy", location: "GOR C-Tra" },
@@ -18,6 +19,8 @@ export default function FindCoachPage() {
             {/* Hero Search */}
             <div className="bg-[#151515] rounded-[3rem] p-8 md:p-12 text-center border border-white/5 relative overflow-hidden">
                 <div className="absolute top-[-50%] left-[-10%] w-[120%] h-[200%] bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none"></div>
+                <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-[#00f2ea] to-[#ff0099] opacity-5 blur-[120px] rounded-full pointer-events-none"></div>
+
                 <h1 className="text-4xl md:text-6xl font-black text-white uppercase italic mb-4">
                     Level Up <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f2ea] to-[#ff0099]">Your Game</span>
                 </h1>
@@ -69,6 +72,17 @@ export default function FindCoachPage() {
                         </div>
                     </Card>
                 ))}
+
+                 {/* Join as Coach Card */}
+                <Link href="/member/coaching/register" className="group">
+                    <div className="bg-[#1A1A1A] border-2 border-dashed border-white/10 h-full rounded-[2.5rem] flex flex-col items-center justify-center p-8 hover:border-[#00f2ea] hover:bg-[#00f2ea]/5 transition-all">
+                        <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center border-2 border-white/10 mb-6 group-hover:scale-110 transition-transform">
+                            <UserPlus className="w-10 h-10 text-[#00f2ea]" />
+                        </div>
+                        <h3 className="text-xl font-black text-white text-center">Become A Coach</h3>
+                        <p className="text-sm text-gray-500 mt-2 text-center">Share your skills and earn extra income.</p>
+                    </div>
+                </Link>
             </div>
         </div>
     );
