@@ -13,7 +13,8 @@ import {
     LayoutGrid, // Icon untuk Court
     Hash, // Icon untuk Nomor
     Repeat, // Icon baru untuk Recurring
-    CalendarDays
+    CalendarDays,
+    Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,8 +31,22 @@ import { Card } from '@/components/ui/card';
 import Link from 'next/link';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { useRouter } from 'next/navigation';
 
 export default function CreateEventPage() {
+    const router = useRouter();
+
+    // Form states
+    const [title, setTitle] = useState("");
+    const [date, setDate] = useState("");
+    const [time, setTime] = useState("");
+    const [location, setLocation] = useState("");
+    const [courts, setCourts] = useState("");
+    const [price, setPrice] = useState("");
+    const [quota, setQuota] = useState("");
+    const [level, setLevel] = useState("All Level");
+    const [isLoading, setIsLoading] = useState(false);
+    
     // Feature Toggles
     const [isDynamicPrice, setIsDynamicPrice] = useState(false);
     const [isSkillLocked, setIsSkillLocked] = useState(false);
@@ -41,16 +56,37 @@ export default function CreateEventPage() {
     const [isRecurring, setIsRecurring] = useState(false);
     const [repeatWeeks, setRepeatWeeks] = useState("4"); // Default 1 Bulan (4 Minggu)
 
-    const handleSave = () => {
-        const message = isRecurring 
-            ? `Berhasil membuat ${repeatWeeks} jadwal event rutin!`
-            : "Jadwal event berhasil diterbitkan.";
+    const handleSave = async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch('/api/events', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title, 
+                    date, 
+                    time, 
+                    location,
+                    courts,
+                    price, 
+                    quota,
+                    level,
+                    isRecurring,
+                    // ... kirim data lain sesuai state
+                })
+            });
 
-        toast({
-            title: "Event Published! 🎉",
-            description: message,
-            className: "bg-[#ca1f3d] text-white border-none"
-        });
+            if (res.ok) {
+                toast({ title: "Success", description: "Event Published!", className: "bg-green-600 text-white" });
+                router.push('/host/events'); // Redirect setelah sukses
+            } else {
+                throw new Error("Gagal membuat event");
+            }
+        } catch (e) {
+            toast({ title: "Error", description: (e as Error).message || "Gagal membuat event", variant: "destructive" });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -81,16 +117,16 @@ export default function CreateEventPage() {
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <Label className="text-gray-400">Judul Event</Label>
-                                <Input placeholder="Contoh: Mabar Rutin Senin" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
+                                <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Contoh: Mabar Rutin Senin" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label className="text-gray-400">Tanggal Awal</Label>
-                                    <Input type="date" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
+                                    <Input value={date} onChange={(e) => setDate(e.target.value)} type="date" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-gray-400">Jam Mulai</Label>
-                                    <Input type="time" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
+                                    <Input value={time} onChange={(e) => setTime(e.target.value)} type="time" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
                                 </div>
                             </div>
 
@@ -153,7 +189,7 @@ export default function CreateEventPage() {
                                 <Label className="text-gray-400">Nama GOR / Lokasi</Label>
                                 <div className="relative">
                                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                                    <Input placeholder="Contoh: GOR Wartawan" className="bg-[#0a0a0a] border-white/10 pl-10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
+                                    <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Contoh: GOR Wartawan" className="bg-[#0a0a0a] border-white/10 pl-10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
@@ -167,7 +203,7 @@ export default function CreateEventPage() {
                                     <Label className="text-gray-400 flex items-center gap-2">
                                         <Hash className="w-3 h-3 text-[#ffbe00]" /> Nomor Court
                                     </Label>
-                                    <Input placeholder="1, 2" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
+                                    <Input value={courts} onChange={(e) => setCourts(e.target.value)} placeholder="1, 2" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
                                 </div>
                             </div>
                         </div>
@@ -182,11 +218,11 @@ export default function CreateEventPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label className="text-gray-400">Harga Normal (Rp)</Label>
-                                    <Input type="number" placeholder="40000" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
+                                    <Input value={price} onChange={(e) => setPrice(e.target.value)} type="number" placeholder="40000" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
                                 </div>
                                 <div className="space-y-2">
                                     <Label className="text-gray-400">Total Slot Pemain</Label>
-                                    <Input type="number" placeholder="12" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
+                                    <Input value={quota} onChange={(e) => setQuota(e.target.value)} type="number" placeholder="12" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
                                 </div>
                             </div>
 
@@ -235,7 +271,7 @@ export default function CreateEventPage() {
                             Jika aktif, member di bawah level ini <span className="text-[#ca1f3d] font-bold">DILARANG</span> join.
                         </p>
                         {isSkillLocked && (
-                            <Select defaultValue="Intermediate">
+                            <Select value={level} onValueChange={(value) => setLevel(value)}>
                                 <SelectTrigger className="bg-[#0a0a0a] border-[#ca1f3d]/30 text-white h-10 rounded-lg">
                                     <SelectValue />
                                 </SelectTrigger>
@@ -272,8 +308,9 @@ export default function CreateEventPage() {
                                 </p>
                              </div>
                         )}
-                        <Button onClick={handleSave} className="w-full h-14 bg-[#ca1f3d] hover:bg-[#a01830] text-white font-black rounded-xl shadow-lg hover:shadow-[#ca1f3d]/20 transition-all">
-                            <Save className="w-5 h-5 mr-2" /> PUBLISH {isRecurring ? 'SERIES' : 'EVENT'}
+                        <Button onClick={handleSave} disabled={isLoading} className="w-full h-14 bg-[#ca1f3d] hover:bg-[#a01830] text-white font-black rounded-xl shadow-lg hover:shadow-[#ca1f3d]/20 transition-all">
+                            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 mr-2" />} 
+                            {isLoading ? 'Publishing...' : `PUBLISH ${isRecurring ? 'SERIES' : 'EVENT'}`}
                         </Button>
                         <Button variant="outline" className="w-full h-12 border-white/10 text-gray-400 hover:text-white rounded-xl">
                             Save as Draft

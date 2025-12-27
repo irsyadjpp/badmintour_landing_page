@@ -15,10 +15,12 @@ export default function ScanPage() {
     const { toast } = useToast();
     
     // State
-    const [scanResult, setScanResult] = useState<string | null>(null);
+    const [scanResult, setScanResult] = useState<any>(null);
     const [scanData, setScanData] = useState<any>(null); // Data detail order dari API
     const [status, setStatus] = useState<'idle' | 'scanning' | 'processing' | 'success' | 'error'>('idle');
     const [errorMessage, setErrorMessage] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
+
 
     const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
@@ -57,48 +59,32 @@ export default function ScanPage() {
 
     // Fungsi Validasi ke API
     const handleValidation = async (qrCode: string) => {
-        // Stop scanner sementara
-        if (scannerRef.current) {
-            scannerRef.current.clear();
-            scannerRef.current = null;
-        }
+        if (qrCode && !isProcessing && !scanResult) {
+            setIsProcessing(true);
 
-        setScanResult(qrCode);
-        setStatus('processing');
-
-        try {
-            const res = await fetch('/api/admin/jersey/scan', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ qrData: qrCode })
-            });
-
-            const data = await res.json();
-
-            if (data.success) {
-                setStatus('success');
-                setScanData(data.data);
-                toast({ 
-                    title: "Scan Berhasil", 
-                    description: `Order ${data.data.orderId} dikonfirmasi.`,
-                    className: "bg-green-600 text-white border-none"
+            try {
+                // CALL REAL API
+                const res = await fetch('/api/events/scan', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ ticketCode: qrCode })
                 });
-            } else {
-                setStatus('error');
-                setErrorMessage(data.error);
-                // Jika error double claim, tampilkan detail siapa yang ambil
-                if(data.detail) {
-                    setScanData(data.detail);
+                const result = await res.json();
+
+                if (result.success) {
+                    setStatus('success');
+                    setScannedData(`${result.data.userName} - ${result.data.status}`);
+                    //playBeep('success');
+                } else {
+                    setStatus('error');
+                    setScannedData(result.error); // Tampilkan error message
+                    //playBeep('error');
                 }
-                toast({ 
-                    title: "Scan Gagal", 
-                    description: data.error, 
-                    variant: "destructive" 
-                });
+            } catch (e) {
+                setStatus('error');
+            } finally {
+                setIsProcessing(false);
             }
-        } catch (error) {
-            setStatus('error');
-            setErrorMessage("Terjadi kesalahan koneksi server.");
         }
     };
 
@@ -199,12 +185,12 @@ export default function ScanPage() {
                         </div>
 
                          {/* Jika Error karena sudah diambil, tampilkan info siapa yg ambil */}
-                         {scanData && scanData.scannedByName && (
+                         {scanData && scanData.scannedBy && (
                             <div className="bg-red-500/10 p-4 rounded-xl border border-red-500/20 text-sm text-left">
                                 <p className="text-red-300 font-bold mb-1">Riwayat Pengambilan:</p>
                                 <ul className="list-disc list-inside text-gray-400 space-y-1">
                                     <li>Waktu: <span className="text-white">{new Date(scanData.pickedUpAt).toLocaleString()}</span></li>
-                                    <li>Petugas: <span className="text-white">{scanData.scannedByName}</span></li>
+                                    <li>Petugas: <span className="text-white">{scanData.scannedBy}</span></li>
                                 </ul>
                             </div>
                         )}
