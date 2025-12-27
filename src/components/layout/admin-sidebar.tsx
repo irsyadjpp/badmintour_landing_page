@@ -27,7 +27,7 @@ const menuItems = [
     { title: "Events Management", href: "/admin/events", icon: Calendar },
     { title: "Tournaments", href: "/admin/tournaments", icon: Trophy },
     { title: "Jersey Orders", href: "/admin/jersey", icon: Shirt, badge: "New" },
-    { title: "Settings", href: "/admin/settings", icon: Settings }
+    { title: "Admin Profile", href: "/admin/profile", icon: UserCog }
 ];
 
 export default function AdminSidebar() {
@@ -92,25 +92,11 @@ export default function AdminSidebar() {
                         </Link>
                     );
                 })}
-                 <Link href="/admin/profile">
-                    <div className={cn(
-                        "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 relative group",
-                        pathname.startsWith("/admin/profile") 
-                            ? "bg-bad-yellow text-black shadow-[0_0_20px_rgba(250,204,21,0.4)] scale-110" 
-                            : "text-white/40 hover:bg-white/10 hover:text-white hover:scale-105"
-                    )}>
-                        <UserCog className={cn("w-5 h-5", pathname.startsWith("/admin/profile") && "fill-current")} />
-                        {pathname.startsWith("/admin/profile") && (
-                            <span className="absolute -right-1 top-1 w-2 h-2 bg-white rounded-full border border-black/10"></span>
-                        )}
-                    </div>
-                </Link>
             </nav>
 
             {/* Footer */}
             <div className="p-2 border-t border-transparent w-full mt-auto space-y-2">
                 
-                {/* --- Tombol Beralih ke Member Dashboard --- */}
                 <Link href="/member/dashboard" className="block">
                     <Button 
                         variant="outline" 
@@ -121,7 +107,6 @@ export default function AdminSidebar() {
                     </Button>
                 </Link>
 
-                {/* Logout */}
                 <Button 
                     variant="ghost" 
                     title="Sign Out"

@@ -27,7 +27,6 @@ export default function HostSidebar() {
         { href: "/host/community", icon: Users, label: "Komunitas" },
         { href: "/host/finance", icon: Wallet, label: "Pendapatan" },
         { href: "/host/profile", icon: User, label: "Profile & Akun"},
-        { href: "/host/settings", icon: Settings, label: "Pengaturan" },
     ];
 
     return (
