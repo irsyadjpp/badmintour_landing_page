@@ -1,35 +1,26 @@
-
 'use client';
 
 import { useState } from 'react';
-import { Search, User, MoreHorizontal, MessageSquare, TrendingUp } from 'lucide-react';
+import { Search, User, MessageSquare, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 export default function CoachStudentsPage() {
     const [search, setSearch] = useState('');
 
-    // Mock Data
     const students = [
         { id: 1, name: "Budi Santoso", level: "Intermediate", sessions: 12, status: "Active", image: "", lastSession: "2 days ago" },
         { id: 2, name: "Siti Aminah", level: "Beginner", sessions: 4, status: "Active", image: "", lastSession: "1 week ago" },
-        { id: 3, name: "Kevin Sanjaya KW", level: "Advanced", sessions: 45, status: "Inactive", image: "", lastSession: "1 month ago" },
+        { id: 3, name: "Kevin KW", level: "Advanced", sessions: 45, status: "Inactive", image: "", lastSession: "1 month ago" },
     ];
 
     const filteredStudents = students.filter(s => s.name.toLowerCase().includes(search.toLowerCase()));
 
     return (
         <div className="space-y-8 pb-20 p-6 md:p-8">
-            {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-black text-white flex items-center gap-3">
@@ -39,27 +30,26 @@ export default function CoachStudentsPage() {
                 </div>
                 <div className="relative w-full md:w-64">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    {/* INPUT FIX: Dark BG, White Text */}
                     <Input 
                         placeholder="Cari nama murid..." 
-                        className="pl-10 bg-[#151515] border-white/10 rounded-xl text-white focus:border-[#00f2ea]"
+                        className="pl-10 bg-[#151515] border-white/20 rounded-xl text-white focus:border-[#00f2ea] placeholder:text-gray-600"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
                 </div>
             </div>
 
-            {/* Students Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredStudents.map((student) => (
-                    <Card key={student.id} className="bg-[#151515] border-white/5 p-6 rounded-[2rem] group hover:border-[#00f2ea]/30 transition-all relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-[#00f2ea]/5 rounded-full blur-[40px] group-hover:bg-[#00f2ea]/10 transition"></div>
+                    <Card key={student.id} className="bg-[#151515] border-white/10 p-6 rounded-[2rem] group hover:border-[#00f2ea]/30 transition-all relative overflow-hidden">
                         
                         <div className="flex justify-between items-start mb-6 relative z-10">
-                            <Avatar className="w-16 h-16 border-2 border-[#1A1A1A] shadow-lg">
+                            <Avatar className="w-16 h-16 border-2 border-[#1A1A1A] shadow-lg ring-1 ring-white/10">
                                 <AvatarImage src={student.image} />
                                 <AvatarFallback className="bg-[#222] text-[#00f2ea] font-bold">{student.name.charAt(0)}</AvatarFallback>
                             </Avatar>
-                            <Badge variant="outline" className={student.status === 'Active' ? "text-green-500 border-green-500/20 bg-green-500/10" : "text-gray-500 border-gray-500/20"}>
+                            <Badge variant="outline" className={student.status === 'Active' ? "text-green-500 border-green-500/20 bg-green-500/10 font-bold" : "text-gray-500 border-gray-500/20 font-bold"}>
                                 {student.status}
                             </Badge>
                         </div>
@@ -82,10 +72,12 @@ export default function CoachStudentsPage() {
                             </div>
 
                             <div className="flex gap-2">
-                                <Button className="flex-1 bg-white text-black hover:bg-gray-200 font-bold rounded-xl h-10 text-xs">
+                                {/* BUTTON FIX: White BG -> Black Text */}
+                                <Button className="flex-1 bg-white text-black hover:bg-gray-200 font-bold rounded-xl h-10 text-xs border-none">
                                     <TrendingUp className="w-3 h-3 mr-2" /> Report
                                 </Button>
-                                <Button className="flex-1 bg-[#1A1A1A] border border-white/10 text-white hover:text-[#00f2ea] hover:border-[#00f2ea] font-bold rounded-xl h-10 text-xs">
+                                {/* BUTTON FIX: Transparent BG -> White Text */}
+                                <Button className="flex-1 bg-transparent border border-white/20 text-white hover:text-[#00f2ea] hover:border-[#00f2ea] hover:bg-white/5 font-bold rounded-xl h-10 text-xs">
                                     <MessageSquare className="w-3 h-3 mr-2" /> Chat
                                 </Button>
                             </div>

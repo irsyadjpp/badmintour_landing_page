@@ -1,9 +1,8 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { User, Phone, Save, Loader2, ShieldCheck, MapPin, Award, DollarSign } from 'lucide-react';
+import { User, Phone, Save, Loader2, ShieldCheck, Award, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,7 +24,6 @@ export default function CoachProfilePage() {
         bio: ''
     });
 
-    // Fetch Profile
     useEffect(() => {
         const fetchProfile = async () => {
             const res = await fetch('/api/profile');
@@ -34,7 +32,7 @@ export default function CoachProfilePage() {
                 setFormData({
                     name: data.data.name || session?.user?.name || '',
                     phoneNumber: data.data.phoneNumber || '',
-                    specialty: data.data.coachProfile?.specialty || '', // Data spesifik coach
+                    specialty: data.data.coachProfile?.specialty || '',
                     rate: data.data.coachProfile?.rate || '',
                     bio: data.data.coachProfile?.bio || '',
                 });
@@ -46,35 +44,20 @@ export default function CoachProfilePage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
-
         try {
-            // Kita reuse API profile universal, tapi logicnya perlu handle coachProfile object
-            // Untuk simplifikasi, asumsikan API profile bisa menerima field tambahan
-            // Atau Anda bisa buat endpoint khusus /api/coach/profile
-            
             const res = await fetch('/api/profile', { 
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...formData,
-                    // Kirim sebagai coachProfile object jika Backend mendukung nested update
-                    // atau kirim flat jika Backend menangani mappingnya
-                })
+                body: JSON.stringify(formData)
             });
-
             const data = await res.json();
-
             if (res.ok) {
                 await update();
-                toast({ title: "Profile Updated", description: "Data coach berhasil diperbarui.", className: "bg-green-600 text-white" });
-            } else {
-                throw new Error(data.error);
-            }
+                toast({ title: "Profile Updated", description: "Data berhasil disimpan.", className: "bg-green-600 text-white border-none" });
+            } else { throw new Error(data.error); }
         } catch (error: any) {
             toast({ title: "Gagal", description: error.message, variant: "destructive" });
-        } finally {
-            setIsLoading(false);
-        }
+        } finally { setIsLoading(false); }
     };
 
     return (
@@ -83,13 +66,11 @@ export default function CoachProfilePage() {
                 <h1 className="text-3xl font-black text-white flex items-center gap-3">
                     <User className="w-8 h-8 text-[#00f2ea]" /> COACH PROFILE
                 </h1>
-                <p className="text-gray-400">Atur informasi publik yang akan dilihat oleh calon murid.</p>
+                <p className="text-gray-400">Atur informasi publik Anda.</p>
             </div>
 
             <Card className="bg-[#151515] border-white/10 p-8 rounded-[2rem]">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    
-                    {/* Header Avatar */}
                     <div className="flex items-center gap-6 mb-8">
                         <Avatar className="w-24 h-24 border-4 border-[#00f2ea]">
                             <AvatarImage src={session?.user?.image || ""} />
@@ -104,10 +85,10 @@ export default function CoachProfilePage() {
                         </div>
                     </div>
 
-                    {/* Form Fields */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <Label>Nama Lengkap (Sesuai Sertifikat)</Label>
+                            <Label className="text-gray-300">Nama Lengkap</Label>
+                            {/* INPUT FIX: Dark BG, White Text */}
                             <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="bg-[#0a0a0a] border-white/10 text-white" />
                         </div>
                         <div className="space-y-2">
@@ -118,14 +99,14 @@ export default function CoachProfilePage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <Label>Spesialisasi</Label>
+                            <Label className="text-gray-300">Spesialisasi</Label>
                             <div className="relative">
                                 <Award className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
                                 <Input value={formData.specialty} onChange={(e) => setFormData({...formData, specialty: e.target.value})} className="pl-10 bg-[#0a0a0a] border-white/10 text-white" placeholder="Ex: Ganda Putra" />
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <Label>Rate Per Jam (Rp)</Label>
+                            <Label className="text-gray-300">Rate Per Jam (Rp)</Label>
                             <div className="relative">
                                 <DollarSign className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
                                 <Input type="number" value={formData.rate} onChange={(e) => setFormData({...formData, rate: e.target.value})} className="pl-10 bg-[#0a0a0a] border-white/10 text-white" placeholder="150000" />
@@ -134,7 +115,7 @@ export default function CoachProfilePage() {
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Bio / Pengalaman</Label>
+                        <Label className="text-gray-300">Bio / Pengalaman</Label>
                         <Textarea 
                             value={formData.bio} 
                             onChange={(e) => setFormData({...formData, bio: e.target.value})} 
