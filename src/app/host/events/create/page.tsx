@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarPlus, Save, Loader2, Dumbbell, Users, Trophy, Info, MapPin, Clock, DollarSign } from 'lucide-react';
+import { CalendarPlus, Save, Loader2, Dumbbell, Users, Trophy, Info, MapPin, Clock, DollarSign, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +16,9 @@ export default function CreateEventPage() {
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     
+    // State untuk daftar Coach
+    const [coaches, setCoaches] = useState<any[]>([]);
+    
     const [formData, setFormData] = useState({
         title: '',
         type: 'mabar',
@@ -27,6 +30,22 @@ export default function CreateEventPage() {
         quota: '12',
         description: ''
     });
+
+    // Fetch Data Coach saat component mount
+    useEffect(() => {
+        const fetchCoaches = async () => {
+            try {
+                const res = await fetch('/api/coaches');
+                const data = await res.json();
+                if (data.success) {
+                    setCoaches(data.data);
+                }
+            } catch (error) {
+                console.error("Gagal load coach", error);
+            }
+        };
+        fetchCoaches();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -41,7 +60,7 @@ export default function CreateEventPage() {
 
             if (res.ok) {
                 toast({ title: "Sukses", description: "Jadwal berhasil dibuat!", className: "bg-green-600 text-white" });
-                router.push('/host/events'); // Redirect ke list event
+                router.push('/host/events'); 
             } else {
                 throw new Error("Gagal membuat event");
             }
@@ -88,7 +107,7 @@ export default function CreateEventPage() {
                                     <Label className="text-gray-300">Tipe Kegiatan</Label>
                                     <Select 
                                         value={formData.type} 
-                                        onValueChange={(val) => setFormData({...formData, type: val})}
+                                        onValueChange={(val) => setFormData({...formData, type: val, coachName: ''})}
                                     >
                                         <SelectTrigger className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:ring-[#ca1f3d]">
                                             <SelectValue />
@@ -101,16 +120,32 @@ export default function CreateEventPage() {
                                     </Select>
                                 </div>
 
+                                {/* LOGIC DROPDOWN COACH */}
                                 {formData.type === 'drilling' && (
                                     <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                                        <Label className="text-[#00f2ea] font-bold">Nama Coach / Pelatih</Label>
-                                        <Input 
-                                            placeholder="Cth: Coach Budi" 
+                                        <Label className="text-[#00f2ea] font-bold">Pilih Coach / Pelatih</Label>
+                                        <Select 
                                             value={formData.coachName} 
-                                            onChange={(e) => setFormData({...formData, coachName: e.target.value})} 
-                                            className="bg-[#0a0a0a] border-[#00f2ea]/50 text-white h-12 rounded-xl focus:border-[#00f2ea]"
-                                            required
-                                        />
+                                            onValueChange={(val) => setFormData({...formData, coachName: val})}
+                                        >
+                                            <SelectTrigger className="bg-[#0a0a0a] border-[#00f2ea]/50 text-white h-12 rounded-xl focus:ring-[#00f2ea]">
+                                                <SelectValue placeholder="Pilih Pelatih..." />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-[#1A1A1A] border-white/10 text-white rounded-xl">
+                                                {coaches.length > 0 ? (
+                                                    coaches.map((coach) => (
+                                                        <SelectItem key={coach.id} value={coach.name}>
+                                                            <span className="flex items-center gap-2">
+                                                                <User className="w-4 h-4 text-[#00f2ea]"/> 
+                                                                {coach.name}
+                                                            </span>
+                                                        </SelectItem>
+                                                    ))
+                                                ) : (
+                                                    <div className="p-2 text-xs text-gray-500 text-center">Belum ada data Coach</div>
+                                                )}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
                                 )}
 
