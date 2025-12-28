@@ -17,14 +17,16 @@ import {
     Trophy,
     UserCog,
     ArrowLeft,
-    DollarSign
+    DollarSign,
+    FileSpreadsheet
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 const menuItems = [
     { title: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-    { title: "Transactions", href: "/admin/transactions", icon: DollarSign, badge: "New" },
+    { title: "Transactions", href: "/admin/transactions", icon: DollarSign },
+    { title: "Reports", href: "/admin/reports", icon: FileSpreadsheet },
     { title: "Users / Members", href: "/admin/members", icon: Users },
     { title: "Events Management", href: "/admin/events", icon: Calendar },
     { title: "Tournaments", href: "/admin/tournaments", icon: Trophy },
@@ -85,7 +87,7 @@ export default function AdminSidebar() {
                                     isActive && "fill-current"
                                 )} />
                                 
-                                {item.badge && (
+                                {(item.title === 'Transactions') && (
                                     <span className="absolute -top-1 -right-1 flex h-4 w-4">
                                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-bad-yellow opacity-75"></span>
                                       <span className="relative inline-flex rounded-full h-4 w-4 bg-bad-yellow text-[8px] items-center justify-center text-black font-black"></span>

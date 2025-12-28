@@ -8,7 +8,8 @@ import {
     QrCode,
     Settings,
     LogOut,
-    User
+    User,
+    MapPin
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -24,6 +25,7 @@ export default function HostSidebar() {
         { href: "/host/dashboard", icon: LayoutGrid, label: "Dashboard" },
         { href: "/host/events", icon: CalendarPlus, label: "Kelola Event" },
         { href: "/host/scan", icon: QrCode, label: "Scan Tiket" },
+        { href: "/host/check-in", icon: MapPin, label: "Absensi Host" },
         { href: "/host/community", icon: Users, label: "Komunitas" },
         { href: "/host/finance", icon: Wallet, label: "Pendapatan" },
         { href: "/host/profile", icon: User, label: "Profile & Akun"},
@@ -95,8 +97,8 @@ export default function HostSidebar() {
 
             {/* MOBILE NAV */}
             <div className="md:hidden fixed bottom-4 left-4 right-4 z-50">
-                <nav className="flex justify-between items-center bg-[#151515]/95 backdrop-blur-xl border border-white/10 rounded-[2rem] px-6 py-3 shadow-2xl">
-                    {[navItems[0], navItems[1], navItems[2], navItems[4]].map((item) => {
+                <nav className="flex justify-around items-center bg-[#151515]/95 backdrop-blur-xl border border-white/10 rounded-[2rem] px-6 py-3 shadow-2xl">
+                    {[navItems[0], navItems[1], navItems[2], navItems[3], navItems[4]].map((item) => {
                         const isActive = pathname.startsWith(item.href);
                         return (
                             <Link key={item.label} href={item.href} className="flex flex-col items-center gap-1">
