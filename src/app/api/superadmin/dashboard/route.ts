@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -10,16 +11,17 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
-        // Jalankan Query secara Paralel
-        const [usersSnap, eventsSnap, bookingsSnap, jerseySnap, logsSnap] = await Promise.all([
-            db.collection("users").get(),
-            db.collection("events").get(),
-            db.collection("bookings").get(),
-            db.collection("jersey_orders").get(),
-            db.collection("audit_logs").orderBy("createdAt", "desc").limit(5).get()
+        // Fetch Data untuk Statistik Sistem
+        const [usersSnap, eventsSnap, bookingsSnap, jerseySnap, logsSnap, recentLogsSnap] = await Promise.all([
+            db.collection("users").get(),             // Hitung User
+            db.collection("events").get(),            // Hitung Event
+            db.collection("bookings").get(),          // Hitung Load Transaksi (bukan nominal)
+            db.collection("jersey_orders").get(),     // Hitung Order Jersey
+            db.collection("audit_logs").count().get(), // Hitung Total Log (Beban Log)
+            db.collection("audit_logs").orderBy("createdAt", "desc").limit(7).get() // Ambil 7 Log Terakhir
         ]);
 
-        // 1. User Stats
+        // 1. User Stats (Demografi)
         const users = usersSnap.docs.map(doc => doc.data());
         const userStats = {
             total: users.length,
@@ -29,36 +31,21 @@ export async function GET(req: Request) {
             members: users.filter(u => !u.role || u.role === 'member').length
         };
 
-        // 2. Revenue Calculation (Bookings + Jersey)
-        let totalRevenue = 0;
-        
-        bookingsSnap.docs.forEach(doc => {
-            const data = doc.data();
-            if (data.status === 'paid' || data.status === 'completed') {
-                if (data.price) totalRevenue += Number(data.price);
-            }
-        });
+        // 2. System Load (Total Records di Database)
+        // Menjumlahkan semua dokumen untuk melihat beban penyimpanan
+        const totalDatabaseRecords = 
+            usersSnap.size + 
+            eventsSnap.size + 
+            bookingsSnap.size + 
+            jerseySnap.size + 
+            logsSnap.data().count;
 
-        // Revenue dari Jersey
-        jerseySnap.docs.forEach(doc => {
-            const data = doc.data();
-            if (data.status === 'paid' || data.status === 'completed' || data.status === 'shipped') {
-                if (data.totalPrice) {
-                    totalRevenue += Number(data.totalPrice);
-                } else {
-                    const quantity = data.quantity || 1;
-                    const paidQty = Math.max(0, quantity - 1);
-                    totalRevenue += paidQty * 150000;
-                }
-            }
-        });
-
-        // 3. Activity Stats
+        // 3. Operational Stats
+        // Event yang tanggalnya >= hari ini
         const activeEvents = eventsSnap.docs.filter(d => new Date(d.data().date) >= new Date()).length;
-        const totalBookings = bookingsSnap.size;
-
-        // 4. Recent Logs
-        const recentLogs = logsSnap.docs.map(doc => ({
+        
+        // 4. Recent Security Logs
+        const recentLogs = recentLogsSnap.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
@@ -67,14 +54,22 @@ export async function GET(req: Request) {
             success: true,
             data: {
                 userStats,
-                financial: { totalRevenue },
-                operational: { totalEvents: eventsSnap.size, activeEvents, totalBookings },
+                system: {
+                    totalRecords: totalDatabaseRecords,
+                    totalLogs: logsSnap.data().count,
+                    serverStatus: "Online", // Mockup status server
+                    lastBackup: new Date().toLocaleDateString() // Mockup info backup
+                },
+                operational: {
+                    totalEvents: eventsSnap.size,
+                    activeEvents
+                },
                 recentLogs
             }
         });
 
     } catch (error) {
         console.error("Dashboard stats error:", error);
-        return NextResponse.json({ error: "Gagal memuat statistik" }, { status: 500 });
+        return NextResponse.json({ error: "Gagal memuat statistik sistem" }, { status: 500 });
     }
 }
