@@ -1,8 +1,10 @@
 
+
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/firebase-admin";
+import { logActivity } from "@/lib/audit-logger";
 
 // GET: Ambil Semua Event (Untuk Landing Page & Dashboard)
 export async function GET(req: Request) {
@@ -57,6 +59,16 @@ export async function POST(req: Request) {
         };
 
         const docRef = await db.collection("events").add(newEvent);
+
+        await logActivity({
+            userId: session.user.id,
+            userName: session.user.name || "Unknown",
+            role: session.user.role || "Unknown",
+            action: 'create',
+            entity: 'Event',
+            entityId: docRef.id,
+            details: `Membuat event baru: ${title} (${type})`
+        });
 
         return NextResponse.json({ success: true, id: docRef.id });
 
