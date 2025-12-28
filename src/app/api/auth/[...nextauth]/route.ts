@@ -2,6 +2,7 @@ import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { db } from "@/lib/firebase-admin";
+import { logActivity } from "@/lib/audit-logger";
 
 // --- HELPER FUNCTIONS ---
 
@@ -96,8 +97,23 @@ export const authOptions: NextAuthOptions = {
       }
     })
   ],
+  events: {
+    async signIn({ user, account, profile, isNewUser }) {
+      try {
+        await logActivity({
+          userId: user.id,
+          userName: user.name || "No Name",
+          role: (user as any).role || "user",
+          action: 'login',
+          entity: 'Auth',
+          details: `User logged in via ${account?.provider}`
+        });
+      } catch (error) {
+        console.error("Login log error", error);
+      }
+    },
+  },
   callbacks: {
-    // A. Saat User Sign In (Google)
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         try {
@@ -105,24 +121,30 @@ export const authOptions: NextAuthOptions = {
           const doc = await userRef.get();
 
           if (!doc.exists) {
-            // --- LOGIC USER BARU ---
             const newPin = generateDistinctPin();
             const nickname = extractNickname(user.name || "");
 
             await userRef.set({
               uid: user.id,
-              name: user.name,          // Nama Asli Lengkap (Google)
-              nickname: nickname,       // Nickname hasil split
+              name: user.name,
+              nickname: nickname,
               email: user.email,
               image: user.image,
               role: "member",
               status: "active",
-              pin: newPin,              // PIN login permanen
+              pin: newPin,
               createdAt: new Date().toISOString(),
+            });
+            await logActivity({
+                userId: user.id,
+                userName: user.name || "New User",
+                role: "member",
+                action: 'create',
+                entity: 'User',
+                details: `User baru mendaftar via ${account.provider}`
             });
             console.log(`[AUTH] New User Created: ${nickname} | PIN: ${newPin}`);
           } else {
-            // --- LOGIC USER LAMA ---
             const userData = doc.data();
             if (userData?.status && userData.status !== 'active') {
                 return `/login?error=AccountInactive`; 
@@ -136,9 +158,7 @@ export const authOptions: NextAuthOptions = {
       }
       return true; // Allow PIN login flow
     },
-
     async jwt({ token, user, trigger, session }) {
-      // Update session real-time jika ada perubahan di client
       if (trigger === "update" && session?.name) {
           token.name = session.name;
       }
@@ -146,14 +166,10 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         if (user.role) token.role = user.role;
-        // Simpan nickname ke token saat pertama kali login
         if (user.nickname) token.nickname = user.nickname;
-        // Simpan phone number jika ada saat login pertama
         if (user.phoneNumber) token.phoneNumber = user.phoneNumber;
       }
 
-      // Fetch Data Terbaru dari DB (jika user refresh halaman)
-      // Every time user refreshes/accesses a page, we check the latest data in the DB
       try {
         const uid = token.sub || token.id; 
         if(uid) {
@@ -162,8 +178,7 @@ export const authOptions: NextAuthOptions = {
                 const userData = userDoc.data();
                 token.role = userData?.role || "member";
                 token.status = userData?.status || "active";
-                token.nickname = userData?.nickname; // Ambil nickname dari DB
-                // AMBIL PHONE NUMBER DARI DB
+                token.nickname = userData?.nickname;
                 token.phoneNumber = userData?.phoneNumber || ""; 
             }
         }
@@ -172,16 +187,12 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
-
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
         (session.user as any).status = token.status;
-        
-        // Teruskan nickname ke session client-side
         session.user.nickname = token.nickname as string;
-        // Teruskan ke client
         session.user.phoneNumber = token.phoneNumber as string;
       }
       return session;

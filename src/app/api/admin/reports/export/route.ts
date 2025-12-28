@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/firebase-admin";
+import { logActivity } from "@/lib/audit-logger";
 
 export async function POST(req: Request) {
     try {
@@ -39,6 +40,17 @@ export async function POST(req: Request) {
             const safeName = `"${name.replace(/"/g, '""')}"`;
 
             csvContent += `${index + 1},${safeName},${type},${phone},${status},${time}\n`;
+        });
+
+        // Log the download action
+        await logActivity({
+            userId: session.user.id,
+            userName: session.user.name || "Unknown",
+            role: session.user.role || "Admin",
+            action: 'create', // Menganggap download sebagai creation of report file
+            entity: 'Report',
+            entityId: eventId,
+            details: `Mendownload data peserta (CSV) untuk event: ${eventName}`
         });
 
         // 5. Return sebagai Text/CSV

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // Menggunakan absolute path agar lebih aman
 import { db } from "@/lib/firebase-admin";
+import { logActivity } from "@/lib/audit-logger";
 
 // 1. POST: Simpan Order & Pairing Akun
 export async function POST(req: Request) {
@@ -67,6 +68,17 @@ export async function POST(req: Request) {
             updatedAt: new Date().toISOString()
         });
     }
+
+    // Log the activity
+    await logActivity({
+        userId: session?.user?.id || 'guest',
+        userName: session?.user?.name || fullName,
+        role: session?.user?.role || 'guest',
+        action: 'create',
+        entity: 'JerseyOrder',
+        entityId: orderId,
+        details: `Memesan Jersey Custom: ${backName}`
+    });
 
     return NextResponse.json({ 
         success: true, 

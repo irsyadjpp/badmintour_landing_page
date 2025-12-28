@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/firebase-admin";
+import { logActivity } from "@/lib/audit-logger";
 
 export async function POST(req: Request) {
     try {
@@ -10,7 +11,7 @@ export async function POST(req: Request) {
         const { eventId, guestName, guestPhone } = await req.json();
 
         // 1. Validasi: Member wajib login atau Guest wajib isi data
-        let userData = {};
+        let userData: any = {};
         if (session) {
             userData = {
                 userId: session.user.id,
@@ -21,6 +22,7 @@ export async function POST(req: Request) {
         } else {
             if (!guestName || !guestPhone) return NextResponse.json({ error: "Nama & WA wajib diisi" }, { status: 400 });
             userData = {
+                userId: 'guest',
                 name: guestName,
                 phone: guestPhone,
                 type: 'guest'
@@ -43,6 +45,16 @@ export async function POST(req: Request) {
             ...userData,
             status: 'waiting', // waiting -> notified -> joined
             createdAt: new Date().toISOString()
+        });
+
+        await logActivity({
+            userId: userData.userId || 'guest',
+            userName: userData.name,
+            role: session ? session.user.role || 'member' : 'guest',
+            action: 'create',
+            entity: 'WaitingList',
+            entityId: eventId,
+            details: `Bergabung ke waiting list untuk event ID: ${eventId}`
         });
 
         return NextResponse.json({ success: true });
