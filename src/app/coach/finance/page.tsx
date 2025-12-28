@@ -16,8 +16,8 @@ export default function CoachFinancePage() {
                     </h1>
                     <p className="text-gray-400">Laporan pendapatan dari sesi coaching.</p>
                 </div>
-                {/* BUTTON FIX: Outline White -> Hover White BG Black Text */}
-                <Button variant="outline" className="border-white/20 text-white hover:bg-white hover:text-black rounded-xl h-12 font-bold transition-colors w-full md:w-auto">
+                {/* BUTTON FIX: Solid White Background -> Black Text (High Contrast) */}
+                <Button className="bg-white text-black hover:bg-gray-200 rounded-xl h-12 font-bold transition-colors w-full md:w-auto shadow-lg border-none">
                     <Download className="w-4 h-4 mr-2" /> Export Report
                 </Button>
             </div>
@@ -38,12 +38,12 @@ export default function CoachFinancePage() {
                         <h2 className="text-5xl md:text-6xl font-black text-white mb-8 tracking-tight">Rp 3.500.000</h2>
                         
                         <div className="flex flex-col sm:flex-row gap-4">
-                            {/* BUTTON FIX: Cyan BG -> Black Text (High Contrast) */}
+                            {/* Primary Action: Cyan (Signature) */}
                             <Button className="bg-[#00f2ea] text-black hover:bg-[#00c2bb] font-black h-14 px-8 rounded-xl shadow-[0_0_20px_rgba(0,242,234,0.3)] hover:scale-105 transition-transform">
                                 WITHDRAW FUNDS
                             </Button>
-                            {/* BUTTON FIX: Transparent -> White Border/Text */}
-                            <Button variant="outline" className="bg-transparent border-white/20 text-white hover:bg-white hover:text-black h-14 px-6 rounded-xl font-bold transition-all">
+                            {/* Secondary Action: Transparent White Border */}
+                            <Button variant="outline" className="bg-transparent border-2 border-white/20 text-white hover:bg-white hover:text-black h-14 px-6 rounded-xl font-bold transition-all">
                                 Add Bank Account
                             </Button>
                         </div>
