@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -37,7 +38,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-export default function SuperAdminPage() {
+export default function SuperAdminUsersPage() {
     const { toast } = useToast();
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -53,9 +54,8 @@ export default function SuperAdminPage() {
         try {
             const res = await fetch('/api/superadmin/users');
             const data = await res.json();
-            // Assuming API returns an array directly, not { success: true, data: [...] }
-            if (Array.isArray(data)) {
-                setUsers(data);
+            if (data.success) {
+                setUsers(data.data);
             }
         } catch (error) {
             console.error(error);
@@ -75,9 +75,9 @@ export default function SuperAdminPage() {
         setUpdating(true);
         try {
             const res = await fetch('/api/superadmin/users', {
-                method: 'PATCH', // Menggunakan PATCH sesuai API
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: selectedUser.id, newRole: newRole })
+                body: JSON.stringify({ userId: selectedUser.id, role: newRole })
             });
 
             if (res.ok) {
