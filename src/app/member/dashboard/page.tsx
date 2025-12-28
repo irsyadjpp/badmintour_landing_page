@@ -15,6 +15,17 @@ import QRCode from "react-qr-code";
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 
 export default function MemberDashboard() {
   const { data: session, status } = useSession();
@@ -28,6 +39,38 @@ export default function MemberDashboard() {
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [cancelId, setCancelId] = useState<string | null>(null); // ID booking yg mau di-cancel
+  const [canceling, setCanceling] = useState(false);
+
+  // LOGIC CANCEL
+  const handleCancelBooking = async () => {
+      if (!cancelId) return;
+      setCanceling(true);
+
+      try {
+          const res = await fetch('/api/bookings/cancel', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ bookingId: cancelId })
+          });
+          
+          const data = await res.json();
+
+          if (res.ok) {
+              toast({ title: "Dibatalkan", description: "Booking telah dibatalkan & slot dikembalikan." });
+              setCancelId(null);
+              // REFRESH DATA (Panggil fungsi fetch ulang data booking di sini)
+              fetchData();
+          } else {
+              throw new Error(data.error);
+          }
+      } catch (error: any) {
+          toast({ title: "Gagal", description: error.message, variant: "destructive" });
+      } finally {
+          setCanceling(false);
+      }
+  };
 
   // FUNGSI HANDLE UPLOAD
   const handleUploadProof = async () => {
@@ -56,6 +99,7 @@ export default function MemberDashboard() {
                 toast({ title: "Berhasil", description: "Bukti terkirim. Mohon tunggu verifikasi admin.", className: "bg-green-600 text-white" });
                 setSelectedBooking(null);
                 // TODO: Refresh data booking di sini (panggil ulang fetchBookings jika ada)
+                fetchData();
             } else {
                 throw new Error("Gagal upload");
             }
@@ -67,27 +111,30 @@ export default function MemberDashboard() {
     };
   };
 
+  const fetchData = async () => {
+    try {
+        const res = await fetch('/api/member/jersey');
+        if (res.ok) {
+            const data = await res.json();
+            if(data.success) setJerseyOrders(data.data);
+        }
+        
+        const resTicket = await fetch('/api/member/bookings');
+        const dataTicket = await resTicket.json();
+        if (dataTicket.success && dataTicket.active) {
+            setActiveTicket(dataTicket.active);
+        }
+
+    } catch (e) { console.error(e) } 
+    finally { setIsLoading(false); }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-        try {
-            const res = await fetch('/api/member/jersey');
-            if (res.ok) {
-                const data = await res.json();
-                if(data.success) setJerseyOrders(data.data);
-            }
-            
-            const resTicket = await fetch('/api/member/bookings');
-            const dataTicket = await resTicket.json();
-            if (dataTicket.success && dataTicket.active) {
-                setActiveTicket(dataTicket.active);
-            }
-
-        } catch (e) { console.error(e) } 
-        finally { setIsLoading(false); }
+    if (session) {
+      fetchData();
+    } else {
+      setIsLoading(false)
     };
-
-    if (session) fetchData();
-    else setIsLoading(false);
   }, [session]);
 
   const handleDownloadQR = (orderId: string) => {
@@ -246,49 +293,59 @@ export default function MemberDashboard() {
         
         {/* UPDATED BOOKING SECTION */}
         <div className="bg-[#151515] border border-white/5 rounded-[2rem] p-6">
-            <h3 className="text-xl font-black text-white mb-6">JADWAL & TRANSAKSI SAYA</h3>
-            
-            <div className="space-y-4">
-                {/* Contoh Item: Pending Payment */}
-                <div className="flex flex-col md:flex-row justify-between items-center bg-[#0a0a0a] p-4 rounded-xl border border-yellow-500/30 gap-4">
-                    <div>
-                        <p className="font-bold text-white">Mabar Senin Ceria</p>
-                        <p className="text-xs text-yellow-500 font-bold uppercase tracking-wider">Menunggu Pembayaran</p>
-                        <p className="text-xs text-gray-500 mt-1">Total: Rp 35.000</p>
-                    </div>
-                    <Button 
-                        onClick={() => setSelectedBooking({ id: 'BOOK-001', title: 'Mabar Senin Ceria', price: '35.000' })}
-                        className="bg-yellow-500 text-black font-bold hover:bg-yellow-400"
-                    >
-                        Upload Bukti Bayar
-                    </Button>
-                </div>
-
-                {/* Contoh Item: Verification Pending */}
-                <div className="flex flex-col md:flex-row justify-between items-center bg-[#0a0a0a] p-4 rounded-xl border border-blue-500/30 gap-4">
-                    <div>
-                        <p className="font-bold text-white">Drilling Class with Coach Budi</p>
-                        <p className="text-xs text-blue-400 font-bold uppercase tracking-wider">Sedang Diverifikasi</p>
-                    </div>
-                    <Button disabled className="bg-white/10 text-gray-400 font-bold border border-white/10">
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Menunggu Admin
-                    </Button>
-                </div>
-
-                 {/* Contoh Item: Confirmed (Active Ticket) */}
-                 {activeTicket && (
-                    <div className="flex flex-col md:flex-row justify-between items-center bg-[#0a0a0a] p-4 rounded-xl border border-green-500/30 gap-4">
-                        <div>
-                            <p className="font-bold text-white">{activeTicket.event}</p>
-                            <p className="text-xs text-green-400 font-bold uppercase tracking-wider">Tiket Aktif</p>
+                <h3 className="text-xl font-black text-white mb-6">JADWAL SAYA</h3>
+                
+                <div className="space-y-4">
+                    {/* MOCK ITEM: Booking Aktif */}
+                    <div className="flex flex-col md:flex-row justify-between items-center bg-[#0a0a0a] p-4 rounded-xl border border-white/5 gap-4 group hover:border-[#ca1f3d]/30 transition-colors">
+                        <div className="flex-1">
+                            <div className="flex justify-between md:justify-start gap-4 mb-1">
+                                <p className="font-bold text-white">Mabar Senin Ceria</p>
+                                <Badge variant="outline" className="text-green-500 border-green-500/20 bg-green-500/10 text-[10px]">PAID</Badge>
+                            </div>
+                            <p className="text-xs text-gray-500">Senin, 30 Des 2025 • 20:00 WIB</p>
                         </div>
-                        <Button className="bg-green-600 text-white font-bold hover:bg-green-500">
-                           <Ticket className="w-4 h-4 mr-2" /> Lihat Tiket
+                        
+                        <div className="flex gap-2 w-full md:w-auto">
+                            {/* Tombol Cancel hanya muncul jika status bukan cancelled/completed */}
+                            <Button 
+                                variant="destructive" 
+                                size="sm"
+                                className="w-full md:w-auto bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 font-bold"
+                                onClick={() => setCancelId('BOOK-ID-CONTOH')} // Set ID saat diklik
+                            >
+                                BATALKAN
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Contoh Item: Pending Payment */}
+                    <div className="flex flex-col md:flex-row justify-between items-center bg-[#0a0a0a] p-4 rounded-xl border border-yellow-500/30 gap-4">
+                        <div>
+                            <p className="font-bold text-white">Mabar Senin Ceria</p>
+                            <p className="text-xs text-yellow-500 font-bold uppercase tracking-wider">Menunggu Pembayaran</p>
+                            <p className="text-xs text-gray-500 mt-1">Total: Rp 35.000</p>
+                        </div>
+                        <Button 
+                            onClick={() => setSelectedBooking({ id: 'BOOK-001', title: 'Mabar Senin Ceria', price: '35.000' })}
+                            className="bg-yellow-500 text-black font-bold hover:bg-yellow-400"
+                        >
+                            Upload Bukti Bayar
                         </Button>
                     </div>
-                )}
+
+                    {/* Contoh Item: Verification Pending */}
+                    <div className="flex flex-col md:flex-row justify-between items-center bg-[#0a0a0a] p-4 rounded-xl border border-blue-500/30 gap-4">
+                        <div>
+                            <p className="font-bold text-white">Drilling Class with Coach Budi</p>
+                            <p className="text-xs text-blue-400 font-bold uppercase tracking-wider">Sedang Diverifikasi</p>
+                        </div>
+                        <Button disabled className="bg-white/10 text-gray-400 font-bold border border-white/10">
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Menunggu Admin
+                        </Button>
+                    </div>
+                </div>
             </div>
-        </div>
 
         <Dialog open={!!selectedQr} onOpenChange={(open) => !open && setSelectedQr(null)}>
             <DialogContent className="bg-[#1A1A1A] border-white/10 text-white sm:max-w-xs rounded-3xl">
@@ -356,6 +413,30 @@ export default function MemberDashboard() {
                 </div>
             </DialogContent>
         </Dialog>
+
+        {/* ALERT DIALOG KONFIRMASI */}
+        <AlertDialog open={!!cancelId} onOpenChange={(open) => !open && setCancelId(null)}>
+            <AlertDialogContent className="bg-[#1A1A1A] border-white/10 text-white rounded-2xl">
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Yakin ingin membatalkan?</AlertDialogTitle>
+                    <AlertDialogDescription className="text-gray-400">
+                        Slot Anda akan dibuka kembali untuk orang lain. 
+                        <br/><br/>
+                        <span className="text-red-400 font-bold text-xs">*Jika sudah transfer, dana akan masuk proses refund manual (hubungi admin). Pembatalan hanya bisa dilakukan H-6 jam.</span>
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5">Kembali</AlertDialogCancel>
+                    <AlertDialogAction 
+                        onClick={handleCancelBooking}
+                        disabled={canceling}
+                        className="bg-red-600 hover:bg-red-700 text-white font-bold"
+                    >
+                        {canceling ? "Memproses..." : "Ya, Batalkan Booking"}
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </div>
   );
 }
@@ -378,3 +459,4 @@ function GameCard({ href, icon: Icon, color, bgColor, title, desc }: any) {
         </Link>
     );
 }
+```
