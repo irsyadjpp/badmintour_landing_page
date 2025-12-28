@@ -6,10 +6,10 @@ import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, MapPin, Calendar, Clock, CheckCircle } from 'lucide-react';
+import { Loader2, MapPin, Calendar, Clock, BellRing, CheckCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; // Tambah import ini
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; 
 
 // 1. Pisahkan Logic Utama ke Komponen Content
 function MabarContent() {
@@ -24,6 +24,7 @@ function MabarContent() {
     const [bookingLoading, setBookingLoading] = useState(false);
     const [guestForm, setGuestForm] = useState({ name: '', phone: '' });
     const [participants, setParticipants] = useState<any[]>([]);
+    const [isFull, setIsFull] = useState(false);
 
     // Fetch Detail Event & Participants
     useEffect(() => {
@@ -41,6 +42,9 @@ function MabarContent() {
                 if (eventData.data) {
                     const found = eventData.data.find((e: any) => e.id === eventId);
                     setEvent(found);
+                    if (found && found.registeredCount >= found.quota) {
+                        setIsFull(true);
+                    }
                 }
 
                 // Fetch Participants
@@ -60,6 +64,34 @@ function MabarContent() {
 
         fetchEventData();
     }, [eventId, toast]);
+
+    const handleWaitingList = async () => {
+        setBookingLoading(true);
+        try {
+            const res = await fetch('/api/events/waiting-list', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    eventId,
+                    guestName: guestForm.name,
+                    guestPhone: guestForm.phone
+                })
+            });
+            
+            const data = await res.json();
+            if (res.ok) {
+                toast({ title: "Berhasil!", description: "Anda masuk daftar tunggu. Kami akan info jika ada slot kosong.", className: "bg-blue-600 text-white" });
+                router.push('/');
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (e: any) {
+            toast({ title: "Gagal", description: e.message, variant: "destructive" });
+        } finally {
+            setBookingLoading(false);
+        }
+    }
+
 
     // Handle Booking Logic
     const handleJoinMabar = async () => {
@@ -195,14 +227,33 @@ function MabarContent() {
                     </div>
                 )}
 
-                <Button 
-                    onClick={handleJoinMabar} 
-                    disabled={bookingLoading}
-                    className="w-full h-14 bg-[#ca1f3d] hover:bg-[#a01830] text-white font-black text-xl rounded-xl shadow-lg"
-                >
-                    {bookingLoading ? <Loader2 className="animate-spin" /> : (!session ? "BOOKING SEBAGAI TAMU" : "KONFIRMASI JOIN")}
-                </Button>
-                <p className="text-center text-xs text-gray-500">Saldo/Kuota akan terpotong otomatis.</p>
+                {isFull ? (
+                    <Button 
+                        onClick={handleWaitingList} 
+                        disabled={bookingLoading}
+                        className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black text-xl rounded-xl shadow-lg shadow-blue-900/20"
+                    >
+                        {bookingLoading ? <Loader2 className="animate-spin" /> : (
+                            <span className="flex items-center gap-2">
+                                <BellRing className="w-5 h-5" /> JOIN WAITING LIST
+                            </span>
+                        )}
+                    </Button>
+                ) : (
+                    <Button 
+                        onClick={handleJoinMabar} 
+                        disabled={bookingLoading}
+                        className="w-full h-14 bg-[#ca1f3d] hover:bg-[#a01830] text-white font-black text-xl rounded-xl shadow-lg"
+                    >
+                        {bookingLoading ? <Loader2 className="animate-spin" /> : (!session ? "BOOKING SEBAGAI TAMU" : "KONFIRMASI JOIN")}
+                    </Button>
+                )}
+                
+                {isFull && (
+                    <p className="text-center text-xs text-blue-400 mt-2 bg-blue-500/10 p-2 rounded-lg border border-blue-500/20">
+                        Kuota penuh. Masuk waiting list agar diprioritaskan saat ada yang cancel.
+                    </p>
+                )}
             
             </Card>
         </div>

@@ -1,18 +1,16 @@
 'use client';
 
 import { 
-    Bell, 
     Wallet, 
     Users, 
     Ticket,
     Trophy,
     MapPin,
     CalendarClock,
-    ArrowUpRight,
     TrendingUp
 } from 'lucide-react';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import NotificationBell from '@/components/layout/notification-bell';
 
 // Data Mock untuk Live Match Turnamen
 const liveMatch = {
@@ -54,11 +52,8 @@ export default function AdminDashboard() {
                 </h1>
             </div>
             
-            {/* Notification Button */}
-            <button className="w-12 h-12 rounded-full bg-[#1A1A1A] border border-white/10 text-white flex items-center justify-center hover:bg-white/10 transition relative group">
-                <Bell className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-bad-red rounded-full shadow-[0_0_10px_rgba(248,113,113,0.8)] animate-pulse"></span>
-            </button>
+            <NotificationBell />
+
         </div>
 
         {/* Top Stats Grid */}
