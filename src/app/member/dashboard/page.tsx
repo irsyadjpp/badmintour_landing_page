@@ -1,39 +1,81 @@
-
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { Trophy, CalendarDays, Clock, MapPin, QrCode, ArrowRight, Ticket, Swords, Dumbbell, UserCog, Users, Medal, SearchX, Shirt, Download } from 'lucide-react';
+import { Trophy, CalendarDays, Clock, MapPin, QrCode, ArrowRight, Ticket, Swords, Dumbbell, UserCog, Users, Medal, SearchX, Shirt, Download, Upload, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from "@/components/ui/card";
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import DashboardSkeleton from '@/components/dashboard/dashboard-skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import QRCode from "react-qr-code";
+import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function MemberDashboard() {
   const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(true);
   const [activeTicket, setActiveTicket] = useState<any>(null);
   
-  // State untuk Order Jersey
   const [jerseyOrders, setJerseyOrders] = useState<any[]>([]);
   const [selectedQr, setSelectedQr] = useState<string | null>(null);
+
+  const { toast } = useToast();
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // FUNGSI HANDLE UPLOAD
+  const handleUploadProof = async () => {
+    const file = fileInputRef.current?.files?.[0];
+    if (!file) {
+        toast({ title: "Error", description: "Pilih file gambar terlebih dahulu.", variant: "destructive" });
+        return;
+    }
+
+    setUploading(true);
+    
+    // Convert to Base64
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+        const base64 = reader.result;
+        
+        try {
+            const res = await fetch('/api/bookings/upload-proof', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bookingId: selectedBooking.id, imageBase64: base64 })
+            });
+
+            if (res.ok) {
+                toast({ title: "Berhasil", description: "Bukti terkirim. Mohon tunggu verifikasi admin.", className: "bg-green-600 text-white" });
+                setSelectedBooking(null);
+                // TODO: Refresh data booking di sini (panggil ulang fetchBookings jika ada)
+            } else {
+                throw new Error("Gagal upload");
+            }
+        } catch (e) {
+            toast({ title: "Gagal", description: "Terjadi kesalahan upload.", variant: "destructive" });
+        } finally {
+            setUploading(false);
+        }
+    };
+  };
 
   useEffect(() => {
     const fetchData = async () => {
         try {
-            // 1. Fetch Jersey Orders
             const res = await fetch('/api/member/jersey');
             if (res.ok) {
                 const data = await res.json();
                 if(data.success) setJerseyOrders(data.data);
             }
             
-            // 2. Fetch Active Booking (Tiket Mabar)
             const resTicket = await fetch('/api/member/bookings');
             const dataTicket = await resTicket.json();
             if (dataTicket.success && dataTicket.active) {
@@ -48,7 +90,6 @@ export default function MemberDashboard() {
     else setIsLoading(false);
   }, [session]);
 
-  // Logic Download QR
   const handleDownloadQR = (orderId: string) => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
@@ -59,23 +100,19 @@ export default function MemberDashboard() {
     canvas.width = 1080;
     canvas.height = 1350;
 
-    // Background
     ctx.fillStyle = "#151515";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Logo
     const logoImg = new window.Image();
     logoImg.src = "/images/logo.png";
     logoImg.crossOrigin = "anonymous";
 
     logoImg.onload = () => {
-        // Draw Logo
         const logoWidth = 200;
         const logoHeight = (logoImg.height / logoImg.width) * logoWidth;
         const logoX = (canvas.width - logoWidth) / 2;
         ctx.drawImage(logoImg, logoX, 150, logoWidth, logoHeight);
 
-        // Draw Text
         ctx.font = "bold 60px sans-serif";
         ctx.fillStyle = "#FFFFFF";
         ctx.textAlign = "center";
@@ -85,7 +122,6 @@ export default function MemberDashboard() {
         ctx.fillStyle = "#FFBE00";
         ctx.fillText("OFFICIAL JERSEY ORDER", canvas.width / 2, 150 + logoHeight + 140);
 
-        // Draw QR
         const svgData = new XMLSerializer().serializeToString(svgElement);
         const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
         const url = URL.createObjectURL(svgBlob);
@@ -125,7 +161,6 @@ export default function MemberDashboard() {
   return (
     <div className="space-y-8 pb-20">
         
-        {/* HEADER */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-[#151515] p-6 rounded-[2rem] border border-white/5 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#ffbe00]/5 rounded-full blur-[80px] pointer-events-none"></div>
             <div className="flex items-center gap-5 relative z-10">
@@ -150,13 +185,11 @@ export default function MemberDashboard() {
             </div>
         </header>
 
-        {/* SECTION JERSEY ORDERS */}
         <section>
             <div className="flex items-center justify-between mb-3 px-2">
                 <h3 className="text-lg font-black text-white flex items-center gap-2">
                     <Shirt className="w-5 h-5 text-[#ca1f3d]" /> MY JERSEY PRE-ORDER
                 </h3>
-                {/* --- UPDATE: Link Mengarah ke /member/jersey --- */}
                 <Link href="/member/jersey">
                     <Button variant="link" className="text-[#ffbe00] text-xs font-bold">Pesan Lagi +</Button>
                 </Link>
@@ -199,7 +232,6 @@ export default function MemberDashboard() {
             )}
         </section>
 
-        {/* GAME MODE SELECTION */}
         <section>
             <div className="flex items-center justify-between mb-4 px-2">
                 <h3 className="text-lg font-black text-white flex items-center gap-2"><Swords className="w-5 h-5 text-[#ffbe00]" /> CHOOSE YOUR GAME</h3>
@@ -212,53 +244,52 @@ export default function MemberDashboard() {
             </div>
         </section>
         
-        {/* ACTIVE TICKET SECTION */}
-        <section>
-            <div className="flex items-center justify-between mb-3 px-2">
-                <h3 className="text-lg font-black text-white flex items-center gap-2"><Ticket className="w-5 h-5 text-[#ffbe00]" /> UPCOMING SESSION</h3>
-            </div>
+        {/* UPDATED BOOKING SECTION */}
+        <div className="bg-[#151515] border border-white/5 rounded-[2rem] p-6">
+            <h3 className="text-xl font-black text-white mb-6">JADWAL & TRANSAKSI SAYA</h3>
             
-            {activeTicket ? (
-                <div className="bg-gradient-to-br from-[#1A1A1A] to-[#0f0f0f] rounded-[2.5rem] border border-white/5 overflow-hidden flex flex-col md:flex-row relative shadow-2xl group">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#ffbe00] to-orange-500"></div>
-                    <div className="p-8 flex-1 relative z-10 flex flex-col justify-between">
-                        <div>
-                            <div className="flex gap-2 mb-4">
-                                <Badge className="bg-green-500/10 text-green-500 border-0 text-[10px] uppercase font-bold px-3 py-1 animate-pulse">● READY</Badge>
-                                <Badge variant="outline" className="border-white/10 text-gray-400 text-[10px] uppercase font-bold px-3 py-1">{activeTicket.court}</Badge>
-                            </div>
-                            <h2 className="text-2xl md:text-3xl font-black text-white mb-2 leading-tight">{activeTicket.event}</h2>
-                            <p className="text-sm text-gray-500 font-medium">Slot Mabar dikonfirmasi. Tunjukkan QR Code ini ke Host.</p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-6 mt-8">
-                            <div><p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-1 flex items-center gap-1"><CalendarDays className="w-3 h-3"/> Date</p><p className="text-xl font-black text-white font-jersey">{activeTicket.date}</p></div>
-                            <div><p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-1 flex items-center gap-1"><Clock className="w-3 h-3"/> Time</p><p className="text-xl font-black text-white font-jersey">{activeTicket.time}</p></div>
-                            <div className="col-span-2"><p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-1 flex items-center gap-1"><MapPin className="w-3 h-3"/> Location</p><p className="text-base font-bold text-white">{activeTicket.location}</p></div>
-                        </div>
+            <div className="space-y-4">
+                {/* Contoh Item: Pending Payment */}
+                <div className="flex flex-col md:flex-row justify-between items-center bg-[#0a0a0a] p-4 rounded-xl border border-yellow-500/30 gap-4">
+                    <div>
+                        <p className="font-bold text-white">Mabar Senin Ceria</p>
+                        <p className="text-xs text-yellow-500 font-bold uppercase tracking-wider">Menunggu Pembayaran</p>
+                        <p className="text-xs text-gray-500 mt-1">Total: Rp 35.000</p>
                     </div>
-                    <div className="relative p-8 bg-white text-black flex flex-col items-center justify-center md:w-72 md:border-l-2 md:border-dashed md:border-gray-300">
-                        <div className="bg-black p-2 rounded-xl mb-4"><QrCode className="w-32 h-32 text-white" /></div>
-                        <p className="text-[10px] font-mono text-center uppercase tracking-widest opacity-60">Scan to Play</p>
-                        <p className="text-xl font-black font-mono mt-1 tracking-widest">{activeTicket.id}</p>
-                    </div>
+                    <Button 
+                        onClick={() => setSelectedBooking({ id: 'BOOK-001', title: 'Mabar Senin Ceria', price: '35.000' })}
+                        className="bg-yellow-500 text-black font-bold hover:bg-yellow-400"
+                    >
+                        Upload Bukti Bayar
+                    </Button>
                 </div>
-            ) : (
-                <div className="bg-[#151515] border border-white/5 border-dashed rounded-[2.5rem] p-12 text-center flex flex-col items-center justify-center">
-                    <div className="w-20 h-20 bg-[#1A1A1A] rounded-full flex items-center justify-center mb-6 text-gray-600">
-                        <SearchX className="w-10 h-10" />
-                    </div>
-                    <h4 className="text-xl font-black text-white mb-2">Belum ada jadwal main</h4>
-                    <p className="text-gray-500 max-w-md mx-auto mb-8">Kamu belum mendaftar mabar atau turnamen apapun minggu ini. Yuk cari lawan main!</p>
-                    <Link href="/member/mabar">
-                        <Button variant="outline" className="border-[#ffbe00] text-[#ffbe00] hover:bg-[#ffbe00] hover:text-black font-bold rounded-xl h-12 px-8">
-                            Cari Mabar Sekarang
-                        </Button>
-                    </Link>
-                </div>
-            )}
-        </section>
 
-        {/* MODAL VIEW QR CODE */}
+                {/* Contoh Item: Verification Pending */}
+                <div className="flex flex-col md:flex-row justify-between items-center bg-[#0a0a0a] p-4 rounded-xl border border-blue-500/30 gap-4">
+                    <div>
+                        <p className="font-bold text-white">Drilling Class with Coach Budi</p>
+                        <p className="text-xs text-blue-400 font-bold uppercase tracking-wider">Sedang Diverifikasi</p>
+                    </div>
+                    <Button disabled className="bg-white/10 text-gray-400 font-bold border border-white/10">
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Menunggu Admin
+                    </Button>
+                </div>
+
+                 {/* Contoh Item: Confirmed (Active Ticket) */}
+                 {activeTicket && (
+                    <div className="flex flex-col md:flex-row justify-between items-center bg-[#0a0a0a] p-4 rounded-xl border border-green-500/30 gap-4">
+                        <div>
+                            <p className="font-bold text-white">{activeTicket.event}</p>
+                            <p className="text-xs text-green-400 font-bold uppercase tracking-wider">Tiket Aktif</p>
+                        </div>
+                        <Button className="bg-green-600 text-white font-bold hover:bg-green-500">
+                           <Ticket className="w-4 h-4 mr-2" /> Lihat Tiket
+                        </Button>
+                    </div>
+                )}
+            </div>
+        </div>
+
         <Dialog open={!!selectedQr} onOpenChange={(open) => !open && setSelectedQr(null)}>
             <DialogContent className="bg-[#1A1A1A] border-white/10 text-white sm:max-w-xs rounded-3xl">
                 <DialogHeader>
@@ -287,11 +318,48 @@ export default function MemberDashboard() {
             </DialogContent>
         </Dialog>
 
+        {/* MODAL UPLOAD BUKTI */}
+        <Dialog open={!!selectedBooking} onOpenChange={(open) => !open && setSelectedBooking(null)}>
+            <DialogContent className="bg-[#1A1A1A] border-white/10 text-white rounded-[2rem] sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle className="text-xl font-black">Konfirmasi Pembayaran</DialogTitle>
+                </DialogHeader>
+                
+                <div className="space-y-6 py-4">
+                    <div className="bg-[#0a0a0a] p-4 rounded-xl border border-white/5 text-center">
+                        <p className="text-gray-400 text-xs uppercase font-bold">Total Transfer</p>
+                        <p className="text-3xl font-black text-[#ffbe00] mt-1">Rp {selectedBooking?.price}</p>
+                        <div className="mt-4 pt-4 border-t border-white/10">
+                            <p className="text-xs text-gray-300 mb-1">Transfer ke BCA:</p>
+                            <p className="text-lg font-mono font-bold select-all bg-white/5 p-2 rounded-lg">123 456 7890</p>
+                            <p className="text-[10px] text-gray-500 mt-1">a.n BadminTour Official</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <Label className="text-xs font-bold uppercase text-gray-400">Upload Bukti (Screenshot/Foto)</Label>
+                        <Input 
+                            ref={fileInputRef}
+                            type="file" 
+                            accept="image/*"
+                            className="bg-[#0a0a0a] border-white/10 file:bg-white/10 file:text-white file:border-0 file:rounded-lg file:mr-4 file:px-4 file:font-bold hover:file:bg-white/20" 
+                        />
+                    </div>
+
+                    <Button 
+                        onClick={handleUploadProof} 
+                        disabled={uploading}
+                        className="w-full bg-[#00f2ea] text-black font-black hover:bg-[#00c2bb] h-12 rounded-xl"
+                    >
+                        {uploading ? "MENGUPLOAD..." : "KIRIM BUKTI TRANSFER"}
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
     </div>
   );
 }
 
-// Helper (GameCard)
 function GameCard({ href, icon: Icon, color, bgColor, title, desc }: any) {
     return (
         <Link href={href} className="group">
@@ -310,5 +378,3 @@ function GameCard({ href, icon: Icon, color, bgColor, title, desc }: any) {
         </Link>
     );
 }
-
-    

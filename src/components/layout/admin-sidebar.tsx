@@ -16,17 +16,19 @@ import {
     Shirt, 
     Trophy,
     UserCog,
-    ArrowLeft
+    ArrowLeft,
+    DollarSign
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 const menuItems = [
     { title: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+    { title: "Transactions", href: "/admin/transactions", icon: DollarSign, badge: "New" },
     { title: "Users / Members", href: "/admin/members", icon: Users },
     { title: "Events Management", href: "/admin/events", icon: Calendar },
     { title: "Tournaments", href: "/admin/tournaments", icon: Trophy },
-    { title: "Jersey Orders", href: "/admin/jersey", icon: Shirt, badge: "New" },
+    { title: "Jersey Orders", href: "/admin/jersey", icon: Shirt },
     { title: "Admin Profile", href: "/admin/profile", icon: UserCog }
 ];
 
@@ -63,12 +65,10 @@ export default function AdminSidebar() {
     return (
         <aside className="fixed top-4 bottom-4 left-4 z-50 w-20 flex flex-col items-center py-8 bg-black/20 backdrop-blur-xl border border-white/10 rounded-[3rem] shadow-2xl text-white transition-all duration-300 hover:bg-black/30 hover:border-white/20">
             
-            {/* Logo Area */}
             <div className="p-3 mb-6 rounded-2xl bg-[#ca1f3d]/80 text-white shadow-[0_0_15px_rgba(202,31,61,0.5)]">
                  <Trophy className="w-5 h-5" />
             </div>
 
-            {/* Navigation */}
             <nav className="flex-1 flex flex-col gap-4 w-full items-center justify-center">
                 {menuItems.map((item) => {
                     const isActive = pathname.startsWith(item.href);
@@ -85,8 +85,11 @@ export default function AdminSidebar() {
                                     isActive && "fill-current"
                                 )} />
                                 
-                                {isActive && (
-                                    <span className="absolute -right-1 top-1 w-2 h-2 bg-white rounded-full border border-black/10"></span>
+                                {item.badge && (
+                                    <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-bad-yellow opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-4 w-4 bg-bad-yellow text-[8px] items-center justify-center text-black font-black"></span>
+                                    </span>
                                 )}
                             </div>
                         </Link>
@@ -94,7 +97,6 @@ export default function AdminSidebar() {
                 })}
             </nav>
 
-            {/* Footer */}
             <div className="p-2 border-t border-transparent w-full mt-auto space-y-2">
                 
                 <Link href="/member/dashboard" className="block">
