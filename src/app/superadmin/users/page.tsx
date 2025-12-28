@@ -2,255 +2,257 @@
 
 import { useState, useEffect } from 'react';
 import { 
-    Search, 
-    Shield, 
     ShieldAlert, 
+    Search, 
+    MoreHorizontal, 
     UserCog, 
-    CheckCircle2, 
-    Ban,
+    CheckCircle,
     Loader2,
-    MoreVertical
+    Users,
+    Trophy
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetDescription,
-    SheetFooter,
-} from '@/components/ui/sheet';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-type UserRole = 'member' | 'host' | 'admin' | 'superadmin';
-
-interface User {
-    id: string;
-    uid: string;
-    name: string;
-    email: string;
-    role: UserRole;
-    image?: string;
-    status?: string;
-}
-
-export default function UserManagementPage() {
+export default function SuperAdminPage() {
     const { toast } = useToast();
-    const [users, setUsers] = useState<User[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [users, setUsers] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
     
-    // State Sheet Edit
-    const [selectedUser, setSelectedUser] = useState<User | null>(null);
-    const [isSheetOpen, setIsSheetOpen] = useState(false);
-    const [editRole, setEditRole] = useState<UserRole>('member');
-    const [isSaving, setIsSaving] = useState(false);
+    // State untuk Modal Edit Role
+    const [selectedUser, setSelectedUser] = useState<any>(null);
+    const [newRole, setNewRole] = useState('');
+    const [updating, setUpdating] = useState(false);
 
-    // 1. Fetch Users saat Load
+    // Fetch All Users
     const fetchUsers = async () => {
-        setIsLoading(true);
         try {
             const res = await fetch('/api/superadmin/users');
-            if (res.ok) {
-                const data = await res.json();
+            const data = await res.json();
+            // Assuming API returns an array directly, not { success: true, data: [...] }
+            if (Array.isArray(data)) {
                 setUsers(data);
             }
         } catch (error) {
-            console.error("Gagal load users", error);
+            console.error(error);
+            toast({ title: "Error", description: "Gagal memuat data user.", variant: "destructive" });
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
     };
 
     useEffect(() => {
         fetchUsers();
-    }, []);
+    }, [toast]);
 
-    // 2. Handle Update Role
-    const handleSaveChanges = async () => {
-        if (!selectedUser) return;
-        setIsSaving(true);
-
+    // Handle Update Role
+    const handleUpdateRole = async () => {
+        if (!selectedUser || !newRole) return;
+        setUpdating(true);
         try {
             const res = await fetch('/api/superadmin/users', {
-                method: 'PATCH',
+                method: 'PATCH', // Menggunakan PATCH sesuai API
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: selectedUser.id || selectedUser.uid, // Firestore Doc ID
-                    newRole: editRole
-                })
+                body: JSON.stringify({ userId: selectedUser.id, newRole: newRole })
             });
 
             if (res.ok) {
-                toast({
-                    title: "Role Updated",
-                    description: `User ${selectedUser.name} sekarang adalah ${editRole}.`,
-                    className: "bg-[#ffbe00] text-black border-none font-bold"
-                });
-                // Refresh list user agar data sinkron
-                fetchUsers();
-                setIsSheetOpen(false);
+                toast({ title: "Sukses", description: `Role user diubah menjadi ${newRole.toUpperCase()}.`, className: "bg-green-600 text-white" });
+                fetchUsers(); // Refresh list
+                setSelectedUser(null);
             } else {
-                throw new Error("Gagal update");
+                throw new Error("Gagal update role");
             }
         } catch (error) {
-            toast({ title: "Error", description: "Gagal mengubah role user.", variant: "destructive" });
+            toast({ title: "Gagal", description: "Terjadi kesalahan sistem.", variant: "destructive" });
         } finally {
-            setIsSaving(false);
+            setUpdating(false);
         }
     };
 
-    const openManageUser = (user: User) => {
-        setSelectedUser(user);
-        setEditRole(user.role || 'member');
-        setIsSheetOpen(true);
-    };
-
-    // Filter Logic
     const filteredUsers = users.filter(user => 
-        (user.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (user.email || "").toLowerCase().includes(searchQuery.toLowerCase())
+        user.name?.toLowerCase().includes(search.toLowerCase()) || 
+        user.email?.toLowerCase().includes(search.toLowerCase())
     );
 
-    const getRoleBadgeColor = (role: string) => {
+    const getRoleBadge = (role: string) => {
         switch(role) {
-            case 'superadmin': return 'bg-[#ffbe00] text-black border-[#ffbe00]';
-            case 'admin': return 'bg-purple-500/20 text-purple-400 border-purple-500/50';
-            case 'host': return 'bg-blue-500/20 text-blue-400 border-blue-500/50';
-            default: return 'bg-gray-800 text-gray-400 border-gray-700';
+            case 'superadmin': return <Badge className="bg-red-600 text-white border-none">SUPERADMIN</Badge>;
+            case 'admin': return <Badge className="bg-orange-500 text-white border-none">ADMIN</Badge>;
+            case 'host': return <Badge className="bg-blue-500 text-white border-none">HOST</Badge>;
+            case 'coach': return <Badge className="bg-[#00f2ea] text-black border-none font-bold">COACH</Badge>;
+            default: return <Badge variant="outline" className="text-gray-400 border-gray-600">MEMBER</Badge>;
         }
     };
 
     return (
-        <main>
+        <div className="space-y-8 pb-20">
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter">
-                        User <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ffbe00] to-orange-600">Control</span>
+                    <h1 className="text-3xl font-black text-white flex items-center gap-3">
+                        <ShieldAlert className="w-8 h-8 text-[#ca1f3d]" /> USER MANAGEMENT
                     </h1>
-                    <p className="text-gray-400 mt-2 font-medium">Kelola akses role member, host, dan admin.</p>
+                    <p className="text-gray-400">Kontrol penuh akses dan role pengguna sistem.</p>
                 </div>
-                <div className="flex items-center gap-2 bg-[#1A1A1A] px-4 py-2 rounded-xl border border-white/10">
-                    <span className="text-2xl font-black text-white">{users.length}</span>
-                    <span className="text-xs font-bold text-gray-500 uppercase">Total User</span>
+                
+                <div className="relative w-full md:w-72">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <Input 
+                        placeholder="Cari nama atau email..." 
+                        className="pl-10 bg-[#151515] border-white/10 text-white rounded-xl focus:border-[#ca1f3d]"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
                 </div>
             </div>
 
-            {/* Search */}
-            <div className="bg-[#1A1A1A] p-4 rounded-[2rem] border border-white/5 mb-6 flex items-center gap-4">
-                <Search className="w-5 h-5 text-gray-500 ml-2" />
-                <Input 
-                    placeholder="Cari nama atau email..." 
-                    className="bg-transparent border-none text-white focus-visible:ring-0 placeholder:text-gray-600 font-bold"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
-            </div>
+            {/* Users Table / Grid */}
+            <Card className="bg-[#151515] border border-white/5 rounded-[2rem] overflow-hidden">
+                {loading ? (
+                    <div className="flex justify-center p-12 text-gray-500">
+                        <Loader2 className="animate-spin w-8 h-8" />
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="bg-[#1A1A1A] text-xs uppercase text-gray-500 font-bold border-b border-white/5">
+                                <tr>
+                                    <th className="p-6">User Info</th>
+                                    <th className="p-6">Role Saat Ini</th>
+                                    <th className="p-6">Bergabung</th>
+                                    <th className="p-6 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                                {filteredUsers.map((user) => (
+                                    <tr key={user.id} className="hover:bg-white/5 transition-colors">
+                                        <td className="p-6">
+                                            <div className="flex items-center gap-4">
+                                                <Avatar className="w-10 h-10 border border-white/10">
+                                                    <AvatarImage src={user.image} />
+                                                    <AvatarFallback className="bg-[#222] text-white font-bold">
+                                                        {user.name?.charAt(0)}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div>
+                                                    <p className="font-bold text-white text-sm">{user.name}</p>
+                                                    <p className="text-xs text-gray-500">{user.email}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="p-6">
+                                            {getRoleBadge(user.role)}
+                                        </td>
+                                        <td className="p-6 text-sm text-gray-400">
+                                            {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
+                                        </td>
+                                        <td className="p-6 text-right">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10">
+                                                        <MoreHorizontal className="w-4 h-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="bg-[#1A1A1A] border-white/10 text-white">
+                                                    <DropdownMenuItem 
+                                                        className="cursor-pointer focus:bg-[#ca1f3d]/10 focus:text-[#ca1f3d]"
+                                                        onClick={() => {
+                                                            setSelectedUser(user);
+                                                            setNewRole(user.role);
+                                                        }}
+                                                    >
+                                                        <UserCog className="w-4 h-4 mr-2" /> Ubah Role Access
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </Card>
 
-            {/* User List */}
-            {isLoading ? (
-                <div className="flex justify-center py-20"><Loader2 className="animate-spin text-[#ffbe00] w-10 h-10"/></div>
-            ) : (
-                <div className="space-y-3">
-                    {filteredUsers.map((user) => (
-                        <div key={user.id} className="group bg-[#151515] hover:bg-[#1A1A1A] border border-white/5 hover:border-[#ffbe00]/30 rounded-[2rem] p-4 transition-all flex flex-col md:flex-row items-center gap-4">
-                            <div className="flex items-center gap-4 w-full md:w-auto flex-1">
-                                <Avatar className="w-12 h-12 border-2 border-[#1A1A1A] group-hover:border-[#ffbe00]">
-                                    <AvatarImage src={user.image} />
-                                    <AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <h3 className="text-white font-bold text-lg leading-tight">{user.name}</h3>
-                                    <p className="text-xs text-gray-500 font-mono">{user.email}</p>
-                                </div>
-                            </div>
+            {/* Modal Edit Role */}
+            <Dialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
+                <DialogContent className="bg-[#1A1A1A] border-white/10 text-white rounded-2xl sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <UserCog className="w-5 h-5 text-[#ffbe00]" /> Ubah Role User
+                        </DialogTitle>
+                    </DialogHeader>
 
-                            <div className="flex items-center gap-4">
-                                <Badge variant="outline" className={`uppercase text-[10px] font-black tracking-widest ${getRoleBadgeColor(user.role)}`}>
-                                    {user.role}
-                                </Badge>
-                                <Button 
-                                    onClick={() => openManageUser(user)}
-                                    size="sm" 
-                                    className="bg-[#1A1A1A] hover:bg-[#ffbe00] text-gray-400 hover:text-black border border-white/10 hover:border-[#ffbe00] rounded-xl font-bold"
-                                >
-                                    <UserCog className="w-4 h-4 mr-2"/> Edit Role
-                                </Button>
+                    <div className="space-y-6 py-4">
+                        <div className="p-4 bg-[#0a0a0a] rounded-xl border border-white/5 flex items-center gap-4">
+                            <Avatar className="w-12 h-12">
+                                <AvatarImage src={selectedUser?.image} />
+                                <AvatarFallback>U</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p className="font-bold text-white">{selectedUser?.name}</p>
+                                <p className="text-xs text-gray-500">{selectedUser?.email}</p>
                             </div>
                         </div>
-                    ))}
-                </div>
-            )}
 
-            {/* SHEET EDIT ROLE */}
-            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-                <SheetContent className="bg-[#0a0a0a] border-l border-white/10 text-white sm:max-w-md w-full p-0 flex flex-col h-full">
-                    {selectedUser && (
-                        <>
-                            <SheetHeader className="p-8 border-b border-white/5 bg-[#121212]">
-                                <SheetTitle className="text-2xl font-black text-white">Edit Access</SheetTitle>
-                                <SheetDescription className="text-gray-500">Ubah hak akses user ini dalam sistem.</SheetDescription>
-                            </SheetHeader>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-400 uppercase">Pilih Role Baru</label>
+                            <Select value={newRole} onValueChange={(val) => setNewRole(val)}>
+                                <SelectTrigger className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
+                                    <SelectItem value="member">
+                                        <span className="flex items-center gap-2"><Users className="w-4 h-4"/> Member (User Biasa)</span>
+                                    </SelectItem>
+                                    <SelectItem value="coach">
+                                        <span className="flex items-center gap-2"><Trophy className="w-4 h-4"/> Coach (Pelatih)</span>
+                                    </SelectItem>
+                                    <SelectItem value="host">
+                                        <span className="flex items-center gap-2"><CheckCircle className="w-4 h-4"/> Host (Pengelola GOR)</span>
+                                    </SelectItem>
+                                    <SelectItem value="admin">
+                                        <span className="flex items-center gap-2"><ShieldAlert className="w-4 h-4"/> Admin</span>
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                            <ScrollArea className="flex-1 p-8">
-                                <div className="space-y-6">
-                                    <div className="bg-[#1A1A1A] p-4 rounded-2xl border border-white/5 flex items-center gap-4">
-                                        <Avatar className="w-12 h-12"><AvatarImage src={selectedUser.image} /></Avatar>
-                                        <div>
-                                            <p className="font-bold text-white">{selectedUser.name}</p>
-                                            <p className="text-xs text-gray-500">{selectedUser.email}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <label className="text-xs font-bold text-[#ffbe00] uppercase tracking-widest flex items-center gap-2">
-                                            <Shield className="w-4 h-4"/> Assign New Role
-                                        </label>
-                                        <div className="bg-[#1A1A1A] p-1 rounded-2xl border border-white/5">
-                                            <Select value={editRole} onValueChange={(val: UserRole) => setEditRole(val)}>
-                                                <SelectTrigger className="w-full bg-transparent border-none h-12 text-white font-bold">
-                                                    <SelectValue placeholder="Pilih Role" />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
-                                                    <SelectItem value="member">Member (User)</SelectItem>
-                                                    <SelectItem value="host">Host (Jaga Lapangan)</SelectItem>
-                                                    <SelectItem value="admin">Admin (Backoffice)</SelectItem>
-                                                    <SelectItem value="superadmin" className="text-[#ffbe00]">Superadmin</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <p className="text-[10px] text-gray-500 leading-relaxed">
-                                            *Perubahan role akan efektif saat user login berikutnya.
-                                        </p>
-                                    </div>
-                                </div>
-                            </ScrollArea>
-
-                            <SheetFooter className="p-6 border-t border-white/5 bg-[#121212]">
-                                <Button 
-                                    onClick={handleSaveChanges}
-                                    disabled={isSaving}
-                                    className="w-full h-12 rounded-xl bg-[#ffbe00] text-black hover:bg-yellow-400 font-black"
-                                >
-                                    {isSaving ? <Loader2 className="w-5 h-5 animate-spin"/> : "SIMPAN PERUBAHAN"}
-                                </Button>
-                            </SheetFooter>
-                        </>
-                    )}
-                </SheetContent>
-            </Sheet>
-        </main>
+                        <Button 
+                            onClick={handleUpdateRole} 
+                            disabled={updating}
+                            className="w-full h-12 bg-[#ca1f3d] hover:bg-[#a01830] text-white font-black rounded-xl"
+                        >
+                            {updating ? <Loader2 className="animate-spin" /> : "SIMPAN PERUBAHAN"}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </div>
     );
 }
