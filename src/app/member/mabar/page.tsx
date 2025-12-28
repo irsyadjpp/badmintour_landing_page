@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -10,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, MapPin, Calendar, Clock, CheckCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; // Tambah import ini
 
 // 1. Pisahkan Logic Utama ke Komponen Content
 function MabarContent() {
@@ -23,26 +23,43 @@ function MabarContent() {
     const [loading, setLoading] = useState(true);
     const [bookingLoading, setBookingLoading] = useState(false);
     const [guestForm, setGuestForm] = useState({ name: '', phone: '' });
+    const [participants, setParticipants] = useState<any[]>([]);
 
-    // Fetch Detail Event
+    // Fetch Detail Event & Participants
     useEffect(() => {
-        if(!eventId) return;
-        const fetchDetail = async () => {
+        if (!eventId) {
+            setLoading(false);
+            return;
+        };
+
+        const fetchEventData = async () => {
+            setLoading(true);
             try {
-                const res = await fetch('/api/events'); 
-                const data = await res.json();
-                if (data.data) {
-                    const found = data.data.find((e: any) => e.id === eventId);
+                // Fetch Event Details
+                const eventRes = await fetch('/api/events'); 
+                const eventData = await eventRes.json();
+                if (eventData.data) {
+                    const found = eventData.data.find((e: any) => e.id === eventId);
                     setEvent(found);
                 }
+
+                // Fetch Participants
+                const participantsRes = await fetch(`/api/events/${eventId}/participants`);
+                const participantsData = await participantsRes.json();
+                if (participantsData.success) {
+                    setParticipants(participantsData.data);
+                }
+
             } catch (error) {
-                console.error("Failed to fetch event detail");
+                console.error("Failed to fetch event data", error);
+                toast({ title: "Error", description: "Gagal memuat detail event.", variant: "destructive"});
             } finally {
                 setLoading(false);
             }
         };
-        fetchDetail();
-    }, [eventId]);
+
+        fetchEventData();
+    }, [eventId, toast]);
 
     // Handle Booking Logic
     const handleJoinMabar = async () => {
@@ -90,6 +107,7 @@ function MabarContent() {
     return (
         <div className="min-h-screen pt-24 px-6 pb-12 max-w-lg mx-auto">
             <Card className="bg-[#151515] border-white/10 p-8 rounded-[2rem] space-y-6">
+                
                 <div className="text-center">
                     <h1 className="text-2xl font-black text-white">{event.title}</h1>
                     <p className="text-[#ffbe00] font-bold mt-2 text-lg">Rp {event.price.toLocaleString('id-ID')}</p>
@@ -108,6 +126,41 @@ function MabarContent() {
                         <MapPin className="w-5 h-5 text-[#ca1f3d]" />
                         <span>{event.location}</span>
                     </div>
+                </div>
+
+                {/* --- FITUR BARU: WHO IS PLAYING? --- */}
+                <div className="bg-black/20 p-5 rounded-2xl border border-white/5 space-y-3">
+                    <div className="flex justify-between items-center">
+                        <h3 className="text-sm font-bold text-white uppercase tracking-wider">Siapa yang main?</h3>
+                        <span className="text-xs text-[#00f2ea] font-bold">{participants.length} / {event?.quota || 12} Joined</span>
+                    </div>
+                    
+                    {participants.length > 0 ? (
+                        <div className="flex items-center -space-x-3 overflow-hidden py-2">
+                            {participants.slice(0, 5).map((p, i) => (
+                                <Avatar key={i} className="w-10 h-10 border-2 border-[#151515] shadow-lg">
+                                    <AvatarImage src={p.avatar} />
+                                    <AvatarFallback className="bg-gradient-to-br from-[#ffbe00] to-[#ff0099] text-white text-[10px] font-bold">
+                                        {p.name.charAt(0)}
+                                    </AvatarFallback>
+                                </Avatar>
+                            ))}
+                            {participants.length > 5 && (
+                                <div className="w-10 h-10 rounded-full bg-[#1A1A1A] border-2 border-[#151515] flex items-center justify-center text-[10px] text-gray-400 font-bold">
+                                    +{participants.length - 5}
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <p className="text-xs text-gray-500 italic">Belum ada peserta. Jadilah yang pertama!</p>
+                    )}
+                    
+                    {/* List Nama Singkat */}
+                    {participants.length > 0 && (
+                        <p className="text-[10px] text-gray-500 truncate">
+                            Bersama <span className="text-white font-bold">{participants[0].name}</span> dan teman-teman lainnya.
+                        </p>
+                    )}
                 </div>
 
                 {/* FORM INPUT KHUSUS GUEST (Hanya muncul jika BELUM LOGIN) */}
@@ -150,6 +203,7 @@ function MabarContent() {
                     {bookingLoading ? <Loader2 className="animate-spin" /> : (!session ? "BOOKING SEBAGAI TAMU" : "KONFIRMASI JOIN")}
                 </Button>
                 <p className="text-center text-xs text-gray-500">Saldo/Kuota akan terpotong otomatis.</p>
+            
             </Card>
         </div>
     );
