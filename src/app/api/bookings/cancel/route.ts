@@ -71,4 +71,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: true, message: "Booking berhasil dibatalkan. Kuota event telah dikembalikan." });
 
     } catch (error: any) {
-        return NextResponse.json({ error: error.message || "Gagal membatalkan booking" },
+        return NextResponse.json({ error: error.message || "Gagal membatalkan booking" }, { status: 500 });
+    }
+}

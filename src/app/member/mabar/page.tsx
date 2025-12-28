@@ -10,6 +10,7 @@ import { Loader2, MapPin, Calendar, Clock, BellRing, CheckCircle } from 'lucide-
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; 
+import Link from 'next/link';
 
 // 1. Pisahkan Logic Utama ke Komponen Content
 function MabarContent() {
@@ -170,12 +171,16 @@ function MabarContent() {
                     {participants.length > 0 ? (
                         <div className="flex items-center -space-x-3 overflow-hidden py-2">
                             {participants.slice(0, 5).map((p, i) => (
-                                <Avatar key={i} className="w-10 h-10 border-2 border-[#151515] shadow-lg">
-                                    <AvatarImage src={p.avatar} />
-                                    <AvatarFallback className="bg-gradient-to-br from-[#ffbe00] to-[#ff0099] text-white text-[10px] font-bold">
-                                        {p.name.charAt(0)}
-                                    </AvatarFallback>
-                                </Avatar>
+                                <Link key={i} href={`/profile/${p.id || '1'}`}>
+                                    <div className="group relative cursor-pointer">
+                                        <Avatar className="w-10 h-10 border-2 border-[#151515] shadow-lg transition-transform group-hover:scale-110 group-hover:border-[#00f2ea] group-hover:z-10">
+                                            <AvatarImage src={p.avatar} />
+                                            <AvatarFallback className="bg-gradient-to-br from-[#ffbe00] to-[#ff0099] text-white text-[10px] font-bold">
+                                                {p.name.charAt(0)}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                    </div>
+                                </Link>
                             ))}
                             {participants.length > 5 && (
                                 <div className="w-10 h-10 rounded-full bg-[#1A1A1A] border-2 border-[#151515] flex items-center justify-center text-[10px] text-gray-400 font-bold">

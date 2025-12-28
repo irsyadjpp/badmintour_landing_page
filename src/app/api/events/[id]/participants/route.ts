@@ -16,6 +16,7 @@ export async function GET(
         .get();
 
     const participants = bookingsSnap.docs.map(doc => ({
+        id: doc.data().userId, // Add user ID for profile link
         name: doc.data().userName || doc.data().guestName || "Member",
         avatar: doc.data().userImage || "", // URL foto profil
         joinedAt: doc.data().bookedAt
