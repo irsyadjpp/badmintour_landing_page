@@ -1,323 +1,189 @@
+
 'use client';
 
 import { useState } from 'react';
-import { 
-    ArrowLeft, 
-    Calendar, 
-    MapPin, 
-    DollarSign, 
-    Lock, 
-    Zap, 
-    ListChecks,
-    Save,
-    LayoutGrid, // Icon untuk Court
-    Hash, // Icon untuk Nomor
-    Repeat, // Icon baru untuk Recurring
-    CalendarDays,
-    Loader2
-} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { CalendarPlus, Save, Loader2, Dumbbell, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { 
-    Select, 
-    SelectContent, 
-    SelectItem, 
-    SelectTrigger, 
-    SelectValue 
-} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import Link from 'next/link';
-import { toast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
-import { useRouter } from 'next/navigation';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 
 export default function CreateEventPage() {
     const router = useRouter();
-
-    // Form states
-    const [title, setTitle] = useState("");
-    const [date, setDate] = useState("");
-    const [time, setTime] = useState("");
-    const [location, setLocation] = useState("");
-    const [courts, setCourts] = useState("");
-    const [price, setPrice] = useState("");
-    const [quota, setQuota] = useState("");
-    const [level, setLevel] = useState("All Level");
-    const [isLoading, setIsLoading] = useState(false);
+    const { toast } = useToast();
+    const [loading, setLoading] = useState(false);
     
-    // Feature Toggles
-    const [isDynamicPrice, setIsDynamicPrice] = useState(false);
-    const [isSkillLocked, setIsSkillLocked] = useState(false);
-    const [isWaitlist, setIsWaitlist] = useState(true);
-    
-    // Recurring State
-    const [isRecurring, setIsRecurring] = useState(false);
-    const [repeatWeeks, setRepeatWeeks] = useState("4"); // Default 1 Bulan (4 Minggu)
+    const [formData, setFormData] = useState({
+        title: '',
+        type: 'mabar', // Default Mabar
+        coachName: '', // Khusus Drilling
+        date: '',
+        time: '',
+        location: '',
+        price: '',
+        quota: '12',
+        description: ''
+    });
 
-    const handleSave = async () => {
-        setIsLoading(true);
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+
         try {
             const res = await fetch('/api/events', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title, 
-                    date, 
-                    time, 
-                    location,
-                    courts,
-                    price, 
-                    quota,
-                    level,
-                    isRecurring,
-                    // ... kirim data lain sesuai state
-                })
+                body: JSON.stringify(formData)
             });
 
             if (res.ok) {
-                toast({ title: "Success", description: "Event Published!", className: "bg-green-600 text-white" });
-                router.push('/host/events'); // Redirect setelah sukses
+                toast({ title: "Sukses", description: "Jadwal berhasil dibuat!", className: "bg-green-600 text-white" });
+                router.push('/host/dashboard');
             } else {
                 throw new Error("Gagal membuat event");
             }
-        } catch (e) {
-            toast({ title: "Error", description: (e as Error).message || "Gagal membuat event", variant: "destructive" });
+        } catch (error) {
+            toast({ title: "Error", description: "Terjadi kesalahan sistem.", variant: "destructive" });
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
     };
 
     return (
-        <div className="space-y-8 pb-20">
-            {/* Header */}
-            <div className="flex items-center gap-4">
-                <Link href="/host/events">
-                    <Button variant="ghost" size="icon" className="rounded-xl text-gray-400 hover:text-white">
-                        <ArrowLeft className="w-6 h-6" />
-                    </Button>
-                </Link>
+        <div className="min-h-screen bg-[#0a0a0a] text-white p-6 md:p-8 pb-20">
+            <div className="max-w-2xl mx-auto space-y-6">
                 <div>
-                    <h1 className="text-3xl font-black text-white tracking-tighter">New Event</h1>
-                    <p className="text-gray-400">Atur detail acara, lokasi, harga, dan jadwal rutin.</p>
+                    <h1 className="text-3xl font-black flex items-center gap-3">
+                        <CalendarPlus className="w-8 h-8 text-[#ca1f3d]" /> BUAT KEGIATAN BARU
+                    </h1>
+                    <p className="text-gray-400">Atur jadwal Mabar, Drilling, atau Turnamen.</p>
                 </div>
-            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
-                {/* LEFT COLUMN: MAIN FORM */}
-                <div className="lg:col-span-2 space-y-6">
-                    
-                    {/* 1. Basic Info (Judul & Waktu) */}
-                    <Card className="bg-[#151515] border-white/5 p-6 rounded-[2rem]">
-                        <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                            <Calendar className="w-5 h-5 text-[#ca1f3d]" /> Basic Information
-                        </h3>
-                        <div className="space-y-4">
+                <Card className="bg-[#151515] border-white/10 p-6 rounded-[2rem]">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        
+                        {/* PILIH TIPE KEGIATAN */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <Label className="text-gray-400">Judul Event</Label>
-                                <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Contoh: Mabar Rutin Senin" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label className="text-gray-400">Tanggal Awal</Label>
-                                    <Input value={date} onChange={(e) => setDate(e.target.value)} type="date" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-gray-400">Jam Mulai</Label>
-                                    <Input value={time} onChange={(e) => setTime(e.target.value)} type="time" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
-                                </div>
+                                <Label>Tipe Kegiatan</Label>
+                                <Select 
+                                    value={formData.type} 
+                                    onValueChange={(val) => setFormData({...formData, type: val})}
+                                >
+                                    <SelectTrigger className="bg-[#0a0a0a] border-white/10 text-white h-12">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
+                                        <SelectItem value="mabar"><span className="flex items-center gap-2"><Users className="w-4 h-4"/> Mabar (Fun Game)</span></SelectItem>
+                                        <SelectItem value="drilling"><span className="flex items-center gap-2"><Dumbbell className="w-4 h-4"/> Drilling / Clinic</span></SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
 
-                            {/* FITUR RECURRING / JADWAL BERULANG */}
-                            <div className="pt-4 mt-4 border-t border-white/5">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="space-y-1">
-                                        <Label className="text-white font-bold flex items-center gap-2">
-                                            <Repeat className="w-4 h-4 text-[#ffbe00]" /> Jadwal Berulang (Recurring)
-                                        </Label>
-                                        <p className="text-[10px] text-gray-500">Buat jadwal otomatis untuk beberapa minggu ke depan.</p>
-                                    </div>
-                                    <Switch checked={isRecurring} onCheckedChange={setIsRecurring} className="data-[state=checked]:bg-[#ffbe00]" />
+                            {/* Input Coach muncul HANYA jika tipe Drilling */}
+                            {formData.type === 'drilling' && (
+                                <div className="space-y-2 animate-in fade-in slide-in-from-left-2">
+                                    <Label className="text-[#00f2ea] font-bold">Nama Coach / Pelatih</Label>
+                                    <Input 
+                                        placeholder="Cth: Coach Budi" 
+                                        value={formData.coachName} 
+                                        onChange={(e) => setFormData({...formData, coachName: e.target.value})} 
+                                        className="bg-[#0a0a0a] border-[#00f2ea]/50 text-white"
+                                        required
+                                    />
                                 </div>
-
-                                {isRecurring && (
-                                    <div className="bg-[#0a0a0a] p-4 rounded-xl border border-[#ffbe00]/20 animate-in fade-in slide-in-from-top-2">
-                                        <div className="space-y-3">
-                                            <div className="space-y-2">
-                                                <Label className="text-[#ffbe00] text-xs uppercase font-bold">Ulangi Selama (Minggu)</Label>
-                                                <Select value={repeatWeeks} onValueChange={setRepeatWeeks}>
-                                                    <SelectTrigger className="bg-[#151515] border-white/10 text-white h-10 rounded-lg">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
-                                                        <SelectItem value="4">1 Bulan (4 Minggu)</SelectItem>
-                                                        <SelectItem value="8">2 Bulan (8 Minggu)</SelectItem>
-                                                        <SelectItem value="12">3 Bulan (12 Minggu)</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            
-                                            {/* Preview Dates */}
-                                            <div className="bg-[#151515] p-3 rounded-lg flex items-start gap-3">
-                                                <CalendarDays className="w-4 h-4 text-gray-500 mt-0.5" />
-                                                <div>
-                                                    <p className="text-xs text-gray-400 mb-1">Event akan dibuat pada:</p>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        <Badge variant="secondary" className="bg-[#ffbe00]/10 text-[#ffbe00] text-[10px]">Minggu 1</Badge>
-                                                        <Badge variant="secondary" className="bg-[#ffbe00]/10 text-[#ffbe00] text-[10px]">Minggu 2</Badge>
-                                                        <Badge variant="secondary" className="bg-[#ffbe00]/10 text-[#ffbe00] text-[10px]">...</Badge>
-                                                        <Badge variant="secondary" className="bg-[#ffbe00]/10 text-[#ffbe00] text-[10px]">Minggu {repeatWeeks}</Badge>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                            )}
                         </div>
-                    </Card>
 
-                    {/* 2. VENUE & COURTS */}
-                    <Card className="bg-[#151515] border-white/5 p-6 rounded-[2rem]">
-                        <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                            <MapPin className="w-5 h-5 text-[#ca1f3d]" /> Venue & Courts
-                        </h3>
-                        <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Judul Kegiatan</Label>
+                            <Input 
+                                placeholder="Cth: Drilling Smash & Netting" 
+                                value={formData.title} 
+                                onChange={(e) => setFormData({...formData, title: e.target.value})} 
+                                className="bg-[#0a0a0a] border-white/10 text-white font-bold"
+                                required
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label className="text-gray-400">Nama GOR / Lokasi</Label>
-                                <div className="relative">
-                                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                                    <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Contoh: GOR Wartawan" className="bg-[#0a0a0a] border-white/10 pl-10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
-                                </div>
+                                <Label>Tanggal</Label>
+                                <Input 
+                                    type="date"
+                                    value={formData.date} 
+                                    onChange={(e) => setFormData({...formData, date: e.target.value})} 
+                                    className="bg-[#0a0a0a] border-white/10 text-white [color-scheme:dark]"
+                                    required
+                                />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label className="text-gray-400 flex items-center gap-2">
-                                        <LayoutGrid className="w-3 h-3 text-[#ffbe00]" /> Jumlah Court
-                                    </Label>
-                                    <Input type="number" placeholder="2" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-gray-400 flex items-center gap-2">
-                                        <Hash className="w-3 h-3 text-[#ffbe00]" /> Nomor Court
-                                    </Label>
-                                    <Input value={courts} onChange={(e) => setCourts(e.target.value)} placeholder="1, 2" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
-
-                    {/* 3. Pricing & Capacity */}
-                    <Card className="bg-[#151515] border-white/5 p-6 rounded-[2rem]">
-                        <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                            <DollarSign className="w-5 h-5 text-[#ffbe00]" /> Pricing & Capacity
-                        </h3>
-                        <div className="space-y-6">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label className="text-gray-400">Harga Normal (Rp)</Label>
-                                    <Input value={price} onChange={(e) => setPrice(e.target.value)} type="number" placeholder="40000" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label className="text-gray-400">Total Slot Pemain</Label>
-                                    <Input value={quota} onChange={(e) => setQuota(e.target.value)} type="number" placeholder="12" className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]" />
-                                </div>
-                            </div>
-
-                            {/* Dynamic Pricing */}
-                            <div className="bg-[#0a0a0a] p-4 rounded-xl border border-white/5">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="space-y-1">
-                                        <Label className="text-white font-bold flex items-center gap-2">
-                                            <Zap className="w-4 h-4 text-[#ffbe00]" /> Dynamic Pricing
-                                        </Label>
-                                        <p className="text-[10px] text-gray-500">Aktifkan harga Early Bird atau Last Minute.</p>
-                                    </div>
-                                    <Switch checked={isDynamicPrice} onCheckedChange={setIsDynamicPrice} className="data-[state=checked]:bg-[#ffbe00]" />
-                                </div>
-
-                                {isDynamicPrice && (
-                                    <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
-                                        <div className="space-y-2">
-                                            <Label className="text-[#ffbe00] text-xs uppercase font-bold">Early Bird Price</Label>
-                                            <Input type="number" placeholder="30000" className="bg-[#151515] border-[#ffbe00]/20 text-white h-10 rounded-lg focus:border-[#ffbe00]" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-[#ffbe00] text-xs uppercase font-bold">Limit (First X User)</Label>
-                                            <Input type="number" placeholder="5" className="bg-[#151515] border-[#ffbe00]/20 text-white h-10 rounded-lg focus:border-[#ffbe00]" />
-                                        </div>
-                                    </div>
-                                )}
+                            <div className="space-y-2">
+                                <Label>Waktu</Label>
+                                <Input 
+                                    placeholder="19:00 - 22:00"
+                                    value={formData.time} 
+                                    onChange={(e) => setFormData({...formData, time: e.target.value})} 
+                                    className="bg-[#0a0a0a] border-white/10 text-white"
+                                    required
+                                />
                             </div>
                         </div>
-                    </Card>
 
-                </div>
-
-                {/* RIGHT COLUMN: ADVANCED SETTINGS */}
-                <div className="lg:col-span-1 space-y-6">
-                    
-                    {/* 4. Skill Level Lock */}
-                    <Card className={`p-6 rounded-[2rem] border transition-all ${isSkillLocked ? 'bg-[#ca1f3d]/10 border-[#ca1f3d]/30' : 'bg-[#151515] border-white/5'}`}>
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className={`text-sm font-bold flex items-center gap-2 ${isSkillLocked ? 'text-[#ca1f3d]' : 'text-gray-400'}`}>
-                                <Lock className="w-4 h-4" /> Skill Lock
-                            </h3>
-                            <Switch checked={isSkillLocked} onCheckedChange={setIsSkillLocked} className="data-[state=checked]:bg-[#ca1f3d]"/>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Lokasi (GOR)</Label>
+                                <Input 
+                                    value={formData.location} 
+                                    onChange={(e) => setFormData({...formData, location: e.target.value})} 
+                                    className="bg-[#0a0a0a] border-white/10 text-white"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>HTM (Rupiah)</Label>
+                                <Input 
+                                    type="number"
+                                    value={formData.price} 
+                                    onChange={(e) => setFormData({...formData, price: e.target.value})} 
+                                    className="bg-[#0a0a0a] border-white/10 text-white"
+                                    required
+                                />
+                            </div>
                         </div>
-                        <p className="text-xs text-gray-500 mb-4">
-                            Jika aktif, member di bawah level ini <span className="text-[#ca1f3d] font-bold">DILARANG</span> join.
-                        </p>
-                        {isSkillLocked && (
-                            <Select value={level} onValueChange={(value) => setLevel(value)}>
-                                <SelectTrigger className="bg-[#0a0a0a] border-[#ca1f3d]/30 text-white h-10 rounded-lg">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
-                                    <SelectItem value="Intermediate">Intermediate Only</SelectItem>
-                                    <SelectItem value="Advanced">Advanced Only</SelectItem>
-                                    <SelectItem value="Pro">Pro Athlete Only</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        )}
-                    </Card>
 
-                    {/* 5. Waitlist System */}
-                    <Card className="bg-[#151515] border-white/5 p-6 rounded-[2rem]">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-sm font-bold text-gray-400 flex items-center gap-2">
-                                <ListChecks className="w-4 h-4 text-[#ffbe00]" /> Waitlist System
-                            </h3>
-                            <Switch checked={isWaitlist} onCheckedChange={setIsWaitlist} className="data-[state=checked]:bg-[#ffbe00]"/>
+                        <div className="space-y-2">
+                            <Label>Kuota Peserta</Label>
+                            <Input 
+                                type="number"
+                                value={formData.quota} 
+                                onChange={(e) => setFormData({...formData, quota: e.target.value})} 
+                                className="bg-[#0a0a0a] border-white/10 text-white"
+                            />
                         </div>
-                        <p className="text-xs text-gray-500">
-                            {isWaitlist 
-                                ? "Otomatis buka antrian saat slot penuh. Prioritas 'Siapa Cepat Dia Dapat'." 
-                                : "Saat penuh, pendaftaran ditutup total."}
-                        </p>
-                    </Card>
 
-                    {/* Summary Sticky */}
-                    <div className="space-y-3 sticky top-6">
-                        {isRecurring && (
-                             <div className="bg-[#ffbe00]/10 border border-[#ffbe00]/20 p-4 rounded-xl mb-2">
-                                <p className="text-[#ffbe00] font-bold text-sm text-center">
-                                    Total: {repeatWeeks} Event
-                                </p>
-                             </div>
-                        )}
-                        <Button onClick={handleSave} disabled={isLoading} className="w-full h-14 bg-[#ca1f3d] hover:bg-[#a01830] text-white font-black rounded-xl shadow-lg hover:shadow-[#ca1f3d]/20 transition-all">
-                            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 mr-2" />} 
-                            {isLoading ? 'Publishing...' : `PUBLISH ${isRecurring ? 'SERIES' : 'EVENT'}`}
+                        <div className="space-y-2">
+                            <Label>Deskripsi / Catatan</Label>
+                            <Textarea 
+                                placeholder="Info tambahan..."
+                                value={formData.description} 
+                                onChange={(e) => setFormData({...formData, description: e.target.value})} 
+                                className="bg-[#0a0a0a] border-white/10 text-white min-h-[100px]"
+                            />
+                        </div>
+
+                        <Button 
+                            type="submit" 
+                            disabled={loading}
+                            className="w-full h-12 bg-[#ca1f3d] hover:bg-[#a01830] text-white font-black rounded-xl text-lg shadow-lg mt-4"
+                        >
+                            {loading ? <Loader2 className="animate-spin" /> : <><Save className="w-5 h-5 mr-2" /> TERBITKAN JADWAL</>}
                         </Button>
-                        <Button variant="outline" className="w-full h-12 border-white/10 text-gray-400 hover:text-white rounded-xl">
-                            Save as Draft
-                        </Button>
-                    </div>
-
-                </div>
+                    </form>
+                </Card>
             </div>
         </div>
     );
