@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/firebase-admin";
+import { logActivity } from "@/lib/audit-logger";
 
 export async function POST(req: Request) {
     try {
@@ -38,6 +39,16 @@ export async function POST(req: Request) {
             });
             isFollowing = true;
         }
+
+        await logActivity({
+            userId: session.user.id,
+            userName: session.user.name || "Unknown User",
+            role: session.user.role || "Unknown",
+            action: isFollowing ? 'create' : 'delete',
+            entity: 'Relationship',
+            entityId: targetId,
+            details: `${isFollowing ? 'Follow' : 'Unfollow'} user ID: ${targetId}`
+        });
 
         return NextResponse.json({ success: true, isFollowing });
 

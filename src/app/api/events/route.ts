@@ -67,7 +67,7 @@ export async function POST(req: Request) {
             action: 'create',
             entity: 'Event',
             entityId: docRef.id,
-            details: `Membuat event baru: ${title} (${type})`
+            details: `Membuat event baru: ${title} (${type}) di ${location}`
         });
 
         return NextResponse.json({ success: true, id: docRef.id });

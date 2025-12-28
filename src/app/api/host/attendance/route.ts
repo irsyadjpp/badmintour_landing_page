@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/firebase-admin";
+import { logActivity } from "@/lib/audit-logger";
 
 // QR Token Rahasia (Bisa disimpan di ENV atau Database Config)
 const VALID_QR_TOKEN = "GOR-WARTAWAN-2025"; 
@@ -28,6 +29,16 @@ export async function POST(req: Request) {
             checkInTime: new Date().toISOString(),
             coordinates: coordinates || null, // { lat: ..., lng: ... }
             status: "Present"
+        });
+
+        await logActivity({
+            userId: session.user.id,
+            userName: session.user.name || "Unknown User",
+            role: 'host',
+            action: 'create',
+            entity: 'Attendance',
+            entityId: session.user.id,
+            details: `Host melakukan Check-in di lokasi`
         });
 
         return NextResponse.json({ success: true, message: "Check-in berhasil! Selamat bertugas." });

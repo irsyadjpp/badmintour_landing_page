@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/firebase-admin"; 
 import { FieldValue } from 'firebase-admin/firestore';
+import { logActivity } from "@/lib/audit-logger";
 
 export async function POST(req: Request) {
     try {
@@ -66,6 +67,16 @@ export async function POST(req: Request) {
             transaction.update(eventRef, {
                 registeredCount: FieldValue.increment(-1) 
             });
+        });
+
+        await logActivity({
+            userId: session.user.id,
+            userName: session.user.name || "Unknown User",
+            role: session.user.role || "Unknown",
+            action: 'update',
+            entity: 'Booking',
+            entityId: bookingId,
+            details: `Membatalkan booking ID: ${bookingId}`
         });
 
         return NextResponse.json({ success: true, message: "Booking berhasil dibatalkan. Kuota event telah dikembalikan." });

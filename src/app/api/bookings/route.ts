@@ -3,8 +3,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { logActivity } from "@/lib/audit-logger";
 
 export async function POST(req: Request) {
+  let bookingId = "";
+  let eventTitle = "";
   try {
     const session = await getServerSession(authOptions);
     const body = await req.json();
@@ -40,6 +43,7 @@ export async function POST(req: Request) {
         if (!eventDoc.exists) throw "Event tidak ditemukan";
 
         const eventData = eventDoc.data();
+        eventTitle = eventData?.title || "";
         
         if (eventData?.registeredCount >= eventData?.quota) {
             throw "Slot Penuh";
@@ -48,7 +52,7 @@ export async function POST(req: Request) {
         // Generate Booking ID
         // Jika Guest, ID-nya pakai kombinasi Event+HP biar unik dan bisa ditrack
         const uniqueKey = session?.user?.id || guestPhone; 
-        const bookingId = `BK-${eventId}-${uniqueKey.replace(/[^a-zA-Z0-9]/g, "")}`;
+        bookingId = `BK-${eventId}-${uniqueKey.replace(/[^a-zA-Z0-9]/g, "")}`;
         
         const bookingRef = db.collection("bookings").doc(bookingId);
         const bookingDoc = await t.get(bookingRef);
@@ -77,6 +81,16 @@ export async function POST(req: Request) {
         t.update(eventRef, {
             registeredCount: FieldValue.increment(1)
         });
+    });
+
+    await logActivity({
+      userId: userId,
+      userName: userName,
+      role: session?.user?.role || 'guest',
+      action: 'create',
+      entity: 'Booking',
+      entityId: bookingId,
+      details: `Booking tiket untuk event: ${eventTitle}`
     });
 
     return NextResponse.json({ 

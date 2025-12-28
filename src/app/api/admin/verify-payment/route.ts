@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/firebase-admin";
+import { logActivity } from "@/lib/audit-logger";
 
 export async function POST(req: Request) {
     try {
@@ -26,6 +27,16 @@ export async function POST(req: Request) {
                 verifiedAt: new Date().toISOString()
             });
         }
+
+        await logActivity({
+            userId: session.user.id,
+            userName: session.user.name || "Unknown User",
+            role: session.user.role || "Unknown",
+            action: 'verify',
+            entity: 'Transaction',
+            entityId: bookingId,
+            details: `Melakukan aksi ${action.toUpperCase()} pada transaksi ${bookingId}`
+        });
 
         return NextResponse.json({ success: true });
 

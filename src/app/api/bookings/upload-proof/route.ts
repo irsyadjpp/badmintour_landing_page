@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/firebase-admin";
+import { logActivity } from "@/lib/audit-logger";
 
 export async function POST(req: Request) {
     try {
@@ -19,6 +20,16 @@ export async function POST(req: Request) {
             paymentProof: imageBase64,
             status: 'verification_pending',
             uploadedAt: new Date().toISOString()
+        });
+
+        await logActivity({
+            userId: session.user.id,
+            userName: session.user.name || "Unknown User",
+            role: session.user.role || "Unknown",
+            action: 'update',
+            entity: 'Transaction',
+            entityId: bookingId,
+            details: `Mengupload bukti transfer untuk booking ${bookingId}`
         });
 
         return NextResponse.json({ success: true, message: "Bukti berhasil diupload. Tunggu verifikasi admin." });

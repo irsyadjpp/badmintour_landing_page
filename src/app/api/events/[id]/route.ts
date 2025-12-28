@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/firebase-admin";
+import { logActivity } from "@/lib/audit-logger";
 
 export async function DELETE(
     req: Request,
@@ -15,6 +16,17 @@ export async function DELETE(
 
     try {
         await db.collection("events").doc(params.id).delete();
+        
+        await logActivity({
+            userId: session.user.id,
+            userName: session.user.name || "Unknown User",
+            role: session.user.role || "Unknown",
+            action: 'delete',
+            entity: 'Event',
+            entityId: params.id,
+            details: `Menghapus event ID: ${params.id}`
+        });
+
         return NextResponse.json({ success: true });
     } catch (error) {
         return NextResponse.json({ error: "Gagal menghapus event" }, { status: 500 });

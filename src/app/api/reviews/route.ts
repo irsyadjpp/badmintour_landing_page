@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/firebase-admin";
+import { logActivity } from "@/lib/audit-logger";
 
 export async function POST(req: Request) {
     try {
@@ -11,7 +12,7 @@ export async function POST(req: Request) {
 
         const { targetId, targetType, rating, comment } = await req.json(); // targetType: 'coach' | 'event'
 
-        await db.collection("reviews").add({
+        const reviewRef = await db.collection("reviews").add({
             reviewerId: session.user.id,
             reviewerName: session.user.name,
             reviewerImage: session.user.image,
@@ -20,6 +21,16 @@ export async function POST(req: Request) {
             rating: Number(rating),
             comment,
             createdAt: new Date().toISOString()
+        });
+
+        await logActivity({
+            userId: session.user.id,
+            userName: session.user.name || "Unknown User",
+            role: session.user.role || "Unknown",
+            action: 'create',
+            entity: 'Review',
+            entityId: reviewRef.id,
+            details: `Memberikan rating ${rating} bintang untuk ${targetType} ID: ${targetId}`
         });
 
         return NextResponse.json({ success: true });
