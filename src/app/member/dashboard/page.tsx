@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useSession } from 'next-auth/react';
@@ -459,4 +460,5 @@ function GameCard({ href, icon: Icon, color, bgColor, title, desc }: any) {
         </Link>
     );
 }
-```
+
+    
