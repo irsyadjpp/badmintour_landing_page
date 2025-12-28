@@ -184,8 +184,8 @@ export default function Header() {
             </button>
              <div className="absolute top-full right-0 mt-6 w-48 opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300 ease-out pt-2">
                     <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-2xl p-2 shadow-xl ring-1 ring-black/5 text-left">
-                        <Link href="#" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-accent hover:text-black transition text-sm font-bold">👑 Hall of Fame</Link>
-                        <Link href="#" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-primary hover:text-white transition text-sm font-bold">📸 Momen Seru</Link>
+                        <Link href="/moments" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-accent hover:text-black transition text-sm font-bold">📸 Momen Seru</Link>
+                        <Link href="#" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-primary hover:text-white transition text-sm font-bold">👑 Hall of Fame</Link>
                     </div>
                 </div>
           </div>
