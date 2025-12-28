@@ -21,15 +21,14 @@ const NAV_ITEMS = [
     { label: 'Home', href: '/' },
     { label: 'Jadwal Mabar', href: '/#schedule' },
     { label: 'Program Latihan', href: '/#services' },
-    { label: 'Momen Seru', href: '/moments' }, // Menu Baru
 ];
 
 export default function Header() {
     const pathname = usePathname();
     const [isScrolled, setIsScrolled] = React.useState(false);
 
-    // Logic: Navbar jadi gelap jika di-scroll ATAU sedang di halaman /moments
-    const isDarkHeader = isScrolled || pathname === '/moments';
+    // Logic: Navbar jadi gelap jika di-scroll
+    const isDarkHeader = isScrolled || pathname.startsWith('/moments'); // Keep moments logic for background consistency
 
     React.useEffect(() => {
         const handleScroll = () => {
