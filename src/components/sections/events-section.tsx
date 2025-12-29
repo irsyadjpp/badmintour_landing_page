@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils'; // Pastikan import cn utility
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 export default function EventsSection() {
     const [events, setEvents] = useState<any[]>([]);
@@ -93,7 +94,7 @@ export default function EventsSection() {
                         [1, 2, 3].map(i => <Skeleton key={i} className="h-40 w-full rounded-[2rem] bg-zinc-800" />)
                     ) : filteredEvents.length > 0 ? (
                         filteredEvents.map((event) => {
-                            const filled = event.registeredCount || 0;
+                            const filled = event.bookedSlot || 0;
                             const total = event.quota || 12;
                             const percent = (filled / total) * 100;
                             const isFull = filled >= total;
@@ -113,23 +114,56 @@ export default function EventsSection() {
 
                                         {/* Info Utama */}
                                         <div className="flex-1 p-6 flex flex-col justify-center w-full">
-                                            <div className="flex flex-wrap items-center gap-2 mb-2">
-                                                {event.isRecurring && <Badge variant="secondary" className="text-[10px]">Rutin</Badge>}
-                                                <Badge variant="outline" className="text-[10px] uppercase">{event.level}</Badge>
+                                            <div className="flex flex-col gap-1 mb-2">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    {event.isRecurring && <Badge variant="secondary" className="text-[10px]">Rutin</Badge>}
+                                                    <Badge variant="outline" className="text-[10px] uppercase">{event.level}</Badge>
+                                                </div>
+                                                <div className="text-xs font-bold uppercase tracking-wider">
+                                                    {event.type === 'drilling' ? (
+                                                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+                                                            COACH: {event.coachNickname || event.hostNickname || "PRO COACH"}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-muted-foreground">
+                                                            HOST: {event.hostNickname || event.organizer || "BADMINTOUR"}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
 
                                             <h3 className="text-2xl font-black tracking-tight mb-3 group-hover:text-primary transition-colors">
                                                 {event.title}
                                             </h3>
 
-                                            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-bold text-muted-foreground">
-                                                <div className="flex items-center gap-2">
+                                            <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm font-bold text-muted-foreground mt-2">
+                                                <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-3 py-1.5 rounded-full">
                                                     <MapPin className="w-4 h-4 text-primary" />
                                                     {event.location}
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Users className="w-4 h-4 text-primary" />
-                                                    Slot: {filled} / {total}
+
+                                                <div className="flex items-center gap-3">
+                                                    {/* Avatar Stack */}
+                                                    <div className="flex -space-x-3">
+                                                        {event.avatars && event.avatars.length > 0 ? (
+                                                            event.avatars.map((img: string, idx: number) => (
+                                                                <Avatar key={idx} className="w-8 h-8 border-2 border-background">
+                                                                    <AvatarImage src={img} className="object-cover" />
+                                                                    <AvatarFallback className="bg-primary/20 text-[10px]">U</AvatarFallback>
+                                                                </Avatar>
+                                                            ))
+                                                        ) : (
+                                                            <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center border-2 border-background">
+                                                                <Users className="w-4 h-4 text-zinc-400" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-xs">
+                                                        <span className={cn("font-black text-base", isFull ? "text-[#ffbe00]" : "text-primary")}>
+                                                            {isFull ? "FULL" : `${total - filled}`}
+                                                        </span>
+                                                        <span className="text-muted-foreground"> {isFull ? "" : "Slot Tersisa"}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -139,7 +173,7 @@ export default function EventsSection() {
                                             <div className="w-full">
                                                 <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-1 text-muted-foreground">
                                                     <span>{isFull ? 'FULL' : 'AVAILABLE'}</span>
-                                                    <span>{Math.round(percent)}%</span>
+                                                    <span>{isFull ? '0' : total - filled} Slot</span>
                                                 </div>
                                                 <div className="w-full h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                                                     <div className={`h-full rounded-full ${isFull ? 'bg-zinc-500' : 'bg-primary'}`} style={{ width: `${percent}%` }}></div>
@@ -148,19 +182,22 @@ export default function EventsSection() {
 
                                             <Link
                                                 href={
-                                                    isFull ? '#' :
-                                                        !session ? `/events/${event.id}` : // JIKA GUEST -> ROUTE KE PUBLIC PAGE
-                                                            event.type === 'drilling' ? `/member/drilling?id=${event.id}` :
-                                                                event.type === 'tournament' ? `/member/tournament?id=${event.id}` :
-                                                                    `/member/mabar?id=${event.id}`
+                                                    !session ? `/events/${event.id}` : // JIKA GUEST -> ROUTE KE PUBLIC PAGE
+                                                        event.type === 'drilling' ? `/member/drilling?id=${event.id}` :
+                                                            event.type === 'tournament' ? `/member/tournament?id=${event.id}` :
+                                                                `/member/mabar?id=${event.id}`
                                                 }
                                                 className="w-full"
                                             >
                                                 <Button
-                                                    className={`w-full h-12 rounded-xl font-bold ${isFull ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed' : 'bg-black text-white hover:bg-primary'}`}
-                                                    disabled={isFull}
+                                                    className={cn(
+                                                        "w-full h-12 rounded-xl font-bold transition-all",
+                                                        isFull
+                                                            ? "bg-[#ffbe00] text-black hover:bg-[#ffbe00]/90" // Waiting List Style
+                                                            : "bg-black text-white hover:bg-primary" // Normal Style
+                                                    )}
                                                 >
-                                                    {isFull ? 'FULL BOOKED' : (event.type === 'tournament' ? 'DAFTAR DETAIL' : 'JOIN SEKARANG')}
+                                                    {isFull ? 'WAITING LIST' : (event.type === 'tournament' ? 'DAFTAR DETAIL' : 'JOIN SEKARANG')}
                                                 </Button>
                                             </Link>
                                         </div>

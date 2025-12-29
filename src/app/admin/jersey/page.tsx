@@ -2,14 +2,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-    LayoutDashboard, 
-    Shirt, 
-    Search, 
-    MoreHorizontal, 
-    CheckCircle2, 
-    Clock, 
-    Truck, 
+import {
+    LayoutDashboard,
+    Shirt,
+    Search,
+    MoreHorizontal,
+    CheckCircle2,
+    Clock,
+    Truck,
     Download,
     RefreshCw,
     User,
@@ -19,12 +19,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -35,8 +35,8 @@ type Order = {
     orderId?: string; // Tambahkan optional
     type: 'MEMBER' | 'GUEST';
     realUserId?: string;
-    fullName?: string;    
-    senderName?: string;  
+    fullName?: string;
+    senderName?: string;
     backName: string;
     size: string;
     senderPhone: string;
@@ -52,6 +52,9 @@ export default function AdminJerseyPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(5);
 
     // 1. FETCH DATA
     const fetchOrders = async () => {
@@ -73,6 +76,11 @@ export default function AdminJerseyPage() {
         fetchOrders();
     }, []);
 
+    // Reset pagination when search/filter changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, statusFilter, itemsPerPage]);
+
     // 2. UPDATE STATUS
     const handleUpdateStatus = async (order: Order, newStatus: string) => {
         try {
@@ -84,10 +92,10 @@ export default function AdminJerseyPage() {
                     status: newStatus
                 })
             });
-            
+
             if (res.ok) {
                 toast({ title: "Status Updated", description: `Pesanan diubah menjadi ${newStatus}`, className: "bg-green-600 text-white border-none" });
-                fetchOrders(); 
+                fetchOrders();
             }
         } catch (error) {
             toast({ title: "Gagal Update", variant: "destructive" });
@@ -97,20 +105,26 @@ export default function AdminJerseyPage() {
     // 3. FILTERING
     const filteredOrders = orders.filter(order => {
         const name = order.senderName || order.fullName || "No Name";
-        const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                              (order.backName && order.backName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                              (order.senderPhone && order.senderPhone.includes(searchTerm));
+        const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (order.backName && order.backName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (order.senderPhone && order.senderPhone.includes(searchTerm));
         const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
         return matchesSearch && matchesStatus;
     });
+
+    // 4. PAGINATION LOGIC
+    const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentOrders = filteredOrders.slice(startIndex, endIndex);
 
     // 4. STATS CALCULATION (Safe Calculation)
     const stats = {
         total: orders.length,
         revenue: orders.reduce((acc, curr) => {
             // Gunakan totalPrice jika ada, atau hitung manual sebagai fallback
-            const price = curr.totalPrice !== undefined 
-                ? curr.totalPrice 
+            const price = curr.totalPrice !== undefined
+                ? curr.totalPrice
                 : (Math.max(0, (curr.quantity || 1) - 1) * 150000);
             return acc + price;
         }, 0),
@@ -119,8 +133,8 @@ export default function AdminJerseyPage() {
     };
 
     const getStatusColor = (status: string) => {
-        switch(status) {
-            case 'pending': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'; 
+        switch (status) {
+            case 'pending': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
             case 'paid': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
             case 'processing': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
             case 'shipped': return 'bg-green-500/10 text-green-500 border-green-500/20';
@@ -130,9 +144,88 @@ export default function AdminJerseyPage() {
         }
     };
 
+    // 5. EDIT LOGIC
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+    const [editForm, setEditForm] = useState({
+        fullName: '',
+        backName: '',
+        size: '',
+        senderPhone: ''
+    });
+
+    const [generatedOptions, setGeneratedOptions] = useState({ A: '', B: '' });
+    const [isSizeChartOpen, setIsSizeChartOpen] = useState(false);
+
+    // Logic Generate Options (Copied from Jersey Request Page)
+    const generateOptions = (name: string) => {
+        if (!name) return { A: '', B: '' };
+        const cleanName = name.trim().toUpperCase().replace(/[^A-Z\s]/g, '');
+        const parts = cleanName.split(/\s+/).filter(p => p.length > 0);
+        if (parts.length === 0) return { A: '', B: '' };
+        if (parts.length === 1) {
+            return { A: parts[0], B: parts[0] };
+        }
+        const first = parts[0];
+        const initialsTail = parts.slice(1).map(p => p[0]).join(' ');
+        let optionA = `${first} ${initialsTail}`.trim();
+        const last = parts[parts.length - 1];
+        const initialsHead = parts.slice(0, parts.length - 1).map(p => p[0]).join(' ');
+        let optionB = `${initialsHead} ${last}`.trim();
+        if (optionA.length > 12) optionA = optionA.replace(/\s/g, '').slice(0, 12);
+        if (optionB.length > 12) optionB = optionB.replace(/\s/g, '').slice(0, 12);
+        return { A: optionA, B: optionB };
+    };
+
+    // Update options when Full Name changes in Edit Form
+    useEffect(() => {
+        if (isEditOpen && editForm.fullName) {
+            setGeneratedOptions(generateOptions(editForm.fullName));
+        }
+    }, [editForm.fullName, isEditOpen]);
+
+    const openEditModal = (order: Order) => {
+        setEditingOrder(order);
+        const currentFullName = order.fullName || order.senderName || '';
+        setEditForm({
+            fullName: currentFullName,
+            backName: order.backName || '',
+            size: order.size || 'L',
+            senderPhone: order.senderPhone || ''
+        });
+        setGeneratedOptions(generateOptions(currentFullName));
+        setIsEditOpen(true);
+    };
+
+    const handleEditSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingOrder) return;
+
+        try {
+            const res = await fetch('/api/admin/jersey', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: editingOrder.id,
+                    ...editForm
+                })
+            });
+
+            if (res.ok) {
+                toast({ title: "Sukses", description: "Data pesanan berhasil diperbarui!", className: "bg-green-600 text-white" });
+                setIsEditOpen(false);
+                fetchOrders();
+            } else {
+                throw new Error("Gagal update");
+            }
+        } catch (error) {
+            toast({ title: "Error", description: "Gagal menyimpan perubahan.", variant: "destructive" });
+        }
+    };
+
     return (
         <div className="space-y-8">
-            
+
             {/* HEADER */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
@@ -156,34 +249,40 @@ export default function AdminJerseyPage() {
                 <StatsCard title="Total Pesanan" value={stats.total} icon={LayoutDashboard} color="text-white" />
                 <StatsCard title="Estimasi Revenue" value={`Rp ${stats.revenue.toLocaleString('id-ID')}`} icon={CheckCircle2} color="text-[#ffbe00]" />
                 <StatsCard title="Menunggu Bayar" value={stats.pending} icon={Clock} color="text-yellow-500" />
-                <StatsCard title="Terkirim / Selesai" value={stats.shipped} icon={Truck} color="text-green-500" />
+                <StatsCard title="Picked Up" value={stats.shipped} icon={Truck} color="text-green-500" />
             </div>
 
             {/* FILTERS & SEARCH */}
             <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                    <Input 
-                        placeholder="Cari nama pemesan, nama punggung, atau No WA..." 
+                    <Input
+                        placeholder="Cari nama pemesan, nama punggung, atau No WA..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="bg-[#151515] border-white/10 pl-10 h-12 rounded-xl text-white placeholder:text-gray-500 focus:border-[#ffbe00] focus:ring-0" 
+                        className="bg-[#151515] border-white/10 pl-10 h-12 rounded-xl text-white placeholder:text-gray-500 focus:border-[#ffbe00] focus:ring-0"
                     />
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
-                    {['all', 'pending', 'paid', 'processing', 'shipped'].map((status) => (
-                        <button
-                            key={status}
-                            onClick={() => setStatusFilter(status)}
-                            className={`px-6 h-12 rounded-xl text-sm font-bold uppercase transition-all whitespace-nowrap border ${
-                                statusFilter === status 
-                                ? 'bg-[#ffbe00] text-black border-[#ffbe00]' 
-                                : 'bg-[#151515] text-gray-400 border-white/10 hover:border-white/30 hover:text-white'
-                            }`}
-                        >
-                            {status}
-                        </button>
-                    ))}
+                    {['all', 'pending', 'paid', 'processing', 'shipped'].map((status) => {
+                        // Helper Label
+                        let label = status;
+                        if (status === 'all') label = 'Semua';
+                        if (status === 'shipped') label = 'Picked Up';
+
+                        return (
+                            <button
+                                key={status}
+                                onClick={() => setStatusFilter(status)}
+                                className={`px-6 h-12 rounded-xl text-sm font-bold uppercase transition-all whitespace-nowrap border ${statusFilter === status
+                                    ? 'bg-[#ffbe00] text-black border-[#ffbe00]'
+                                    : 'bg-[#151515] text-gray-400 border-white/10 hover:border-white/30 hover:text-white'
+                                    }`}
+                            >
+                                {label}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
@@ -202,19 +301,19 @@ export default function AdminJerseyPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {filteredOrders.length > 0 ? (
-                                filteredOrders.map((order) => (
+                            {currentOrders.length > 0 ? (
+                                currentOrders.map((order) => (
                                     <tr key={order.id} className="hover:bg-white/5 transition-colors group">
                                         <td className="p-6">
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center border border-white/5 ${order.type === 'MEMBER' ? 'bg-[#ffbe00]/10 text-[#ffbe00]' : 'bg-white/5 text-gray-400'}`}>
-                                                    {order.type === 'MEMBER' ? <User className="w-5 h-5"/> : <Users className="w-5 h-5"/>}
+                                                    {order.type === 'MEMBER' ? <User className="w-5 h-5" /> : <Users className="w-5 h-5" />}
                                                 </div>
                                                 <div>
                                                     <p className="font-bold text-white text-base tracking-tight">{order.senderName || order.fullName}</p>
                                                     <div className="flex gap-2 mt-1">
                                                         <Badge variant="outline" className="text-[10px] border-white/10 text-gray-500">{order.type}</Badge>
-                                                        <span className="text-xs text-gray-500 font-mono pt-0.5">{order.orderId || order.id?.substring(0,8)}</span>
+                                                        <span className="text-xs text-gray-500 font-mono pt-0.5">{order.orderId || order.id?.substring(0, 8)}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -244,7 +343,7 @@ export default function AdminJerseyPage() {
                                         </td>
                                         <td className="p-6">
                                             <span className={`px-3 py-1.5 rounded-lg text-[11px] font-black uppercase border tracking-wide ${getStatusColor(order.status)}`}>
-                                                {order.status}
+                                                {order.status === 'shipped' ? 'Picked Up' : order.status}
                                             </span>
                                         </td>
                                         <td className="p-6 text-right">
@@ -255,11 +354,17 @@ export default function AdminJerseyPage() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="bg-[#1a1a1a] border-white/10 text-white p-2 rounded-xl shadow-xl">
-                                                    <DropdownMenuLabel className="text-xs text-gray-500 uppercase tracking-wider">Update Status</DropdownMenuLabel>
+                                                    <DropdownMenuLabel className="text-xs text-gray-500 uppercase tracking-wider">Actions</DropdownMenuLabel>
+                                                    <DropdownMenuSeparator className="bg-white/10" />
+                                                    <DropdownMenuItem onClick={() => openEditModal(order)} className="focus:bg-white/10 cursor-pointer rounded-lg font-medium mb-1">
+                                                        Edit Detail
+                                                    </DropdownMenuItem>
+
+                                                    <DropdownMenuLabel className="text-xs text-gray-500 uppercase tracking-wider mt-2">Update Status</DropdownMenuLabel>
                                                     <DropdownMenuSeparator className="bg-white/10" />
                                                     <DropdownMenuItem onClick={() => handleUpdateStatus(order, 'paid')} className="focus:bg-[#ffbe00]/10 focus:text-[#ffbe00] cursor-pointer rounded-lg font-medium">Mark as Paid</DropdownMenuItem>
                                                     <DropdownMenuItem onClick={() => handleUpdateStatus(order, 'processing')} className="focus:bg-[#ffbe00]/10 focus:text-[#ffbe00] cursor-pointer rounded-lg font-medium">Mark as Processing</DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => handleUpdateStatus(order, 'shipped')} className="focus:bg-[#ffbe00]/10 focus:text-[#ffbe00] cursor-pointer rounded-lg font-medium">Mark as Shipped</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleUpdateStatus(order, 'shipped')} className="focus:bg-[#ffbe00]/10 focus:text-[#ffbe00] cursor-pointer rounded-lg font-medium">Mark as Picked Up</DropdownMenuItem>
                                                     <DropdownMenuSeparator className="bg-white/10" />
                                                     <DropdownMenuItem onClick={() => handleUpdateStatus(order, 'cancelled')} className="text-red-500 focus:bg-red-500/10 focus:text-red-500 cursor-pointer rounded-lg font-medium">Cancel Order</DropdownMenuItem>
                                                 </DropdownMenuContent>
@@ -284,6 +389,183 @@ export default function AdminJerseyPage() {
                     </table>
                 </div>
             </Card>
+
+            {/* PAGINATION CONTROLS */}
+            {filteredOrders.length > 0 && (
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-400">
+                    <div className="flex items-center gap-4">
+                        <span>
+                            Showing <span className="text-white font-bold">{startIndex + 1}</span> to <span className="text-white font-bold">{Math.min(endIndex, filteredOrders.length)}</span> of <span className="text-white font-bold">{filteredOrders.length}</span> entries
+                        </span>
+
+                        {/* Rows Per Page Selector */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs uppercase font-bold text-gray-500">Rows:</span>
+                            <select
+                                value={itemsPerPage}
+                                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                                className="bg-[#151515] border border-white/10 text-white text-xs rounded-lg px-2 py-1 outline-none focus:border-[#ffbe00]"
+                            >
+                                {[5, 10, 20, 50, 100].map(size => (
+                                    <option key={size} value={size}>{size}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="bg-[#151515] border-white/10 text-white hover:bg-white/10 disabled:opacity-50"
+                        >
+                            Previous
+                        </Button>
+
+                        <div className="flex gap-1">
+                            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                                let pageNum = i + 1;
+                                // Logic simple untuk pagination (tampilkan max 5 page pertama atau logikanya bisa dibuat lebih kompleks)
+                                // Di sini kita pakai simple iteration untuk 5 halaman pertama atau logic sliding window jika perlu. 
+                                // Untuk MVP, tombol Prev/Next + Text "Page X of Y" sudah cukup, tapi kita coba render numbers.
+
+                                // Sliding window logic sederhana: center current page
+                                if (totalPages > 5) {
+                                    if (currentPage > 3) {
+                                        pageNum = currentPage - 2 + i;
+                                    }
+                                    if (pageNum > totalPages) return null;
+                                }
+
+                                return (
+                                    <button
+                                        key={pageNum}
+                                        onClick={() => setCurrentPage(pageNum)}
+                                        className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold transition-colors ${currentPage === pageNum
+                                            ? 'bg-[#ffbe00] text-black'
+                                            : 'bg-[#151515] text-gray-400 hover:bg-white/10 hover:text-white'
+                                            }`}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                );
+                            }).filter(Boolean)}
+                        </div>
+
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                            className="bg-[#151515] border-white/10 text-white hover:bg-white/10 disabled:opacity-50"
+                        >
+                            Next
+                        </Button>
+                    </div>
+                </div>
+            )}
+
+            {/* EDIT DIALOG */}
+            {isEditOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <form onSubmit={handleEditSubmit} className="bg-[#1a1a1a] w-full max-w-md rounded-2xl border border-white/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+
+                        {/* HEADER */}
+                        <div className="p-6 border-b border-white/5 flex justify-between items-center shrink-0">
+                            <h3 className="text-xl font-bold text-white">Edit Pesanan</h3>
+                            <button type="button" onClick={() => setIsEditOpen(false)} className="text-gray-400 hover:text-white">✕</button>
+                        </div>
+
+                        {/* SCROLLABLE CONTENT */}
+                        <div className="p-6 space-y-4 overflow-y-auto">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Nama Lengkap</label>
+                                <Input
+                                    value={editForm.fullName}
+                                    onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value.toUpperCase() })}
+                                    className="bg-[#151515] border-white/10 text-white focus:border-[#ffbe00]"
+                                    required
+                                />
+                            </div>
+
+                            {/* NEW BACK NAME LOGIC */}
+                            <div className="bg-[#151515] p-4 rounded-xl border border-white/10 space-y-3">
+                                <label className="text-xs font-bold text-[#ffbe00] uppercase tracking-wider flex items-center gap-2">Pilih Nama Punggung</label>
+
+                                <div onClick={() => setEditForm({ ...editForm, backName: generatedOptions.A })} className={`p-3 rounded-lg border-2 transition-all cursor-pointer flex items-center justify-between group ${editForm.backName === generatedOptions.A ? "border-[#ffbe00] bg-[#ffbe00]/10" : "border-white/5 bg-black/20 hover:border-white/20"}`}>
+                                    <div><p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Opsi 1</p><p className="text-lg font-black text-white tracking-widest">{generatedOptions.A || "..."}</p></div>
+                                    {editForm.backName === generatedOptions.A && <div className="w-5 h-5 rounded-full bg-[#ffbe00] flex items-center justify-center text-black"><CheckCircle2 className="w-3 h-3" /></div>}
+                                </div>
+
+                                <div onClick={() => setEditForm({ ...editForm, backName: generatedOptions.B })} className={`p-3 rounded-lg border-2 transition-all cursor-pointer flex items-center justify-between group ${editForm.backName === generatedOptions.B ? "border-[#ffbe00] bg-[#ffbe00]/10" : "border-white/5 bg-black/20 hover:border-white/20"}`}>
+                                    <div><p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Opsi 2</p><p className="text-lg font-black text-white tracking-widest">{generatedOptions.B || "..."}</p></div>
+                                    {editForm.backName === generatedOptions.B && <div className="w-5 h-5 rounded-full bg-[#ffbe00] flex items-center justify-center text-black"><CheckCircle2 className="w-3 h-3" /></div>}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <div className="flex justify-between items-end mb-1">
+                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Ukuran</label>
+                                        <button type="button" onClick={() => setIsSizeChartOpen(true)} className="text-[10px] font-bold text-[#ffbe00] hover:text-white hover:underline">Lihat Chart</button>
+                                    </div>
+                                    <select
+                                        value={editForm.size}
+                                        onChange={(e) => setEditForm({ ...editForm, size: e.target.value })}
+                                        className="w-full h-10 px-3 rounded-md bg-[#151515] border border-white/10 text-white focus:outline-none focus:border-[#ffbe00]"
+                                    >
+                                        {['S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map(s => (
+                                            <option key={s} value={s}>{s}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">No HP</label>
+                                    <Input
+                                        value={editForm.senderPhone}
+                                        onChange={(e) => setEditForm({ ...editForm, senderPhone: e.target.value.replace(/\D/g, '') })}
+                                        className="bg-[#151515] border-white/10 text-white focus:border-[#ffbe00]"
+                                        required
+                                        type="tel"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* FOOTER */}
+                        <div className="p-6 border-t border-white/5 bg-[#1a1a1a] flex gap-3 shrink-0">
+                            <Button type="button" variant="ghost" onClick={() => setIsEditOpen(false)} className="flex-1 text-gray-400 hover:text-white hover:bg-white/5">Batal</Button>
+                            <Button type="submit" className="flex-1 bg-[#ca1f3d] hover:bg-[#a01830] text-white font-bold">Simpan</Button>
+                        </div>
+                    </form>
+                </div>
+            )}
+
+            {/* SIZE CHART MODAL */}
+            {isSizeChartOpen && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setIsSizeChartOpen(false)}>
+                    <div className="absolute inset-0 bg-black/90 backdrop-blur-sm"></div>
+                    <div className="bg-[#1A1A1A] w-full max-w-sm rounded-[2rem] border border-white/10 shadow-2xl relative z-10 overflow-hidden animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+                        <div className="bg-[#ffbe00] p-6 flex justify-between items-center">
+                            <h3 className="text-black font-black text-2xl uppercase tracking-tighter">📏 Size Chart</h3>
+                            <button onClick={() => setIsSizeChartOpen(false)} className="text-black bg-black/10 p-2 rounded-full hover:bg-black/20"><span className="sr-only">Close</span>✕</button>
+                        </div>
+                        <div className="p-6">
+                            <p className="text-xs text-gray-400 mb-6 text-center uppercase tracking-widest font-bold">Unisex Regular Fit (CM)</p>
+                            <div className="space-y-2">
+                                <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10"><span className="font-bold text-[#ffbe00] w-8">S</span> <span className="text-white">47 x 67</span></div>
+                                <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10"><span className="font-bold text-[#ffbe00] w-8">M</span> <span className="text-white">50 x 70</span></div>
+                                <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10"><span className="font-bold text-[#ffbe00] w-8">L</span> <span className="text-white">52 x 72</span></div>
+                                <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10"><span className="font-bold text-[#ffbe00] w-8">XL</span> <span className="text-white">54 x 74</span></div>
+                                <div className="flex justify-between p-3 bg-white/5 rounded-lg border border-white/10"><span className="font-bold text-[#ffbe00] w-8">XXL</span> <span className="text-white">56 x 77</span></div>
+                            </div>
+                            <p className="text-[10px] text-gray-500 mt-4 text-center">*Lebar Dada x Panjang Badan</p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -312,7 +594,7 @@ function StatsCard({ title, value, icon: Icon, color }: any) {
 function ArrowUpRightMini() {
     return (
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M7 17l9.2-9.2M17 17V7H7"/>
+            <path d="M7 17l9.2-9.2M17 17V7H7" />
         </svg>
     )
 }

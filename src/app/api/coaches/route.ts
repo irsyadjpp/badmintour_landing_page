@@ -11,6 +11,7 @@ export async function GET(req: Request) {
         const coaches = snapshot.docs.map(doc => ({
             id: doc.id,
             name: doc.data().name || "Tanpa Nama",
+            nickname: doc.data().nickname || "", // Added nickname
             email: doc.data().email
         }));
 

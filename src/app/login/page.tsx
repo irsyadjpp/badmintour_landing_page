@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { KeyRound, Chrome, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-import { signIn, useSession } from 'next-auth/react'; 
+import { signIn, useSession } from 'next-auth/react';
 
 // Komponen Content terpisah agar bisa dibungkus Suspense (wajib untuk useSearchParams di Next 14+)
 function LoginContent() {
@@ -16,7 +16,7 @@ function LoginContent() {
     const { toast } = useToast();
     const { data: session, status } = useSession();
     const searchParams = useSearchParams();
-    
+
     const [pin, setPin] = useState(['', '', '', '', '', '']);
     const [isLoading, setIsLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
@@ -25,7 +25,7 @@ function LoginContent() {
     useEffect(() => {
         if (status === 'authenticated' && session?.user) {
             const userStatus = (session.user as any).status;
-            
+
             if (userStatus === 'inactive') {
                 setErrorMsg("Akun Anda dinonaktifkan. Silakan hubungi admin.");
                 return;
@@ -59,16 +59,40 @@ function LoginContent() {
         // tapi untuk google biasanya flow redirect otomatis.
         // callbackUrl diset agar setelah login google sukses, dia balik ke halaman ini dulu 
         // untuk diproses oleh useEffect Auto Redirect di atas.
-        await signIn('google', { callbackUrl: '/login' }); 
+        await signIn('google', { callbackUrl: '/login' });
+    };
+
+    const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Backspace') {
+            if (!pin[index] && index > 0) {
+                // Pin kosong, pindah ke sebelumnya
+                const prev = document.getElementById(`pin-${index - 1}`);
+                prev?.focus();
+            } else if (pin[index]) {
+                // Pin ada isinya, hapus tapi jangan pindah dulu (biar user lihat apa yang dihapus)
+                // Default behavior backspace sudah menghapus value di input, 
+                // tapi kita perlu sync state.
+            }
+        }
     };
 
     const handlePinChange = (index: number, value: string) => {
+        // Validasi angka only
         if (!/^\d*$/.test(value)) return;
+
         const newPin = [...pin];
         newPin[index] = value;
         setPin(newPin);
-        if (value && index < 5) document.getElementById(`pin-${index + 1}`)?.focus();
-        if (index === 5 && value) handlePinSubmit(newPin.join(''));
+
+        // Auto focus next
+        if (value && index < 5) {
+            document.getElementById(`pin-${index + 1}`)?.focus();
+        }
+
+        // Auto submit if last digit filled
+        if (index === 5 && value) {
+            handlePinSubmit(newPin.join(''));
+        }
     };
 
     const handlePinSubmit = async (fullPin: string) => {
@@ -80,7 +104,7 @@ function LoginContent() {
 
         if (result?.error) {
             toast({ title: "Login Gagal", description: "PIN Salah.", variant: "destructive" });
-            setPin(['', '', '', '', '', '']); 
+            setPin(['', '', '', '', '', '']);
             document.getElementById(`pin-0`)?.focus();
             setIsLoading(false);
         } else {
@@ -109,7 +133,7 @@ function LoginContent() {
                     <Image src="/images/logo-light.png" alt="Logo" fill className="object-contain p-2" priority />
                 </div>
                 <h1 className="text-4xl font-black tracking-tighter mb-2">BADMINTOUR<span className="text-[#ffbe00]">.</span></h1>
-                <p className="text-gray-400 font-medium">Community Hub & Court Booking</p>
+                <p className="text-gray-400 font-medium">Mabar, Drilling & Tournament Community</p>
             </div>
 
             {/* ERROR ALERT */}
@@ -119,7 +143,7 @@ function LoginContent() {
                     <div className="flex-1">
                         <h4 className="text-red-500 font-bold text-sm">Login Gagal</h4>
                         <p className="text-red-400 text-xs mt-1 leading-relaxed">{errorMsg}</p>
-                        
+
                         {/* Tombol Bantuan Aktivasi (Mockup WA) */}
                         <Button variant="link" className="p-0 h-auto text-[#ffbe00] text-xs mt-2">
                             Hubungi Admin via WhatsApp &rarr;
@@ -131,11 +155,11 @@ function LoginContent() {
             {/* Login Card */}
             <div className="bg-[#1A1A1A] border border-white/5 rounded-[2.5rem] p-8 shadow-2xl backdrop-blur-sm relative overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#ca1f3d] to-[#ffbe00]"></div>
-                
+
                 {/* Google Login */}
                 <div className="mb-8">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 text-center">Metode Cepat</p>
-                    <Button 
+                    <Button
                         onClick={handleGoogleLogin}
                         disabled={isLoading}
                         className="w-full h-14 bg-white text-black hover:bg-gray-200 font-bold rounded-xl flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg"
@@ -167,6 +191,7 @@ function LoginContent() {
                                 maxLength={1}
                                 value={digit}
                                 onChange={(e) => handlePinChange(i, e.target.value)}
+                                onKeyDown={(e) => handleKeyDown(i, e)}
                                 className="w-12 h-14 text-center text-2xl font-black bg-[#121212] border-white/10 rounded-xl focus:border-[#ffbe00] focus:ring-1 focus:ring-[#ffbe00] text-white"
                             />
                         ))}
@@ -174,7 +199,7 @@ function LoginContent() {
                 </div>
             </div>
 
-            <p className="text-center text-[10px] font-bold text-gray-600 mt-8 uppercase tracking-widest">&copy; 2026 BadminTour</p>
+            <p className="text-center text-[10px] font-bold text-gray-600 mt-8 uppercase tracking-widest">&copy; {new Date().getFullYear()} BadminTour</p>
         </div>
     );
 }
@@ -184,7 +209,7 @@ export default function LoginPage() {
         <main className="min-h-screen w-full flex items-center justify-center bg-[#121212] relative overflow-hidden font-sans text-white p-4">
             <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-[#ca1f3d]/10 rounded-full blur-[100px] pointer-events-none"></div>
             <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-[#ffbe00]/10 rounded-full blur-[100px] pointer-events-none"></div>
-            
+
             <Suspense fallback={<div>Loading...</div>}>
                 <LoginContent />
             </Suspense>

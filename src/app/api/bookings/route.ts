@@ -17,7 +17,7 @@ export async function POST(req: Request) {
         const eventRef = db.collection("events").doc(eventId);
         const eventDoc = await eventRef.get();
         if (!eventDoc.exists) return NextResponse.json({ error: "Event tidak ditemukan" }, { status: 404 });
-        
+
         const eventData = eventDoc.data();
         if ((eventData?.bookedSlot || 0) >= eventData?.quota) {
             return NextResponse.json({ error: "Kuota Penuh" }, { status: 400 });
@@ -39,31 +39,76 @@ export async function POST(req: Request) {
             };
             loggerDetails = `Member ${session.user.name} booking event`;
         } else {
-            // SCENARIO GUEST
+            // SCENARIO GUEST OR UNLOGGED MEMBER
             if (!guestName || !guestPhone) {
                 return NextResponse.json({ error: "Nama dan No. WhatsApp wajib diisi" }, { status: 400 });
             }
-            participantData = {
-                guestName: guestName,
-                guestPhone: guestPhone,
-                type: 'guest'
-            };
-            loggerDetails = `Guest ${guestName} (${guestPhone}) booking event`;
+
+            // Cek apakah No. HP ini terdaftar sebagai Member
+            const userCheckSnapshot = await db.collection("users").where("phone", "==", guestPhone).limit(1).get();
+
+            if (!userCheckSnapshot.empty) {
+                // LINK TO EXISTING MEMBER ACCOUNT
+                const userDoc = userCheckSnapshot.docs[0];
+                const userData = userDoc.data();
+
+                participantData = {
+                    userId: userDoc.id,
+                    userName: userData.name || guestName,
+                    userEmail: userData.email,
+                    userImage: userData.image,
+                    userRole: userData.role || 'member',
+                    type: 'member', // Treated as member
+                    guestPhone: guestPhone // Keep phone for reference
+                };
+                loggerDetails = `Member ${userData.name} (via Guest Form) booking event`;
+            } else {
+                // PURE GUEST
+                participantData = {
+                    guestName: guestName,
+                    guestPhone: guestPhone,
+                    type: 'guest'
+                };
+                loggerDetails = `Guest ${guestName} (${guestPhone}) booking event`;
+            }
+        }
+
+        // 2.5. CEK DUPLIKASI (Anti Double Booking)
+        // Cek apakah user/guest ini sudah terdaftar di event ID ini
+        // 2.5. CEK DUPLIKASI (Anti Double Booking)
+        // Cek apakah user/guest ini sudah terdaftar di event ID ini (Active Only)
+        const existingBookingsSnapshot = await db.collection("bookings")
+            .where("eventId", "==", eventId)
+            .where(session ? "userId" : "guestPhone", "==", session ? session.user.id : (guestPhone || ''))
+            .get();
+
+        const hasActiveBooking = existingBookingsSnapshot.docs.some(doc => doc.data().status !== 'cancelled');
+
+        if (hasActiveBooking) {
+            return NextResponse.json({
+                error: session ? "Anda sudah terdaftar di event ini." : "Nomor WhatsApp ini sudah terdaftar di event ini."
+            }, { status: 400 });
         }
 
         // 3. Simpan Booking (Atomic Transaction)
         const bookingRef = await db.runTransaction(async (t) => {
             const freshEventDoc = await t.get(eventRef);
             const currentBooked = freshEventDoc.data()?.bookedSlot || 0;
-            
+
             if (currentBooked >= freshEventDoc.data()?.quota) {
                 throw new Error("Kuota Penuh");
             }
+
+            // Generate Custom Booking Code (e.g. BT-MAB-9X8Y)
+            const cleanTitle = (eventData?.title || 'EVENT').replace(/[^a-zA-Z0-9]/g, '').toUpperCase().substring(0, 3);
+            const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+            const bookingCode = `BT-${cleanTitle}-${randomSuffix}`;
 
             // Create Booking Doc
             const newBookingRef = db.collection("bookings").doc();
             t.set(newBookingRef, {
                 id: newBookingRef.id,
+                bookingCode: bookingCode, // New readable ID
                 eventId,
                 eventTitle: eventData?.title,
                 eventDate: eventData?.date,
@@ -80,7 +125,7 @@ export async function POST(req: Request) {
                 bookedSlot: FieldValue.increment(1)
             });
 
-            return newBookingRef;
+            return { id: newBookingRef.id, code: bookingCode };
         });
 
         // 4. Log Activity
@@ -94,7 +139,7 @@ export async function POST(req: Request) {
             details: loggerDetails
         });
 
-        return NextResponse.json({ success: true, bookingId: bookingRef.id, isGuest: !session });
+        return NextResponse.json({ success: true, bookingId: bookingRef.id, bookingCode: bookingRef.code, isGuest: !session });
 
     } catch (error: any) {
         return NextResponse.json({ error: error.message || "Gagal booking" }, { status: 500 });
@@ -130,9 +175,9 @@ export async function GET(req: Request) {
                 price: data.price
             }
         });
-        
-        return NextResponse.json({ 
-            success: true, 
+
+        return NextResponse.json({
+            success: true,
             data: bookings
         });
     } catch (error) {

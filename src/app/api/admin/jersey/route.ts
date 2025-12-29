@@ -26,19 +26,27 @@ export async function GET() {
 
 // Endpoint untuk update status (Opsional, untuk fitur dropdown action di admin)
 export async function PUT(req: Request) {
-    try {
-        const session = await getServerSession(authOptions);
-        if (!["admin", "superadmin"].includes(session?.user?.role as string)) {
-             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-        }
-        
-        const body = await req.json();
-        await db.collection("jersey_orders").doc(body.id).update({
-            status: body.status
-        });
-
-        return NextResponse.json({ success: true });
-    } catch (error) {
-        return NextResponse.json({ error: "Update failed" }, { status: 500 });
+  try {
+    const session = await getServerSession(authOptions);
+    if (!["admin", "superadmin"].includes(session?.user?.role as string)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
+
+    const body = await req.json();
+
+    // Prepare update data dynamic
+    const updateData: any = {};
+    if (body.status) updateData.status = body.status;
+    if (body.fullName) updateData.fullName = body.fullName;
+    if (body.senderName) updateData.senderName = body.senderName; // Support legacy field
+    if (body.backName) updateData.backName = body.backName;
+    if (body.size) updateData.size = body.size;
+    if (body.senderPhone) updateData.senderPhone = body.senderPhone;
+
+    await db.collection("jersey_orders").doc(body.id).update(updateData);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: "Update failed" }, { status: 500 });
+  }
 }

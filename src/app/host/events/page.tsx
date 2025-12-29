@@ -2,28 +2,29 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { 
-    CalendarDays, 
-    Plus, 
-    Search, 
-    MapPin, 
-    Users, 
-    Clock, 
-    MoreHorizontal, 
-    Trash2, 
-    Dumbbell, 
+import {
+    CalendarDays,
+    Plus,
+    Search,
+    MapPin,
+    Users,
+    Clock,
+    MoreHorizontal,
+    Trash2,
+    Dumbbell,
     Trophy,
-    Loader2
+    Loader2,
+    Pencil
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
 
@@ -67,7 +68,7 @@ export default function HostEventsPage() {
         }
     }
 
-    const filteredEvents = events.filter(event => 
+    const filteredEvents = events.filter(event =>
         event.title.toLowerCase().includes(search.toLowerCase()) ||
         event.location.toLowerCase().includes(search.toLowerCase())
     );
@@ -82,12 +83,12 @@ export default function HostEventsPage() {
                     </h1>
                     <p className="text-gray-400">Daftar kegiatan yang Anda kelola.</p>
                 </div>
-                
+
                 <div className="flex w-full md:w-auto gap-3">
                     <div className="relative flex-1 md:w-64">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                        <Input 
-                            placeholder="Cari event..." 
+                        <Input
+                            placeholder="Cari event..."
                             className="pl-10 bg-[#151515] border-white/10 text-white rounded-xl focus:border-[#ffbe00]"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
@@ -111,28 +112,39 @@ export default function HostEventsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredEvents.map((event) => (
                         <Card key={event.id} className="bg-[#151515] border border-white/5 p-6 rounded-[2rem] group hover:border-[#ffbe00]/30 transition-all relative overflow-hidden shadow-lg">
-                            
+
                             {/* Badges & Menu */}
                             <div className="flex justify-between items-start mb-4">
                                 <Badge className={`
                                     text-[10px] font-bold uppercase tracking-wider border-0 px-3 py-1
-                                    ${event.type === 'drilling' 
-                                        ? 'bg-[#00f2ea]/10 text-[#00f2ea] border border-[#00f2ea]/20' 
+                                    ${event.type === 'drilling'
+                                        ? 'bg-[#00f2ea]/10 text-[#00f2ea] border border-[#00f2ea]/20'
                                         : (event.type === 'tournament' ? 'bg-purple-500/10 text-purple-500 border border-purple-500/20' : 'bg-[#ffbe00]/10 text-[#ffbe00] border border-[#ffbe00]/20')
                                     }
                                 `}>
-                                    {event.type === 'drilling' ? <Dumbbell className="w-3 h-3 mr-1"/> : <Trophy className="w-3 h-3 mr-1"/>}
+                                    {event.type === 'drilling' ? <Dumbbell className="w-3 h-3 mr-1" /> : <Trophy className="w-3 h-3 mr-1" />}
                                     {event.type === 'drilling' ? 'Drilling' : (event.type === 'tournament' ? 'Turnamen' : 'Mabar')}
                                 </Badge>
-                                
+
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full">
                                             <MoreHorizontal className="w-4 h-4" />
                                         </Button>
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="bg-[#1A1A1A] border-white/10 text-white">
-                                        <DropdownMenuItem className="text-red-500 cursor-pointer focus:bg-white/5" onClick={() => handleDelete(event.id)}>
+                                    <DropdownMenuContent align="end" className="bg-[#1A1A1A] border-white/10 text-white min-w-[150px]">
+                                        <DropdownMenuItem asChild>
+                                            <Link href={`/host/events/${event.id}`} className="w-full cursor-pointer flex items-center focus:bg-white/5 focus:text-[#ffbe00]">
+                                                <Users className="w-4 h-4 mr-2" /> Lihat Peserta
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild>
+                                            <Link href={`/host/events/${event.id}/edit`} className="w-full cursor-pointer flex items-center focus:bg-white/5 focus:text-[#ffbe00]">
+                                                {/* Use Pencil Icon */}
+                                                <Pencil className="w-4 h-4 mr-2" /> Edit Event
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem className="text-red-500 cursor-pointer focus:bg-red-500/10 focus:text-red-500" onClick={() => handleDelete(event.id)}>
                                             <Trash2 className="w-4 h-4 mr-2" /> Hapus
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -149,7 +161,7 @@ export default function HostEventsPage() {
                                         <p className="text-xs text-[#00f2ea] font-bold mt-1">Coach: {event.coachName}</p>
                                     )}
                                 </div>
-                                
+
                                 <div className="space-y-2 pt-2 border-t border-white/5">
                                     <div className="flex items-center gap-3 text-sm text-gray-400">
                                         <CalendarDays className="w-4 h-4 text-[#ca1f3d]" />

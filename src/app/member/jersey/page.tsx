@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import QRCode from "react-qr-code";
 import Link from 'next/link';
+import { FeedbackModal } from '@/components/ui/feedback-modal';
 
 export default function MemberJerseyPage() {
     const { data: session } = useSession();
@@ -374,53 +375,28 @@ export default function MemberJerseyPage() {
             </Dialog>
 
             {/* MODAL ERROR DUPLICATE (RED CARD THEME) */}
-            <div className={cn(
-                "fixed inset-0 bg-black/95 backdrop-blur-md z-[80] flex items-center justify-center p-6 text-center transition-all duration-500",
-                isDuplicateError ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
-            )}>
-                <div className="relative w-full max-w-md">
-                    {/* Background Effects */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[#ca1f3d]/20 blur-[100px] rounded-full animate-pulse"></div>
-
-                    <Card className="relative bg-[#151515] border-[#ca1f3d]/50 border-2 p-8 rounded-[2.5rem] overflow-hidden shadow-[0_0_50px_rgba(202,31,61,0.3)]">
-                        {/* Red Card Visual */}
-                        <div className="absolute top-0 right-0 p-4 opacity-20">
-                            <TriangleAlert className="w-32 h-32 text-[#ca1f3d]" />
-                        </div>
-
-                        <div className="relative z-10 flex flex-col items-center">
-                            <div className="w-20 h-20 bg-[#ca1f3d]/20 rounded-full flex items-center justify-center mb-6 animate-bounce border border-[#ca1f3d]">
-                                <TriangleAlert className="w-10 h-10 text-[#ca1f3d]" strokeWidth={2.5} />
-                            </div>
-
-                            <h2 className="text-4xl font-black text-white italic tracking-tighter mb-2 uppercase">Double Fault!</h2>
-                            <div className="h-1 w-16 bg-[#ca1f3d] rounded-full mb-6"></div>
-
-                            <p className="text-gray-300 text-sm font-medium leading-relaxed mb-8">
-                                Ops! Nomor WhatsApp <span className="text-white font-bold underline decoration-[#ffbe00]">{whatsAppNumber}</span> sudah mengamankan jersey.
-                                <br /><br />
-                                <span className="text-xs text-gray-500 uppercase tracking-widest font-bold">1 Nomor = 1 Jersey Official</span>
-                            </p>
-
-                            <div className="w-full space-y-3">
-                                <Button
-                                    onClick={() => setIsDuplicateError(false)}
-                                    className="w-full bg-[#ca1f3d] hover:bg-[#a01830] text-white py-6 rounded-2xl font-black text-lg shadow-[0_4px_20px_rgba(202,31,61,0.4)] transition-all transform hover:scale-[1.02]"
-                                >
-                                    COBA NOMOR LAIN
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    onClick={() => window.location.reload()}
-                                    className="w-full text-gray-500 hover:text-white py-4 font-bold text-sm"
-                                >
-                                    Batalkan
-                                </Button>
-                            </div>
-                        </div>
-                    </Card>
-                </div>
-            </div>
+            {/* MODAL FEEDBACK STANDARDIZED */}
+            <FeedbackModal
+                isOpen={isDuplicateError}
+                onClose={() => setIsDuplicateError(false)}
+                type="error"
+                title="Double Fault!"
+                description={
+                    <span>
+                        Ops! Nomor WhatsApp <span className="text-white font-bold underline decoration-[#ffbe00]">{whatsAppNumber}</span> sudah mengamankan jersey.
+                        <br /><br />
+                        <span className="text-xs text-gray-500 uppercase tracking-widest font-bold">1 Nomor = 1 Jersey Official</span>
+                    </span>
+                }
+                primaryAction={{
+                    label: "COBA NOMOR LAIN",
+                    onClick: () => setIsDuplicateError(false)
+                }}
+                secondaryAction={{
+                    label: "Batalkan",
+                    onClick: () => window.location.reload()
+                }}
+            />
 
             {/* MODAL SIZE CHART */}
             <Dialog open={isSizeChartOpen} onOpenChange={setIsSizeChartOpen}>
