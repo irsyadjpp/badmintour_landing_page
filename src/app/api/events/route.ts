@@ -29,11 +29,12 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        
+
         // Destructure data termasuk field baru: type & coachName
-        const { 
-            title, date, time, location, price, quota, 
-            description, type, coachName 
+        const {
+            title, date, time, location, price, quota,
+            description, type, coachName,
+            externalLink, organizer
         } = body;
 
         // Validasi dasar
@@ -53,6 +54,9 @@ export async function POST(req: Request) {
             // Field Penting untuk Drilling:
             type: type || "mabar", // 'mabar' | 'drilling' | 'tournament'
             coachName: coachName || "", // Hanya terisi jika type == 'drilling'
+            // Field untuk Tournament Eksternal
+            externalLink: externalLink || "",
+            organizer: organizer || "",
             hostId: session.user.id,
             createdAt: new Date().toISOString(),
             status: 'open'

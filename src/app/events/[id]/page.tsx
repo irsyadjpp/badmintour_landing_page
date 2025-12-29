@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { 
-    MapPin, 
-    Calendar, 
-    Clock, 
-    Ticket, 
-    ArrowRight, 
-    Loader2, 
-    Smartphone, 
+import {
+    MapPin,
+    Calendar,
+    Clock,
+    Ticket,
+    ArrowRight,
+    Loader2,
+    Smartphone,
     User,
     Trophy,
     Dumbbell
@@ -25,11 +25,11 @@ export default function PublicEventPage() {
     const params = useParams();
     const router = useRouter();
     const { toast } = useToast();
-    
+
     const [event, setEvent] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    
+
     // Guest Form State
     const [guestName, setGuestName] = useState('');
     const [guestPhone, setGuestPhone] = useState('');
@@ -39,10 +39,10 @@ export default function PublicEventPage() {
         const fetchEvent = async () => {
             try {
                 // Fetch public event data
-                const res = await fetch('/api/events'); 
+                const res = await fetch('/api/events');
                 const data = await res.json();
                 if (data.data) {
-                    const found = data.data.find((e:any) => e.id === params.id);
+                    const found = data.data.find((e: any) => e.id === params.id);
                     setEvent(found);
                 }
             } catch (e) {
@@ -94,15 +94,20 @@ export default function PublicEventPage() {
 
     const isFull = (event.bookedSlot || 0) >= event.quota;
     const isDrilling = event.type === 'drilling';
-    const accentColor = isDrilling ? 'text-[#00f2ea]' : 'text-[#ca1f3d]';
-    const accentBg = isDrilling ? 'bg-[#00f2ea]' : 'bg-[#ca1f3d]';
+    const isTournament = event.type === 'tournament';
+
+    // Theme Colors
+    const accentColor = isTournament ? 'text-purple-500' : (isDrilling ? 'text-[#00f2ea]' : 'text-[#ca1f3d]');
+    const accentBg = isTournament ? 'bg-purple-600' : (isDrilling ? 'bg-[#00f2ea]' : 'bg-[#ca1f3d]');
+    const accentBorder = isTournament ? 'border-purple-500/20' : (isDrilling ? 'border-[#00f2ea]/20' : 'border-[#ca1f3d]/20');
+    const badgeBg = isTournament ? 'bg-purple-500/10' : (isDrilling ? 'bg-[#00f2ea]/10' : 'bg-[#ca1f3d]/10');
 
     return (
         <div className="min-h-screen bg-[#050505] text-white selection:bg-[#ca1f3d] selection:text-white font-sans overflow-hidden relative">
-            
+
             {/* Background Effects */}
             <div className={`fixed top-[-20%] left-[-10%] w-[500px] h-[500px] ${accentBg} opacity-20 blur-[150px] rounded-full pointer-events-none`}></div>
-            <div className="fixed bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-purple-600 opacity-10 blur-[150px] rounded-full pointer-events-none"></div>
+            <div className="fixed bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-blue-600 opacity-10 blur-[150px] rounded-full pointer-events-none"></div>
 
             {/* Navbar Simple */}
             <nav className="absolute top-0 w-full p-6 z-50 flex justify-between items-center max-w-7xl mx-auto left-0 right-0">
@@ -116,21 +121,21 @@ export default function PublicEventPage() {
 
             <div className="container mx-auto px-4 min-h-screen flex items-center justify-center py-20 relative z-10">
                 <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                    
+
                     {/* LEFT SIDE: Event Info (Typographic & Visual) */}
                     <div className="lg:col-span-7 space-y-8">
                         <div>
-                            <Badge className={`mb-4 px-4 py-2 text-xs font-bold uppercase tracking-widest ${isDrilling ? 'bg-[#00f2ea]/10 text-[#00f2ea] border-[#00f2ea]/20' : 'bg-[#ca1f3d]/10 text-[#ca1f3d] border-[#ca1f3d]/20'} backdrop-blur-md`}>
-                                {isDrilling ? <Dumbbell className="w-3 h-3 mr-2"/> : <Trophy className="w-3 h-3 mr-2"/>}
-                                {isDrilling ? 'Drilling Session' : 'Fun Match'}
+                            <Badge className={`mb-4 px-4 py-2 text-xs font-bold uppercase tracking-widest ${badgeBg} ${accentColor} ${accentBorder} backdrop-blur-md`}>
+                                {isDrilling ? <Dumbbell className="w-3 h-3 mr-2" /> : isTournament ? <Trophy className="w-3 h-3 mr-2" /> : <Trophy className="w-3 h-3 mr-2" />}
+                                {isDrilling ? 'Drilling Session' : isTournament ? 'External Tournament' : 'Fun Match'}
                             </Badge>
-                            
+
                             <h1 className="text-5xl md:text-7xl font-black uppercase leading-[0.9] tracking-tighter mb-4">
                                 {event.title}
                             </h1>
-                            
+
                             <p className="text-xl text-gray-400 max-w-md leading-relaxed">
-                                Join the game. Level up your skills. Connect with the community.
+                                {isTournament ? "Compete with the best. Show your skills." : "Join the game. Level up your skills. Connect with the community."}
                             </p>
                         </div>
 
@@ -162,73 +167,93 @@ export default function PublicEventPage() {
                         </div>
                     </div>
 
-                    {/* RIGHT SIDE: Guest Form (Card Float) */}
+                    {/* RIGHT SIDE: Guest Form (Card Float) OR External Link */}
                     <div className="lg:col-span-5">
                         <Card className="bg-[#101010]/80 backdrop-blur-2xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
                             {/* Decorative Top Line */}
                             <div className={`absolute top-0 left-0 w-full h-2 ${accentBg}`}></div>
 
-                            <div className="mb-8">
-                                <h2 className="text-2xl font-black text-white mb-1">Guest Access</h2>
-                                <p className="text-gray-500 text-sm">Secure your slot instantly without login.</p>
-                            </div>
+                            {isTournament ? (
+                                // TAMPILAN KHUSUS TOURNAMENT (LINK EKSTERNAL)
+                                <div className="text-center py-8">
+                                    <Trophy className={`w-20 h-20 ${accentColor} mx-auto mb-6 animate-bounce`} />
+                                    <h2 className="text-2xl font-black text-white mb-2">External Registration</h2>
+                                    <p className="text-gray-500 text-sm mb-8">Event ini diselenggarakan oleh pihak eksternal.</p>
 
-                            <form onSubmit={handleGuestBooking} className="space-y-6">
-                                <div className="space-y-2 group">
-                                    <Label className="text-xs font-bold text-gray-500 uppercase tracking-wider group-focus-within:text-white transition-colors">Full Name</Label>
-                                    <div className="relative">
-                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-white transition-colors" />
-                                        <Input 
-                                            required
-                                            value={guestName}
-                                            onChange={(e) => setGuestName(e.target.value)}
-                                            placeholder="Enter your name"
-                                            className="h-14 pl-12 bg-white/5 border-white/10 rounded-2xl text-white placeholder:text-gray-600 focus:border-white/30 focus:bg-white/10 focus:ring-0 transition-all"
-                                        />
-                                    </div>
+                                    <Button
+                                        onClick={() => event.externalLink ? window.open(event.externalLink, '_blank') : alert('Link tidak tersedia')}
+                                        className={`w-full h-16 rounded-2xl text-lg font-black text-white ${accentBg} hover:brightness-110 shadow-lg transition-all`}
+                                    >
+                                        DAFTAR WEBSITE RESMI <ArrowRight className="w-5 h-5 ml-2" />
+                                    </Button>
+                                    <p className="text-[10px] text-gray-600 mt-4">Anda akan diarahkan ke website penyelenggara.</p>
                                 </div>
-
-                                <div className="space-y-2 group">
-                                    <Label className="text-xs font-bold text-gray-500 uppercase tracking-wider group-focus-within:text-white transition-colors">WhatsApp Number</Label>
-                                    <div className="relative">
-                                        <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-white transition-colors" />
-                                        <Input 
-                                            required
-                                            type="tel"
-                                            value={guestPhone}
-                                            onChange={(e) => setGuestPhone(e.target.value)}
-                                            placeholder="08xxxxxxxxxx"
-                                            className="h-14 pl-12 bg-white/5 border-white/10 rounded-2xl text-white placeholder:text-gray-600 focus:border-white/30 focus:bg-white/10 focus:ring-0 transition-all"
-                                        />
+                            ) : (
+                                // FORM GUEST MABAR / DRILLING
+                                <>
+                                    <div className="mb-8">
+                                        <h2 className="text-2xl font-black text-white mb-1">Guest Access</h2>
+                                        <p className="text-gray-500 text-sm">Secure your slot instantly without login.</p>
                                     </div>
-                                </div>
 
-                                <div className="pt-4">
-                                    {isFull ? (
-                                        <Button disabled className="w-full h-16 rounded-2xl bg-white/5 text-gray-500 font-bold border border-white/5 uppercase tracking-widest cursor-not-allowed">
-                                            Sold Out
-                                        </Button>
-                                    ) : (
-                                        <Button 
-                                            type="submit" 
-                                            disabled={submitting}
-                                            className={`w-full h-16 rounded-2xl text-lg font-black text-black ${accentBg} hover:brightness-110 shadow-[0_0_30px_-5px_rgba(202,31,61,0.5)] transition-all transform hover:scale-[1.02] active:scale-[0.98]`}
-                                        >
-                                            {submitting ? <Loader2 className="animate-spin" /> : (
-                                                <span className="flex items-center gap-2">
-                                                    GET TICKET <ArrowRight className="w-5 h-5" />
-                                                </span>
+                                    <form onSubmit={handleGuestBooking} className="space-y-6">
+                                        <div className="space-y-2 group">
+                                            <Label className="text-xs font-bold text-gray-500 uppercase tracking-wider group-focus-within:text-white transition-colors">Full Name</Label>
+                                            <div className="relative">
+                                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-white transition-colors" />
+                                                <Input
+                                                    required
+                                                    value={guestName}
+                                                    onChange={(e) => setGuestName(e.target.value)}
+                                                    placeholder="Enter your name"
+                                                    className="h-14 pl-12 bg-white/5 border-white/10 rounded-2xl text-white placeholder:text-gray-600 focus:border-white/30 focus:bg-white/10 focus:ring-0 transition-all"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2 group">
+                                            <Label className="text-xs font-bold text-gray-500 uppercase tracking-wider group-focus-within:text-white transition-colors">WhatsApp Number</Label>
+                                            <div className="relative">
+                                                <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-white transition-colors" />
+                                                <Input
+                                                    required
+                                                    type="tel"
+                                                    value={guestPhone}
+                                                    onChange={(e) => setGuestPhone(e.target.value)}
+                                                    placeholder="08xxxxxxxxxx"
+                                                    className="h-14 pl-12 bg-white/5 border-white/10 rounded-2xl text-white placeholder:text-gray-600 focus:border-white/30 focus:bg-white/10 focus:ring-0 transition-all"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-4">
+                                            {isFull ? (
+                                                <Button disabled className="w-full h-16 rounded-2xl bg-white/5 text-gray-500 font-bold border border-white/5 uppercase tracking-widest cursor-not-allowed">
+                                                    Sold Out
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    type="submit"
+                                                    disabled={submitting}
+                                                    className={`w-full h-16 rounded-2xl text-lg font-black text-black ${accentBg} hover:brightness-110 shadow-[0_0_30px_-5px_rgba(202,31,61,0.5)] transition-all transform hover:scale-[1.02] active:scale-[0.98]`}
+                                                >
+                                                    {submitting ? <Loader2 className="animate-spin" /> : (
+                                                        <span className="flex items-center gap-2">
+                                                            GET TICKET <ArrowRight className="w-5 h-5" />
+                                                        </span>
+                                                    )}
+                                                </Button>
                                             )}
-                                        </Button>
-                                    )}
-                                </div>
+                                        </div>
 
-                                <div className="text-center pt-2">
-                                    <p className="text-xs text-gray-600">
-                                        Already a member? <span className="text-white underline font-bold cursor-pointer hover:text-gray-300" onClick={() => router.push('/login')}>Login Here</span>
-                                    </p>
-                                </div>
-                            </form>
+                                        <div className="text-center pt-2">
+                                            <p className="text-xs text-gray-600">
+                                                Already a member? <span className="text-white underline font-bold cursor-pointer hover:text-gray-300" onClick={() => router.push('/login')}>Login Here</span>
+                                            </p>
+                                        </div>
+                                    </form>
+                                </>
+                            )}
                         </Card>
                     </div>
 

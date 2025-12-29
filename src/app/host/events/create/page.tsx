@@ -2,29 +2,40 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarPlus, Save, Loader2, Dumbbell, Users, Trophy, Info, MapPin, Clock, DollarSign, User } from 'lucide-react';
+import { CalendarPlus, Save, Loader2, Dumbbell, Users, Trophy, Info, MapPin, Clock, DollarSign, User, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { Material3DatePickerDialogFinal } from '@/components/ui/material-3-date-picker-dialog';
+import { Material3TimePicker } from '@/components/ui/material-3-time-picker';
+import { Material3Input } from '@/components/ui/material-3-input';
+import { Material3Textarea } from '@/components/ui/material-3-textarea';
+import {
+    Material3Select,
+    Material3SelectTrigger,
+    Material3SelectValue,
+    Material3SelectContent,
+    Material3SelectItem
+} from '@/components/ui/material-3-select';
 
 export default function CreateEventPage() {
     const router = useRouter();
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
-    
+
     // State untuk daftar Coach
     const [coaches, setCoaches] = useState<any[]>([]);
-    
+
+    // State terpisah untuk Date & Time Picker
+    const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+    const [startTime, setStartTime] = useState<string>('');
+    const [endTime, setEndTime] = useState<string>('');
+
     const [formData, setFormData] = useState({
         title: '',
         type: 'mabar',
         coachName: '',
-        date: '',
-        time: '',
         location: '',
         price: '',
         quota: '12',
@@ -47,20 +58,52 @@ export default function CreateEventPage() {
         fetchCoaches();
     }, []);
 
+    // AUTO-SET End Time (Start + 2 Jam)
+    useEffect(() => {
+        if (startTime) {
+            const [h, m] = startTime.split(':').map(Number);
+            let nextH = h + 2;
+            if (nextH >= 24) nextH -= 24;
+
+            const formattedEnd = `${nextH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+            setEndTime(formattedEnd);
+        }
+    }, [startTime]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+
+        // Validasi input manual
+        if (!selectedDate || !startTime || !endTime) {
+            toast({ title: "Data Kurang", description: "Mohon lengkapi tanggal dan waktu kegiatan.", variant: "destructive" });
+            setLoading(false);
+            return;
+        }
+
+        // Clean Price (remove Rp, dots, etc)
+        const cleanPrice = formData.price.replace(/\D/g, '');
+
+        // Format Payload
+        const finalPayload = {
+            ...formData,
+            price: cleanPrice, // Send raw number
+            // Format Date: YYYY-MM-DD (tanpa timezone mess)
+            date: format(selectedDate, 'yyyy-MM-dd'),
+            // Format Time: HH:mm - HH:mm
+            time: `${startTime} - ${endTime}`
+        };
 
         try {
             const res = await fetch('/api/events', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(finalPayload)
             });
 
             if (res.ok) {
                 toast({ title: "Sukses", description: "Jadwal berhasil dibuat!", className: "bg-green-600 text-white" });
-                router.push('/host/events'); 
+                router.push('/host/events');
             } else {
                 throw new Error("Gagal membuat event");
             }
@@ -81,8 +124,8 @@ export default function CreateEventPage() {
                     </h1>
                     <p className="text-gray-400">Isi detail lengkap untuk mempublikasikan jadwal Mabar, Drilling, atau Turnamen.</p>
                 </div>
-                <Button 
-                    variant="ghost" 
+                <Button
+                    variant="ghost"
                     onClick={() => router.back()}
                     className="text-gray-400 hover:text-white"
                 >
@@ -93,82 +136,72 @@ export default function CreateEventPage() {
             {/* Form Full Width */}
             <form onSubmit={handleSubmit} className="w-full">
                 <Card className="bg-[#151515] border border-white/5 p-6 md:p-8 rounded-[2rem] shadow-xl w-full">
-                    
+
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                        
+
                         {/* KOLOM KIRI: Informasi Dasar */}
                         <div className="space-y-6">
                             <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
                                 <Info className="w-5 h-5 text-[#ffbe00]" /> Informasi Utama
                             </h3>
 
-                            <div className="space-y-4">
+                            <div className="space-y-5">
                                 <div className="space-y-2">
-                                    <Label className="text-gray-300">Tipe Kegiatan</Label>
-                                    <Select 
-                                        value={formData.type} 
-                                        onValueChange={(val) => setFormData({...formData, type: val, coachName: ''})}
+                                    <Material3Select
+                                        value={formData.type}
+                                        onValueChange={(val) => setFormData({ ...formData, type: val, coachName: '' })}
                                     >
-                                        <SelectTrigger className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:ring-[#ca1f3d]">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-[#1A1A1A] border-white/10 text-white rounded-xl">
-                                            <SelectItem value="mabar"><span className="flex items-center gap-2"><Users className="w-4 h-4"/> Mabar (Fun Game)</span></SelectItem>
-                                            <SelectItem value="drilling"><span className="flex items-center gap-2"><Dumbbell className="w-4 h-4"/> Drilling / Clinic</span></SelectItem>
-                                            <SelectItem value="tournament"><span className="flex items-center gap-2"><Trophy className="w-4 h-4"/> Turnamen</span></SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                        <Material3SelectTrigger label="Jenis Event" hasValue={!!formData.type}>
+                                            <Material3SelectValue />
+                                        </Material3SelectTrigger>
+                                        <Material3SelectContent>
+                                            <Material3SelectItem value="mabar"><span className="flex items-center gap-2"><Users className="w-4 h-4" /> Mabar (Fun Game)</span></Material3SelectItem>
+                                            <Material3SelectItem value="drilling"><span className="flex items-center gap-2"><Dumbbell className="w-4 h-4" /> Drilling / Clinic</span></Material3SelectItem>
+                                            <Material3SelectItem value="tournament"><span className="flex items-center gap-2"><Trophy className="w-4 h-4" /> Turnamen</span></Material3SelectItem>
+                                        </Material3SelectContent>
+                                    </Material3Select>
                                 </div>
 
                                 {/* LOGIC DROPDOWN COACH */}
                                 {formData.type === 'drilling' && (
                                     <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                                        <Label className="text-[#00f2ea] font-bold">Pilih Coach / Pelatih</Label>
-                                        <Select 
-                                            value={formData.coachName} 
-                                            onValueChange={(val) => setFormData({...formData, coachName: val})}
+                                        <Material3Select
+                                            value={formData.coachName}
+                                            onValueChange={(val) => setFormData({ ...formData, coachName: val })}
                                         >
-                                            <SelectTrigger className="bg-[#0a0a0a] border-[#00f2ea]/50 text-white h-12 rounded-xl focus:ring-[#00f2ea]">
-                                                <SelectValue placeholder="Pilih Pelatih..." />
-                                            </SelectTrigger>
-                                            <SelectContent className="bg-[#1A1A1A] border-white/10 text-white rounded-xl">
+                                            <Material3SelectTrigger label="Pilih Coach" hasValue={!!formData.coachName}>
+                                                <Material3SelectValue placeholder="Siapa pelatihnya?" />
+                                            </Material3SelectTrigger>
+                                            <Material3SelectContent>
                                                 {coaches.length > 0 ? (
                                                     coaches.map((coach) => (
-                                                        <SelectItem key={coach.id} value={coach.name}>
+                                                        <Material3SelectItem key={coach.id} value={coach.name}>
                                                             <span className="flex items-center gap-2">
-                                                                <User className="w-4 h-4 text-[#00f2ea]"/> 
+                                                                <User className="w-4 h-4 text-[#00f2ea]" />
                                                                 {coach.name}
                                                             </span>
-                                                        </SelectItem>
+                                                        </Material3SelectItem>
                                                     ))
                                                 ) : (
                                                     <div className="p-2 text-xs text-gray-500 text-center">Belum ada data Coach</div>
                                                 )}
-                                            </SelectContent>
-                                        </Select>
+                                            </Material3SelectContent>
+                                        </Material3Select>
                                     </div>
                                 )}
 
-                                <div className="space-y-2">
-                                    <Label className="text-gray-300">Judul Kegiatan</Label>
-                                    <Input 
-                                        placeholder="Cth: Mabar Senin Ceria / Drilling Smash" 
-                                        value={formData.title} 
-                                        onChange={(e) => setFormData({...formData, title: e.target.value})} 
-                                        className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl font-bold focus:border-[#ca1f3d] text-lg"
-                                        required
-                                    />
-                                </div>
+                                <Material3Input
+                                    label="Judul Kegiatan"
+                                    value={formData.title}
+                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                    required
+                                />
 
-                                <div className="space-y-2">
-                                    <Label className="text-gray-300">Deskripsi / Catatan</Label>
-                                    <Textarea 
-                                        placeholder="Info tambahan (level permainan, rules, dll)..."
-                                        value={formData.description} 
-                                        onChange={(e) => setFormData({...formData, description: e.target.value})} 
-                                        className="bg-[#0a0a0a] border-white/10 text-white min-h-[150px] rounded-xl focus:border-[#ca1f3d] leading-relaxed"
-                                    />
-                                </div>
+                                <Material3Textarea
+                                    label="Deskripsi / Catatan"
+                                    value={formData.description}
+                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                />
                             </div>
                         </div>
 
@@ -178,83 +211,89 @@ export default function CreateEventPage() {
                                 <MapPin className="w-5 h-5 text-[#ffbe00]" /> Waktu & Lokasi
                             </h3>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-5">
                                 <div className="space-y-2">
-                                    <Label className="text-gray-300">Tanggal</Label>
-                                    <Input 
-                                        type="date"
-                                        value={formData.date} 
-                                        onChange={(e) => setFormData({...formData, date: e.target.value})} 
-                                        className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl [color-scheme:dark] focus:border-[#ca1f3d]"
+                                    {/* Material 3 Date Picker */}
+                                    <Material3DatePickerDialogFinal date={selectedDate} setDate={setSelectedDate} />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <Material3TimePicker
+                                            label="Waktu Mulai"
+                                            value={startTime}
+                                            onChange={setStartTime}
+                                        />
+                                        <Material3TimePicker
+                                            label="Waktu Selesai"
+                                            value={endTime}
+                                            onChange={setEndTime}
+                                        />
+                                    </div>
+                                    {startTime && endTime && (
+                                        <p className="text-[10px] text-right text-[#ca1f3d] font-bold animate-pulse">
+                                            *Pastikan waktu sudah benar!
+                                        </p>
+                                    )}
+                                </div>
+
+                                <Material3Input
+                                    label="Lokasi / Lapangan"
+                                    value={formData.location}
+                                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                    required
+                                />
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Material3Input
+                                        label="Harga (IDR)"
+                                        type="text"
+                                        value={formData.price}
+                                        onChange={(e) => {
+                                            const raw = e.target.value.replace(/\D/g, '');
+                                            if (!raw) {
+                                                setFormData({ ...formData, price: '' });
+                                            } else {
+                                                const formatted = new Intl.NumberFormat('id-ID', {
+                                                    style: 'currency',
+                                                    currency: 'IDR',
+                                                    minimumFractionDigits: 0,
+                                                    maximumFractionDigits: 0
+                                                }).format(Number(raw));
+                                                setFormData({ ...formData, price: formatted });
+                                            }
+                                        }}
+                                        required
+                                    />
+                                    <Material3Input
+                                        label="Slot / Kuota"
+                                        type="number"
+                                        value={formData.quota}
+                                        onChange={(e) => setFormData({ ...formData, quota: e.target.value })}
                                         required
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label className="text-gray-300">Jam Main</Label>
-                                    <div className="relative">
-                                        <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                                        <Input 
-                                            placeholder="19:00 - 22:00"
-                                            value={formData.time} 
-                                            onChange={(e) => setFormData({...formData, time: e.target.value})} 
-                                            className="pl-10 bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]"
-                                            required
-                                        />
-                                    </div>
-                                </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <Label className="text-gray-300">Lokasi GOR</Label>
-                                <Input 
-                                    value={formData.location} 
-                                    onChange={(e) => setFormData({...formData, location: e.target.value})} 
-                                    className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]"
-                                    placeholder="Nama GOR & Nomor Lapangan"
-                                    required
-                                />
-                            </div>
-
-                            <div className="pt-4 border-t border-white/5 mt-4">
-                                <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
-                                    <DollarSign className="w-5 h-5 text-[#ffbe00]" /> Detail Tiket
-                                </h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-gray-300">HTM (Rupiah)</Label>
-                                        <Input 
-                                            type="number"
-                                            value={formData.price} 
-                                            onChange={(e) => setFormData({...formData, price: e.target.value})} 
-                                            className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d] font-mono font-bold text-lg"
-                                            placeholder="0"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-gray-300">Kuota Slot</Label>
-                                        <Input 
-                                            type="number"
-                                            value={formData.quota} 
-                                            onChange={(e) => setFormData({...formData, quota: e.target.value})} 
-                                            className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl focus:border-[#ca1f3d]"
-                                            placeholder="12"
-                                        />
-                                    </div>
-                                </div>
+                            <div className="pt-8">
+                                <Button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full bg-gradient-to-r from-[#ca1f3d] to-[#ffbe00] text-black font-black text-lg h-16 rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(202,31,61,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {loading ? (
+                                        <span className="flex items-center gap-2 text-white">
+                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            MEMPROSES...
+                                        </span>
+                                    ) : (
+                                        <span className="flex items-center gap-2">
+                                            PUBLISH EVENT SEKARANG <ArrowRight className="w-6 h-6" />
+                                        </span>
+                                    )}
+                                </Button>
                             </div>
                         </div>
-                    </div>
-
-                    {/* Footer Action */}
-                    <div className="mt-10 pt-6 border-t border-white/10 flex justify-end">
-                        <Button 
-                            type="submit" 
-                            disabled={loading}
-                            className="w-full md:w-auto px-10 h-14 bg-[#ca1f3d] hover:bg-[#a01830] text-white font-black rounded-xl text-lg shadow-[0_0_20px_rgba(202,31,61,0.3)] transition-all hover:scale-[1.02]"
-                        >
-                            {loading ? <Loader2 className="animate-spin" /> : <><Save className="w-5 h-5 mr-2" /> TERBITKAN JADWAL</>}
-                        </Button>
                     </div>
                 </Card>
             </form>
