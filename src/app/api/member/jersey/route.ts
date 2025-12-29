@@ -29,6 +29,18 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Format Nama Punggung salah (Max 12 Huruf Kapital, A-Z)." }, { status: 400 });
     }
 
+    // CEK DUPLICATE ORDER BY PHONE
+    const existingOrderQuery = await db.collection("jersey_orders")
+      .where("senderPhone", "==", senderPhone)
+      .limit(1)
+      .get();
+
+    if (!existingOrderQuery.empty) {
+        return NextResponse.json({ 
+            error: "Nomor WhatsApp ini sudah digunakan untuk pemesanan. Mohon gunakan nomor lain." 
+        }, { status: 400 });
+    }
+
     // Generate Order ID (Format: JSY-YYYYMMDD-XXXX)
     // Ini penting agar sesuai dengan QR Code generator di frontend
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");

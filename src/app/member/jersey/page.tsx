@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
-import { Ruler, X, Check, Loader2, Lock, RefreshCw, Download, Shirt, ShoppingBag } from 'lucide-react';
+import { Ruler, X, Check, Loader2, Lock, RefreshCw, Download, Shirt, ShoppingBag, TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
@@ -21,7 +21,7 @@ export default function MemberJerseyPage() {
     // STATE
     const [quantity, setQuantity] = useState(1);
     const [selectedSize, setSelectedSize] = useState('L');
-    const [fullName, setFullName] = useState(''); 
+    const [fullName, setFullName] = useState('');
     const [whatsAppNumber, setWhatsAppNumber] = useState('');
     const [nameOption, setNameOption] = useState<'A' | 'B'>('A');
     const [generatedOptions, setGeneratedOptions] = useState({ A: '', B: '' });
@@ -29,6 +29,7 @@ export default function MemberJerseyPage() {
     const [isClaimed, setIsClaimed] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [orderId, setOrderId] = useState('');
+    const [isDuplicateError, setIsDuplicateError] = useState(false);
 
     const basePrice = 150000;
     const totalPrice = useMemo(() => {
@@ -62,7 +63,7 @@ export default function MemberJerseyPage() {
             if (!name) return { A: '', B: '' };
             const cleanName = name.trim().toUpperCase().replace(/[^A-Z\s]/g, '');
             const parts = cleanName.split(/\s+/).filter(p => p.length > 0);
-            
+
             if (parts.length === 0) return { A: '', B: '' };
             if (parts.length === 1) return { A: parts[0], B: parts[0] };
 
@@ -99,8 +100,8 @@ export default function MemberJerseyPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     size: selectedSize,
-                    backName: finalBackName, 
-                    fullName: fullName, 
+                    backName: finalBackName,
+                    fullName: fullName,
                     senderPhone: whatsAppNumber,
                     quantity: quantity
                 })
@@ -114,8 +115,13 @@ export default function MemberJerseyPage() {
             } else {
                 throw new Error(data.error || "Gagal memproses pesanan");
             }
-        } catch (error) {
-            toast({ title: "Error", description: "Terjadi kesalahan saat menyimpan pesanan.", variant: "destructive" });
+        } catch (error: any) {
+            if (error.message && (error.message.includes("sudah digunakan") || error.message.includes("Duplicate"))) {
+                setIsDuplicateError(true);
+            } else {
+                console.error("[MEMBER_JERSEY_ERROR]", error);
+                toast({ title: "Error", description: "Terjadi kesalahan saat menyimpan pesanan.", variant: "destructive" });
+            }
         } finally {
             setIsLoading(false);
         }
@@ -163,12 +169,12 @@ export default function MemberJerseyPage() {
                 const qrBoxSize = 600;
                 const qrBoxX = (canvas.width - qrBoxSize) / 2;
                 const qrBoxY = 600;
-                
+
                 ctx.fillStyle = "#FFFFFF";
                 ctx.fillRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize);
-                
+
                 const padding = 50;
-                ctx.drawImage(qrImg, qrBoxX + padding, qrBoxY + padding, qrBoxSize - (padding*2), qrBoxSize - (padding*2));
+                ctx.drawImage(qrImg, qrBoxX + padding, qrBoxY + padding, qrBoxSize - (padding * 2), qrBoxSize - (padding * 2));
                 URL.revokeObjectURL(url);
 
                 ctx.font = "bold 50px monospace";
@@ -208,40 +214,40 @@ export default function MemberJerseyPage() {
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-                
+
                 {/* LEFT: Product Image (Takes 5 columns) */}
                 <div className="xl:col-span-5">
                     <Card className="bg-[#151515] border-white/5 p-8 rounded-[2rem] relative overflow-hidden group sticky top-24">
-                         {/* Background Effects */}
-                         <div className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] bg-[#ca1f3d]/10 blur-[100px] rounded-full"></div>
-                         <div className="absolute bottom-[-20%] left-[-20%] w-[80%] h-[80%] bg-[#ffbe00]/5 blur-[100px] rounded-full"></div>
-                         
-                         <div className="relative aspect-square z-10 flex items-center justify-center">
-                            <Image 
-                                src="/images/jersey-season-1.png" 
-                                alt="Jersey Preview" 
-                                width={600} 
-                                height={600} 
-                                className="w-full h-full object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-transform duration-500 group-hover:scale-105" 
+                        {/* Background Effects */}
+                        <div className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] bg-[#ca1f3d]/10 blur-[100px] rounded-full"></div>
+                        <div className="absolute bottom-[-20%] left-[-20%] w-[80%] h-[80%] bg-[#ffbe00]/5 blur-[100px] rounded-full"></div>
+
+                        <div className="relative aspect-square z-10 flex items-center justify-center">
+                            <Image
+                                src="/images/jersey-season-1.png"
+                                alt="Jersey Preview"
+                                width={600}
+                                height={600}
+                                className="w-full h-full object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-transform duration-500 group-hover:scale-105"
                                 priority
                             />
                             <div className="absolute top-0 left-0">
                                 <Badge className="bg-[#ffbe00] text-black font-black hover:bg-[#ffbe00] text-xs px-3 py-1">SEASON 1</Badge>
                             </div>
-                         </div>
-                         <div className="mt-8 text-center">
-                             <h3 className="text-2xl font-black text-white">OFFICIAL KIT 2026</h3>
-                             <p className="text-gray-500 text-sm mt-2">Bahan Dri-Fit Premium dengan teknologi penyerapan keringat. Desain eksklusif komunitas Badmintour.</p>
-                         </div>
+                        </div>
+                        <div className="mt-8 text-center">
+                            <h3 className="text-2xl font-black text-white">OFFICIAL KIT 2026</h3>
+                            <p className="text-gray-500 text-sm mt-2">Bahan Dri-Fit Premium dengan teknologi penyerapan keringat. Desain eksklusif komunitas Badmintour.</p>
+                        </div>
                     </Card>
                 </div>
 
                 {/* RIGHT: Form (Takes 7 columns) */}
                 <div className="xl:col-span-7 space-y-6">
-                    
+
                     {/* Price Card */}
                     <Card className="bg-[#1A1A1A] border-white/5 p-6 rounded-[1.5rem] flex flex-col md:flex-row items-center justify-between gap-6">
-                         <div>
+                        <div>
                             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Total Tagihan</p>
                             <div className="flex items-baseline gap-2">
                                 <span className={cn("text-3xl font-black", totalPrice === 0 ? "text-[#ffbe00]" : "text-white")}>
@@ -249,12 +255,12 @@ export default function MemberJerseyPage() {
                                 </span>
                                 {quantity > 1 && <span className="text-xs text-gray-400">(Buy 1 Free 1 Member Promo)</span>}
                             </div>
-                         </div>
-                         <div className="flex items-center bg-black/50 rounded-xl p-1 border border-white/10">
+                        </div>
+                        <div className="flex items-center bg-black/50 rounded-xl p-1 border border-white/10">
                             <button onClick={() => updateQty(-1)} className="w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center text-white font-bold hover:bg-white/10">-</button>
                             <input type="number" value={quantity} readOnly className="w-16 bg-transparent text-center font-black text-xl outline-none text-white" />
                             <button onClick={() => updateQty(1)} className="w-12 h-12 bg-white text-black rounded-lg flex items-center justify-center font-bold hover:bg-gray-200">+</button>
-                         </div>
+                        </div>
                     </Card>
 
                     {/* Form Fields */}
@@ -262,11 +268,11 @@ export default function MemberJerseyPage() {
                         {/* Nama */}
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Nama Lengkap</label>
-                            <input 
-                                type="text" 
-                                value={fullName} 
-                                onChange={e => setFullName(e.target.value.toUpperCase())} 
-                                className="w-full bg-[#1A1A1A] border border-white/10 rounded-xl px-5 py-4 text-white font-bold focus:border-[#ffbe00] focus:ring-1 focus:ring-[#ffbe00] outline-none transition uppercase" 
+                            <input
+                                type="text"
+                                value={fullName}
+                                onChange={e => setFullName(e.target.value.toUpperCase())}
+                                className="w-full bg-[#1A1A1A] border border-white/10 rounded-xl px-5 py-4 text-white font-bold focus:border-[#ffbe00] focus:ring-1 focus:ring-[#ffbe00] outline-none transition uppercase"
                                 placeholder="SESUAI KTP"
                             />
                         </div>
@@ -296,10 +302,10 @@ export default function MemberJerseyPage() {
                             <div className="space-y-2">
                                 <div className="flex justify-between items-end">
                                     <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Ukuran</label>
-                                    <button onClick={() => setIsSizeChartOpen(true)} className="text-[10px] font-bold text-[#ffbe00] hover:underline flex items-center gap-1"><Ruler className="w-3 h-3"/> Size Chart</button>
+                                    <button onClick={() => setIsSizeChartOpen(true)} className="text-[10px] font-bold text-[#ffbe00] hover:underline flex items-center gap-1"><Ruler className="w-3 h-3" /> Size Chart</button>
                                 </div>
-                                <select 
-                                    value={selectedSize} 
+                                <select
+                                    value={selectedSize}
                                     onChange={(e) => setSelectedSize(e.target.value)}
                                     className="w-full bg-[#1A1A1A] border border-white/10 rounded-xl px-4 py-4 text-white font-bold focus:border-[#ffbe00] outline-none appearance-none"
                                 >
@@ -308,19 +314,19 @@ export default function MemberJerseyPage() {
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">WhatsApp</label>
-                                <input 
-                                    type="tel" 
-                                    value={whatsAppNumber} 
-                                    onChange={e => setWhatsAppNumber(e.target.value)} 
-                                    className="w-full bg-[#1A1A1A] border border-white/10 rounded-xl px-5 py-4 text-white font-bold focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none" 
+                                <input
+                                    type="tel"
+                                    value={whatsAppNumber}
+                                    onChange={e => setWhatsAppNumber(e.target.value)}
+                                    className="w-full bg-[#1A1A1A] border border-white/10 rounded-xl px-5 py-4 text-white font-bold focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
                                     placeholder="08..."
                                 />
                             </div>
                         </div>
 
                         {/* Action Button */}
-                        <Button 
-                            onClick={handleClaim} 
+                        <Button
+                            onClick={handleClaim}
                             disabled={isLoading}
                             className="w-full h-16 rounded-[1.2rem] bg-[#ca1f3d] hover:bg-[#a01830] text-white font-black text-xl shadow-lg mt-4"
                         >
@@ -349,10 +355,10 @@ export default function MemberJerseyPage() {
                             )}
                         </div>
                         <p className="font-mono font-bold text-xl tracking-widest mb-6">{orderId}</p>
-                        
+
                         <div className="flex flex-col gap-3 w-full">
-                            <Button 
-                                onClick={handleDownloadQR} 
+                            <Button
+                                onClick={handleDownloadQR}
                                 className="w-full rounded-xl bg-[#ffbe00] text-black hover:bg-yellow-400 font-bold h-12"
                             >
                                 <Download className="w-4 h-4 mr-2" /> Simpan Tiket (Gambar)
@@ -366,6 +372,55 @@ export default function MemberJerseyPage() {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* MODAL ERROR DUPLICATE (RED CARD THEME) */}
+            <div className={cn(
+                "fixed inset-0 bg-black/95 backdrop-blur-md z-[80] flex items-center justify-center p-6 text-center transition-all duration-500",
+                isDuplicateError ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
+            )}>
+                <div className="relative w-full max-w-md">
+                    {/* Background Effects */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[#ca1f3d]/20 blur-[100px] rounded-full animate-pulse"></div>
+
+                    <Card className="relative bg-[#151515] border-[#ca1f3d]/50 border-2 p-8 rounded-[2.5rem] overflow-hidden shadow-[0_0_50px_rgba(202,31,61,0.3)]">
+                        {/* Red Card Visual */}
+                        <div className="absolute top-0 right-0 p-4 opacity-20">
+                            <TriangleAlert className="w-32 h-32 text-[#ca1f3d]" />
+                        </div>
+
+                        <div className="relative z-10 flex flex-col items-center">
+                            <div className="w-20 h-20 bg-[#ca1f3d]/20 rounded-full flex items-center justify-center mb-6 animate-bounce border border-[#ca1f3d]">
+                                <TriangleAlert className="w-10 h-10 text-[#ca1f3d]" strokeWidth={2.5} />
+                            </div>
+
+                            <h2 className="text-4xl font-black text-white italic tracking-tighter mb-2 uppercase">Double Fault!</h2>
+                            <div className="h-1 w-16 bg-[#ca1f3d] rounded-full mb-6"></div>
+
+                            <p className="text-gray-300 text-sm font-medium leading-relaxed mb-8">
+                                Ops! Nomor WhatsApp <span className="text-white font-bold underline decoration-[#ffbe00]">{whatsAppNumber}</span> sudah mengamankan jersey.
+                                <br /><br />
+                                <span className="text-xs text-gray-500 uppercase tracking-widest font-bold">1 Nomor = 1 Jersey Official</span>
+                            </p>
+
+                            <div className="w-full space-y-3">
+                                <Button
+                                    onClick={() => setIsDuplicateError(false)}
+                                    className="w-full bg-[#ca1f3d] hover:bg-[#a01830] text-white py-6 rounded-2xl font-black text-lg shadow-[0_4px_20px_rgba(202,31,61,0.4)] transition-all transform hover:scale-[1.02]"
+                                >
+                                    COBA NOMOR LAIN
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => window.location.reload()}
+                                    className="w-full text-gray-500 hover:text-white py-4 font-bold text-sm"
+                                >
+                                    Batalkan
+                                </Button>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            </div>
 
             {/* MODAL SIZE CHART */}
             <Dialog open={isSizeChartOpen} onOpenChange={setIsSizeChartOpen}>
@@ -386,4 +441,3 @@ export default function MemberJerseyPage() {
     );
 }
 
-    

@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ArrowRight, Ruler, X, Check, Loader2, Lock, RefreshCw, Download } from 'lucide-react'; // Tambah Download
+import { ChevronLeft, ArrowRight, Ruler, X, Check, Loader2, Lock, RefreshCw, Download, TriangleAlert } from 'lucide-react'; // Tambah Download
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import QRCode from "react-qr-code";
@@ -17,7 +17,7 @@ export default function JerseyDropPage() {
     const { toast } = useToast();
     const [quantity, setQuantity] = useState(1);
     const [selectedSize, setSelectedSize] = useState('L');
-    const [fullName, setFullName] = useState(''); 
+    const [fullName, setFullName] = useState('');
     const [whatsAppNumber, setWhatsAppNumber] = useState('');
     const [nameOption, setNameOption] = useState<'A' | 'B'>('A');
     const [generatedOptions, setGeneratedOptions] = useState({ A: '', B: '' });
@@ -25,6 +25,7 @@ export default function JerseyDropPage() {
     const [isClaimed, setIsClaimed] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [orderId, setOrderId] = useState('');
+    const [isDuplicateError, setIsDuplicateError] = useState(false);
 
     // ... (EFFECTS DAN HANDLERS LAIN TETAP SAMA) ...
     // Copy paste logic useEffect generateOptions, totalPrice, updateQty, handleClaim dari kode sebelumnya di sini.
@@ -72,32 +73,37 @@ export default function JerseyDropPage() {
     }, [fullName]);
 
     const handleClaim = async () => {
-         const finalBackName = nameOption === 'A' ? generatedOptions.A : generatedOptions.B;
-         if (!fullName || !finalBackName || !whatsAppNumber) {
-             toast({ title: "Data Kurang", description: "Mohon lengkapi semua data.", variant: "destructive" });
-             return;
-         }
-         setIsLoading(true);
-         try {
-             const res = await fetch('/api/member/jersey', {
-                 method: 'POST',
-                 headers: { 'Content-Type': 'application/json' },
-                 body: JSON.stringify({
-                     size: selectedSize,
-                     backName: finalBackName, 
-                     fullName: fullName, 
-                     senderPhone: whatsAppNumber,
-                     quantity: quantity
-                 })
-             });
-             const data = await res.json();
-             if (res.ok) {
-                 setOrderId(data.orderId);
-                 setIsClaimed(true);
-             } else { throw new Error(data.error); }
-         } catch (error) {
-             toast({ title: "Error", description: "Gagal memproses pesanan.", variant: "destructive" });
-         } finally { setIsLoading(false); }
+        const finalBackName = nameOption === 'A' ? generatedOptions.A : generatedOptions.B;
+        if (!fullName || !finalBackName || !whatsAppNumber) {
+            toast({ title: "Data Kurang", description: "Mohon lengkapi semua data.", variant: "destructive" });
+            return;
+        }
+        setIsLoading(true);
+        try {
+            const res = await fetch('/api/member/jersey', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    size: selectedSize,
+                    backName: finalBackName,
+                    fullName: fullName,
+                    senderPhone: whatsAppNumber,
+                    quantity: quantity
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setOrderId(data.orderId);
+                setIsClaimed(true);
+            } else { throw new Error(data.error); }
+        } catch (error: any) {
+            if (error.message && (error.message.includes("sudah digunakan") || error.message.includes("Duplicate"))) {
+                setIsDuplicateError(true);
+            } else {
+                console.error("[JERSEY_ORDER_ERROR]", error);
+                toast({ title: "Error", description: "Gagal memproses pesanan.", variant: "destructive" });
+            }
+        } finally { setIsLoading(false); }
     };
 
     const toggleSizeChart = () => setIsSizeChartOpen(!isSizeChartOpen);
@@ -157,14 +163,14 @@ export default function JerseyDropPage() {
                 const qrBoxSize = 600;
                 const qrBoxX = (canvas.width - qrBoxSize) / 2;
                 const qrBoxY = 600;
-                
+
                 ctx.fillStyle = "#FFFFFF";
                 ctx.fillRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize);
 
                 // Draw QR Image
                 const padding = 50;
-                ctx.drawImage(qrImg, qrBoxX + padding, qrBoxY + padding, qrBoxSize - (padding*2), qrBoxSize - (padding*2));
-                
+                ctx.drawImage(qrImg, qrBoxX + padding, qrBoxY + padding, qrBoxSize - (padding * 2), qrBoxSize - (padding * 2));
+
                 URL.revokeObjectURL(url);
 
                 // 4. Draw Order ID
@@ -190,7 +196,7 @@ export default function JerseyDropPage() {
     return (
         <>
             {/* ... (HEADER & PREVIEW IMAGE TETAP SAMA) ... */}
-           <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex justify-between items-center pointer-events-none">
+            <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex justify-between items-center pointer-events-none">
                 <Link href="/" className="pointer-events-auto w-12 h-12 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition border border-white/10 text-white">
                     <ChevronLeft className="w-6 h-6" />
                 </Link>
@@ -201,9 +207,9 @@ export default function JerseyDropPage() {
 
             <div className="flex flex-col lg:flex-row min-h-screen bg-[#0a0a0a]">
                 <div className="lg:w-1/2 relative bg-[#121212] flex items-center justify-center p-8 lg:sticky lg:top-0 lg:h-screen overflow-hidden border-b lg:border-b-0 lg:border-r border-white/10">
-                     <div className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] bg-[#ca1f3d]/20 blur-[120px] rounded-full animate-[pulse_8s_infinite]"></div>
-                     <div className="absolute bottom-[-20%] left-[-20%] w-[80%] h-[80%] bg-[#ffbe00]/10 blur-[120px] rounded-full animate-[pulse_10s_infinite]"></div>
-                     <div className="relative w-full max-w-md aspect-square z-10 group perspective-1000">
+                    <div className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] bg-[#ca1f3d]/20 blur-[120px] rounded-full animate-[pulse_8s_infinite]"></div>
+                    <div className="absolute bottom-[-20%] left-[-20%] w-[80%] h-[80%] bg-[#ffbe00]/10 blur-[120px] rounded-full animate-[pulse_10s_infinite]"></div>
+                    <div className="relative w-full max-w-md aspect-square z-10 group perspective-1000">
                         <Image src="/images/jersey-season-1.png" alt="Jersey Preview" width={1000} height={1000} className="w-full h-full object-contain transition-all duration-500 animate-[pulse_4s_cubic-bezier(0.4,0,0.6,1)_infinite] drop-shadow-[0_20px_50px_rgba(255,190,0,0.4)] group-hover:scale-110 group-hover:drop-shadow-[0_30px_70px_rgba(202,31,61,0.5)]" priority />
                         <div className="absolute top-4 left-4 bg-black/60 backdrop-blur border border-white/10 px-4 py-2 rounded-xl z-20">
                             <p className="text-[10px] text-gray-300 uppercase font-bold tracking-widest">Season 1</p>
@@ -216,7 +222,7 @@ export default function JerseyDropPage() {
                 <div className="lg:w-1/2 bg-[#0a0a0a] relative flex flex-col">
                     <div className="flex-1 p-6 md:p-12 lg:p-16 space-y-10 max-w-2xl mx-auto w-full pt-24 lg:pt-16">
                         {/* Judul, Qty, Inputs... (Copy paste kode sebelumnya) */}
-                         <div>
+                        <div>
                             <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none mb-4 text-white">Claim Your <br /><span className="text-[#ffbe00]">Legacy.</span></h1>
                             <div className="flex items-center gap-3">
                                 <span className="bg-green-500/20 text-green-500 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wide border border-green-500/30">Free Claim Available</span>
@@ -224,7 +230,7 @@ export default function JerseyDropPage() {
                         </div>
 
                         {/* ... INPUTS FORM ... (Sama seperti sebelumnya) */}
-                         <div className="bg-[#151515] p-5 rounded-[1.5rem] border border-white/10">
+                        <div className="bg-[#151515] p-5 rounded-[1.5rem] border border-white/10">
                             <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Jumlah Pesanan</label>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center bg-black/30 rounded-xl p-1 border border-white/10">
@@ -240,12 +246,12 @@ export default function JerseyDropPage() {
                             <div className={cn("mt-3 pt-3 border-t border-white/5 text-[11px] font-bold italic", totalPrice === 0 ? "text-green-500" : "text-gray-400")}>{priceNote}</div>
                         </div>
 
-                         <div className="space-y-6">
+                        <div className="space-y-6">
                             <div>
                                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Nama Lengkap (Sesuai KTP)</label>
                                 <input type="text" value={fullName} onChange={e => setFullName(e.target.value.toUpperCase())} placeholder="IRSYAD JAMAL PRATAMA PUTRA" className="w-full bg-[#151515] border border-white/20 rounded-xl px-5 py-4 text-lg font-bold text-white placeholder-gray-600 focus:border-[#ffbe00] focus:ring-1 focus:ring-[#ffbe00] focus:outline-none transition uppercase" />
                             </div>
-                             <div className="bg-[#151515] p-5 rounded-[1.5rem] border border-white/10 space-y-4">
+                            <div className="bg-[#151515] p-5 rounded-[1.5rem] border border-white/10 space-y-4">
                                 <div className="flex justify-between items-center">
                                     <label className="flex items-center gap-2 text-xs font-bold text-[#ffbe00] uppercase tracking-widest"><Lock className="w-3 h-3" /> Pilih Nama Punggung</label>
                                     <RefreshCw className="w-3 h-3 text-gray-500 animate-spin-slow" />
@@ -259,7 +265,7 @@ export default function JerseyDropPage() {
                                     {nameOption === 'B' && <div className="w-6 h-6 rounded-full bg-[#ffbe00] flex items-center justify-center text-black"><Check className="w-4 h-4" /></div>}
                                 </div>
                             </div>
-                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <div className="flex justify-between items-end mb-2">
                                         <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest">Ukuran</label>
@@ -278,7 +284,7 @@ export default function JerseyDropPage() {
 
                         <div className="pt-8 border-t border-white/10 pb-12">
                             <Button onClick={handleClaim} disabled={isLoading} className="w-full bg-white text-black py-5 rounded-[1.5rem] font-black text-xl hover:bg-[#ffbe00] transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,214,10,0.6)] hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 group h-auto disabled:opacity-50 disabled:cursor-not-allowed">
-                                {isLoading ? <Loader2 className="w-6 h-6 animate-spin"/> : <><span>KONFIRMASI PESANAN</span><ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" /></>}
+                                {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <><span>KONFIRMASI PESANAN</span><ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" /></>}
                             </Button>
                         </div>
                     </div>
@@ -298,39 +304,88 @@ export default function JerseyDropPage() {
 
                 {/* --- QR CODE SECTION --- */}
                 <div className="bg-white p-4 rounded-2xl mb-6 shadow-[0_0_50px_rgba(255,255,255,0.2)] relative">
-                     {isClaimed && orderId && (
+                    {isClaimed && orderId && (
                         /* PERUBAHAN: Tambahkan ID agar bisa diambil oleh fungsi canvas */
                         <div className="p-2">
-                             <QRCode
-                                id="qr-code-svg" 
+                            <QRCode
+                                id="qr-code-svg"
                                 size={180}
                                 style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                                 value={orderId}
                                 viewBox={`0 0 256 256`}
                             />
                         </div>
-                     )}
-                     <p className="text-black font-mono font-black text-lg mt-2 tracking-widest">{orderId}</p>
+                    )}
+                    <p className="text-black font-mono font-black text-lg mt-2 tracking-widest">{orderId}</p>
                 </div>
 
                 <div className="flex gap-3">
-                     {/* --- TOMBOL DOWNLOAD BARU --- */}
-                    <Button 
-                        onClick={handleDownloadQR} 
+                    {/* --- TOMBOL DOWNLOAD BARU --- */}
+                    <Button
+                        onClick={handleDownloadQR}
                         className="px-8 py-6 rounded-full bg-[#ffbe00] text-black font-bold text-sm hover:bg-yellow-400 transition uppercase tracking-widest shadow-[0_0_20px_rgba(255,190,0,0.5)]"
                     >
                         <Download className="w-4 h-4 mr-2" /> Simpan Gambar
                     </Button>
-                    
+
                     <Link href="/" className="px-8 py-6 rounded-full border border-white/20 text-white font-bold text-sm hover:bg-white hover:text-black transition uppercase tracking-widest flex items-center">
                         Tutup
                     </Link>
                 </div>
             </div>
 
+            {/* MODAL ERROR DUPLICATE (RED CARD THEME) */}
+            <div className={cn(
+                "fixed inset-0 bg-black/95 backdrop-blur-md z-[80] flex items-center justify-center p-6 text-center transition-all duration-500",
+                isDuplicateError ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
+            )}>
+                <div className="relative w-full max-w-md">
+                    {/* Background Effects */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[#ca1f3d]/20 blur-[100px] rounded-full animate-pulse"></div>
+
+                    <div className="relative bg-[#151515] border-[#ca1f3d]/50 border-2 p-8 rounded-[2.5rem] overflow-hidden shadow-[0_0_50px_rgba(202,31,61,0.3)]">
+                        {/* Red Card Visual */}
+                        <div className="absolute top-0 right-0 p-4 opacity-20">
+                            <TriangleAlert className="w-32 h-32 text-[#ca1f3d]" />
+                        </div>
+
+                        <div className="relative z-10 flex flex-col items-center">
+                            <div className="w-20 h-20 bg-[#ca1f3d]/20 rounded-full flex items-center justify-center mb-6 animate-bounce border border-[#ca1f3d]">
+                                <TriangleAlert className="w-10 h-10 text-[#ca1f3d]" strokeWidth={2.5} />
+                            </div>
+
+                            <h2 className="text-4xl font-black text-white italic tracking-tighter mb-2 uppercase">Double Fault!</h2>
+                            <div className="h-1 w-16 bg-[#ca1f3d] rounded-full mb-6"></div>
+
+                            <p className="text-gray-300 text-sm font-medium leading-relaxed mb-8">
+                                Ops! Nomor WhatsApp <span className="text-white font-bold underline decoration-[#ffbe00]">{whatsAppNumber}</span> sudah mengamankan jersey.
+                                <br /><br />
+                                <span className="text-xs text-gray-500 uppercase tracking-widest font-bold">1 Nomor = 1 Jersey Official</span>
+                            </p>
+
+                            <div className="w-full space-y-3">
+                                <Button
+                                    onClick={() => setIsDuplicateError(false)}
+                                    className="w-full bg-[#ca1f3d] hover:bg-[#a01830] text-white py-6 rounded-2xl font-black text-lg shadow-[0_4px_20px_rgba(202,31,61,0.4)] transition-all transform hover:scale-[1.02]"
+                                >
+                                    COBA NOMOR LAIN
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => window.location.reload()}
+                                    className="w-full text-gray-500 hover:text-white py-4 font-bold text-sm"
+                                >
+                                    Batalkan
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* SIZE CHART MODAL */}
             <div id="sizeChartModal" className={cn("fixed inset-0 z-[60] flex items-center justify-center p-4 transition-opacity duration-300", isSizeChartOpen ? 'opacity-100 visible' : 'opacity-0 invisible')} onClick={toggleSizeChart}>
-               {/* Content Size Chart Sama */}
+                {/* Content Size Chart Sama */}
                 <div className="absolute inset-0 bg-black/90 backdrop-blur-sm"></div>
                 <div className={cn("bg-[#1A1A1A] w-full max-w-sm rounded-[2rem] border border-white/10 shadow-2xl relative z-10 overflow-hidden transform transition-all duration-300", isSizeChartOpen ? 'scale-100' : 'scale-95')} onClick={(e) => e.stopPropagation()}>
                     <div className="bg-[#ffbe00] p-6 flex justify-between items-center">
