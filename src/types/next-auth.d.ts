@@ -1,22 +1,19 @@
+
 import NextAuth, { DefaultSession } from "next-auth";
 
 declare module "next-auth" {
   interface Session {
     user: {
       id: string;
-      role: string;
-      nickname?: string;
-      status?: string;
-      phoneNumber?: string; // Tambahan field
+      role: string; // Role Aktif
+      roles: string[]; // Array Role
     } & DefaultSession["user"];
   }
 
   interface User {
+    id: string;
     role: string;
-    nickname?: string;
-    status?: string;
-    pin?: string;
-    phoneNumber?: string; // Tambahan field
+    roles?: string[];
   }
 }
 
@@ -24,8 +21,6 @@ declare module "next-auth/jwt" {
   interface JWT {
     id: string;
     role: string;
-    nickname?: string; // Tambahan field nickname
-    status?: string;
-    phoneNumber?: string; // Tambahan field
+    roles: string[];
   }
 }

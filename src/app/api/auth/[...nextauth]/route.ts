@@ -1,8 +1,10 @@
+
 import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { db } from "@/lib/firebase-admin";
 import { logActivity } from "@/lib/audit-logger";
+import { getHighestRole } from "@/lib/role-utils";
 
 // --- HELPER FUNCTIONS ---
 
@@ -57,6 +59,7 @@ export const authOptions: NextAuthOptions = {
             email: "superadmin@badmintour.com",
             image: "https://ui-avatars.com/api/?name=Super+Admin&background=ffbe00&color=000",
             role: "superadmin",
+            roles: ["superadmin", "admin", "host", "coach", "member"],
             status: "active"
           };
         }
@@ -84,6 +87,7 @@ export const authOptions: NextAuthOptions = {
                 email: userData.email,
                 image: userData.image,
                 role: userData.role || "member",
+                roles: userData.roles || [userData.role || "member"],
                 status: userData.status,
                 phoneNumber: userData.phoneNumber,
               };
@@ -98,20 +102,34 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   events: {
-    async signIn({ user, account, profile, isNewUser }) {
-      try {
-        await logActivity({
-          userId: user.id,
-          userName: user.name || "No Name",
-          role: (user as any).role || "user",
-          action: 'login',
-          entity: 'Auth',
-          details: `User logged in via ${account?.provider}`
-        });
-      } catch (error) {
-        console.error("Login log error", error);
-      }
-    },
+    async signIn({ user }) {
+        const userRef = db.collection("users").doc(user.id);
+        const doc = await userRef.get();
+        
+        if (doc.exists) {
+            const data = doc.data();
+            const roles = data?.roles || [data?.role || 'member'];
+            
+            // LOGIC HIRARKI TERTINGGI
+            // Saat login, paksa active 'role' menjadi yang tertinggi
+            const highestRole = getHighestRole(roles);
+            
+            await userRef.update({
+                role: highestRole, // Set active role
+                roles: roles, // Pastikan array roles tersimpan
+                lastLogin: new Date().toISOString()
+            });
+
+            await logActivity({
+              userId: user.id,
+              userName: user.name || "No Name",
+              role: (user as any).role || "user", // Casting jika typescript complain
+              action: 'login',
+              entity: 'Auth',
+              details: `User logged in`
+            });
+        }
+    }
   },
   callbacks: {
     async signIn({ user, account }) {
@@ -131,6 +149,7 @@ export const authOptions: NextAuthOptions = {
               email: user.email,
               image: user.image,
               role: "member",
+              roles: ["member"],
               status: "active",
               pin: newPin,
               createdAt: new Date().toISOString(),
@@ -159,43 +178,44 @@ export const authOptions: NextAuthOptions = {
       return true; // Allow PIN login flow
     },
     async jwt({ token, user, trigger, session }) {
-      if (trigger === "update" && session?.name) {
-          token.name = session.name;
-      }
+        // 1. Initial Sign In
+        if (user) {
+            token.id = user.id;
+            // Jika user baru login, kita set defaults sementara
+            token.role = (user as any).role;
+            token.roles = (user as any).roles || [(user as any).role]; 
+        }
 
-      if (user) {
-        token.id = user.id;
-        if (user.role) token.role = user.role;
-        if (user.nickname) token.nickname = user.nickname;
-        if (user.phoneNumber) token.phoneNumber = user.phoneNumber;
-      }
-
-      try {
-        const uid = token.sub || token.id; 
-        if(uid) {
-            const userDoc = await db.collection("users").doc(uid).get();
+        // 2. Fetch Data Real-time dari DB (PENTING untuk Switch Role)
+        // Ini memastikan token selalu sync dengan database saat page reload/session check
+        if (token.id) {
+            const userDoc = await db.collection("users").doc(token.id as string).get();
             if (userDoc.exists) {
                 const userData = userDoc.data();
-                token.role = userData?.role || "member";
-                token.status = userData?.status || "active";
-                token.nickname = userData?.nickname;
-                token.phoneNumber = userData?.phoneNumber || ""; 
+                
+                // Pastikan field 'roles' ada. Jika tidak, pakai 'role' lama dibungkus array
+                const userRoles = userData?.roles || [userData?.role || 'member'];
+                const activeRole = userData?.role || 'member';
+
+                token.roles = userRoles;
+                token.role = activeRole; // Ini role yang sedang AKTIF
             }
         }
-      } catch (error) {
-          console.error("JWT Error:", error);
-      }
-      return token;
+        
+        // 3. Handle Client-side Update (Trigger update session manual)
+        if (trigger === "update" && session?.role) {
+            token.role = session.role;
+        }
+
+        return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
-        (session.user as any).status = token.status;
-        session.user.nickname = token.nickname as string;
-        session.user.phoneNumber = token.phoneNumber as string;
-      }
-      return session;
+        if (session.user) {
+            session.user.id = token.id as string;
+            session.user.role = token.role as string; // Active Role
+            (session.user as any).roles = token.roles as string[]; // Available Roles
+        }
+        return session;
     }
   },
   pages: {

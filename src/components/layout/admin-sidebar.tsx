@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -22,12 +23,13 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import RoleSwitcher from './role-switcher'; // IMPORT RoleSwitcher
 
 const menuItems = [
     { title: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
     { title: "Transactions", href: "/admin/transactions", icon: DollarSign },
     { title: "Reports", href: "/admin/reports", icon: FileSpreadsheet },
-    { title: "Users / Members", href: "/admin/members", icon: Users },
+    { title: "Users / Members", href: "/admin/users", icon: Users },
     { title: "Events Management", href: "/admin/events", icon: Calendar },
     { title: "Tournaments", href: "/admin/tournaments", icon: Trophy },
     { title: "Jersey Orders", href: "/admin/jersey", icon: Shirt },
@@ -69,6 +71,10 @@ export default function AdminSidebar() {
             
             <div className="p-3 mb-6 rounded-2xl bg-[#ca1f3d]/80 text-white shadow-[0_0_15px_rgba(202,31,61,0.5)]">
                  <Trophy className="w-5 h-5" />
+            </div>
+
+            <div className="mb-4">
+              <RoleSwitcher />
             </div>
 
             <nav className="flex-1 flex flex-col gap-4 w-full items-center justify-center">
