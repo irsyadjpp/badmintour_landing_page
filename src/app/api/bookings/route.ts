@@ -1,106 +1,142 @@
+'use server';
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/firebase-admin";
-import { FieldValue } from "firebase-admin/firestore";
 import { logActivity } from "@/lib/audit-logger";
+import { FieldValue } from 'firebase-admin/firestore';
 
 export async function POST(req: Request) {
-  let bookingId = "";
-  let eventTitle = "";
-  try {
-    const session = await getServerSession(authOptions);
-    const body = await req.json();
-    const { eventId, guestName, guestPhone } = body;
+    try {
+        const session = await getServerSession(authOptions);
+        const { eventId, guestName, guestPhone } = await req.json();
 
-    // Tentukan Identitas: Member atau Guest
-    let userId = "guest";
-    let userName = guestName;
-    let userPhone = guestPhone;
-    let userType = "GUEST";
+        if (!eventId) return NextResponse.json({ error: "Event ID wajib diisi" }, { status: 400 });
 
-    if (session?.user?.id) {
-        // Jika Login
-        const userDoc = await db.collection("users").doc(session.user.id).get();
-        const userData = userDoc.data();
+        // 1. Ambil Data Event
+        const eventRef = db.collection("events").doc(eventId);
+        const eventDoc = await eventRef.get();
+        if (!eventDoc.exists) return NextResponse.json({ error: "Event tidak ditemukan" }, { status: 404 });
         
-        userId = session.user.id;
-        userName = session.user.name;
-        userPhone = userData?.phoneNumber || ""; // Ambil HP dari profile jika ada
-        userType = "MEMBER";
-    } else {
-        // Jika Guest (Validasi Wajib)
-        if (!guestName || !guestPhone) {
-            return NextResponse.json({ error: "Nama dan No WA wajib diisi untuk tamu." }, { status: 400 });
-        }
-    }
-
-    const eventRef = db.collection("events").doc(eventId);
-
-    // TRANSAKSI BOOKING
-    await db.runTransaction(async (t) => {
-        const eventDoc = await t.get(eventRef);
-        if (!eventDoc.exists) throw "Event tidak ditemukan";
-
         const eventData = eventDoc.data();
-        eventTitle = eventData?.title || "";
-        
-        if (eventData?.registeredCount >= eventData?.quota) {
-            throw "Slot Penuh";
+        if ((eventData?.bookedSlot || 0) >= eventData?.quota) {
+            return NextResponse.json({ error: "Kuota Penuh" }, { status: 400 });
         }
 
-        // Generate Booking ID
-        // Jika Guest, ID-nya pakai kombinasi Event+HP biar unik dan bisa ditrack
-        const uniqueKey = session?.user?.id || guestPhone; 
-        bookingId = `BK-${eventId}-${uniqueKey.replace(/[^a-zA-Z0-9]/g, "")}`;
+        // 2. Tentukan Data Peserta (Member vs Guest)
+        let participantData = {};
+        let loggerDetails = "";
+
+        if (session) {
+            // SCENARIO MEMBER
+            participantData = {
+                userId: session.user.id,
+                userName: session.user.name,
+                userEmail: session.user.email,
+                userImage: session.user.image,
+                userRole: session.user.role,
+                type: 'member'
+            };
+            loggerDetails = `Member ${session.user.name} booking event`;
+        } else {
+            // SCENARIO GUEST
+            if (!guestName || !guestPhone) {
+                return NextResponse.json({ error: "Nama dan No. WhatsApp wajib diisi" }, { status: 400 });
+            }
+            participantData = {
+                guestName: guestName,
+                guestPhone: guestPhone,
+                type: 'guest'
+            };
+            loggerDetails = `Guest ${guestName} (${guestPhone}) booking event`;
+        }
+
+        // 3. Simpan Booking (Atomic Transaction)
+        const bookingRef = await db.runTransaction(async (t) => {
+            const freshEventDoc = await t.get(eventRef);
+            const currentBooked = freshEventDoc.data()?.bookedSlot || 0;
+            
+            if (currentBooked >= freshEventDoc.data()?.quota) {
+                throw new Error("Kuota Penuh");
+            }
+
+            // Create Booking Doc
+            const newBookingRef = db.collection("bookings").doc();
+            t.set(newBookingRef, {
+                id: newBookingRef.id,
+                eventId,
+                eventTitle: eventData?.title,
+                eventDate: eventData?.date,
+                eventTime: eventData?.time,
+                eventLocation: eventData?.location,
+                price: eventData?.price,
+                status: 'pending_payment', // Default status
+                ...participantData,
+                createdAt: new Date().toISOString()
+            });
+
+            // Update Quota Event (+1)
+            t.update(eventRef, {
+                bookedSlot: FieldValue.increment(1)
+            });
+
+            return newBookingRef;
+        });
+
+        // 4. Log Activity
+        await logActivity({
+            userId: session ? session.user.id : 'guest',
+            userName: session ? (session.user.name || 'Unknown') : (guestName || 'Guest'),
+            role: session ? (session.user.role || 'member') : 'guest',
+            action: 'create',
+            entity: 'Booking',
+            entityId: bookingRef.id,
+            details: loggerDetails
+        });
+
+        return NextResponse.json({ success: true, bookingId: bookingRef.id, isGuest: !session });
+
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message || "Gagal booking" }, { status: 500 });
+    }
+}
+
+export async function GET(req: Request) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    try {
+        // Ambil booking user yang belum lewat tanggalnya (Opsional logic tanggal)
+        // Untuk simpel, ambil booking terakhir
+        const snapshot = await db.collection("bookings")
+            .where("userId", "==", session.user.id)
+            .orderBy("createdAt", "desc")
+            .limit(10) // Ambil 10 booking terakhir
+            .get();
+
+        if (snapshot.empty) {
+            return NextResponse.json({ success: true, data: [] });
+        }
+
+        const bookings = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                event: data.eventTitle,
+                date: data.eventDate,
+                time: data.eventTime,
+                location: data.eventLocation,
+                status: data.status,
+                price: data.price
+            }
+        });
         
-        const bookingRef = db.collection("bookings").doc(bookingId);
-        const bookingDoc = await t.get(bookingRef);
-
-        if (bookingDoc.exists) throw "Anda sudah terdaftar di event ini";
-
-        // Simpan Data Booking
-        t.set(bookingRef, {
-            id: bookingId,
-            eventId,
-            eventTitle: eventData?.title,
-            eventDate: eventData?.date,
-            
-            userId,      // "guest" atau "user_id_asli"
-            userName,
-            phoneNumber: userPhone, // KUNCI PAIRING NANTI
-            type: userType,
-            
-            status: "CONFIRMED",
-            bookedAt: new Date().toISOString(),
-            ticketCode: `TIC-${Date.now()}`.slice(0, 12),
-            attendance: false
+        return NextResponse.json({ 
+            success: true, 
+            data: bookings
         });
-
-        // Update Counter Event
-        t.update(eventRef, {
-            registeredCount: FieldValue.increment(1)
-        });
-    });
-
-    await logActivity({
-      userId: userId,
-      userName: userName,
-      role: session?.user?.role || 'guest',
-      action: 'create',
-      entity: 'Booking',
-      entityId: bookingId,
-      details: `Booking tiket untuk event: ${eventTitle}`
-    });
-
-    return NextResponse.json({ 
-        success: true, 
-        message: session?.user?.id ? "Booking Berhasil!" : "Booking Tamu Berhasil! Silahkan datang tepat waktu.",
-        isGuest: !session?.user?.id
-    });
-
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: error || "Booking Failed" }, { status: 400 });
-  }
+    } catch (error) {
+        console.error("GET Bookings Error: ", error);
+        return NextResponse.json({ error: "Failed to fetch bookings" }, { status: 500 });
+    }
 }
