@@ -15,9 +15,10 @@ import "react-day-picker/style.css";
 interface Material3DatePickerDialogProps {
   date: Date | undefined;
   setDate: (date: Date | undefined) => void;
+  label?: string;
 }
 
-export function Material3DatePickerDialogFinal({ date, setDate }: Material3DatePickerDialogProps) {
+export function Material3DatePickerDialogFinal({ date, setDate, label }: Material3DatePickerDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [tempDate, setTempDate] = React.useState<Date | undefined>(date);
 
@@ -50,7 +51,7 @@ export function Material3DatePickerDialogFinal({ date, setDate }: Material3DateP
           )}
         >
           <div className="flex flex-col items-start gap-0.5 z-10">
-            <span className="text-[10px] uppercase tracking-wider font-bold text-gray-500 group-hover:text-[#ca1f3d] transition-colors">Tanggal Kegiatan</span>
+            <span className="text-[10px] uppercase tracking-wider font-bold text-gray-500 group-hover:text-[#ca1f3d] transition-colors">{label || "Tanggal Kegiatan"}</span>
             <div className="flex items-center gap-2 text-base font-medium text-white">
               <CalendarIcon className="w-4 h-4 text-[#ca1f3d]" />
               {date ? format(date, "EEE, d MMM yyyy", { locale: id }) : <span className="text-gray-500">Pilih Tanggal</span>}

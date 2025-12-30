@@ -111,7 +111,7 @@ export default function AdminEventsPage() {
                             onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
-                    <Link href="/host/events/create">
+                    <Link href="/admin/events/create">
                         {/* Menggunakan Form Create milik Host agar efisien */}
                         <Button className="bg-[#ca1f3d] hover:bg-[#a01830] text-white font-bold rounded-xl h-10 shadow-[0_0_15px_rgba(202,31,61,0.3)]">
                             <Plus className="w-5 h-5 mr-2" /> BUAT BARU

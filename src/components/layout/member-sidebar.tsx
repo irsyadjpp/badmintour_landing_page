@@ -40,8 +40,8 @@ export default function MemberSidebar() {
 
                     {/* Brand */}
                     <Link href="/" className="mb-6 block">
-                        <div className="p-3 rounded-2xl bg-[#0a0a0a] border border-white/10 shadow-[0_0_15px_rgba(0,0,0,0.5)] group-hover:border-[#ffbe00]/30 transition-all duration-300">
-                            <NextImage src="/images/logo-light.png" width={40} height={40} alt="BadminTour" className="w-5 h-auto opacity-80 group-hover:opacity-100 transition-opacity" />
+                        <div className="w-12 h-12 flex items-center justify-center rounded-2xl bg-[#0a0a0a] border border-white/10 shadow-[0_0_15px_rgba(0,0,0,0.5)] group-hover:border-[#ffbe00]/30 transition-all duration-300">
+                            <NextImage src="/images/logo-light.png" width={40} height={40} alt="BadminTour" className="h-5 w-auto opacity-80 group-hover:opacity-100 transition-opacity" />
                         </div>
                     </Link>
 

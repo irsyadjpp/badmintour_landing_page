@@ -413,7 +413,18 @@ export default function PublicEventPage() {
                             <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-5 rounded-3xl hover:bg-white/10 transition-colors">
                                 <Calendar className={`w-6 h-6 ${accentColor} mb-2`} />
                                 <p className="text-xs text-gray-500 uppercase font-bold">Date</p>
-                                <p className="font-bold text-lg">{new Date(event.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</p>
+                                <p className="font-bold text-lg">
+                                    {event.date.includes(' - ') ? (
+                                        (() => {
+                                            const [start, end] = event.date.split(' - ');
+                                            const startDate = new Date(start);
+                                            const endDate = new Date(end);
+                                            return `${startDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`;
+                                        })()
+                                    ) : (
+                                        new Date(event.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+                                    )}
+                                </p>
                             </div>
                             <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-5 rounded-3xl hover:bg-white/10 transition-colors">
                                 <Clock className={`w-6 h-6 ${accentColor} mb-2`} />
@@ -456,6 +467,43 @@ export default function PublicEventPage() {
                                         <div>
                                             <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Materi / Kurikulum</p>
                                             <p className="text-sm text-gray-300 leading-relaxed">{event.curriculum}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Tournament Specific Details */}
+                        {isTournament && (
+                            <div className="mt-4 bg-purple-500/5 p-5 rounded-3xl border border-purple-500/20 space-y-5">
+                                <div className="flex items-center gap-2 mb-2 border-b border-purple-500/20 pb-2">
+                                    <Trophy className="w-5 h-5 text-purple-500" />
+                                    <span className="text-xs font-bold text-purple-500 uppercase tracking-wider">Tournament Info</span>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {event.organizer && (
+                                        <div className="col-span-2 md:col-span-1">
+                                            <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Penyelenggara</p>
+                                            <p className="text-white font-bold text-lg">{event.organizer}</p>
+                                        </div>
+                                    )}
+                                    {event.playerCriteria && (
+                                        <div className="col-span-2 md:col-span-1">
+                                            <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Kriteria Peserta</p>
+                                            <Badge variant="outline" className="border-purple-500 text-purple-500 bg-purple-500/10">
+                                                {event.playerCriteria}
+                                            </Badge>
+                                        </div>
+                                    )}
+                                    {event.prizes && (
+                                        <div className="col-span-2 bg-[#ffbe00]/5 p-4 rounded-xl border border-[#ffbe00]/20">
+                                            <p className="text-[10px] text-[#ffbe00] uppercase font-bold mb-2 flex items-center gap-2">
+                                                <Trophy className="w-3 h-3" /> Hadiah / Prize Pool
+                                            </p>
+                                            <p className="text-white font-bold whitespace-pre-wrap leading-relaxed">
+                                                {event.prizes}
+                                            </p>
                                         </div>
                                     )}
                                 </div>

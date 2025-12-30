@@ -46,13 +46,40 @@ export async function GET() {
       return dateB - dateA;
     });
 
+    // Fetch User Nicknames (for top 5)
+    // We only need aliases for the displayed items to save reads
+    const top5Docs = docs.slice(0, 5);
+    const userIds = new Set<string>();
+    top5Docs.forEach((d: any) => {
+      if (d.userId) userIds.add(d.userId);
+    });
+
+    const nicknameMap: Record<string, string> = {};
+    if (userIds.size > 0) {
+      try {
+        const userSnaps = await Promise.all(
+          Array.from(userIds).map(id => db.collection("users").doc(id).get())
+        );
+        userSnaps.forEach(snap => {
+          if (snap.exists) {
+            const uData = snap.data();
+            nicknameMap[snap.id] = uData?.nickname || uData?.name || "";
+          }
+        });
+      } catch (e) {
+        console.warn("Error fetching nicknames:", e);
+      }
+    }
+
     docs.forEach((data: any) => {
       totalRevenue += (data.totalPrice || 0);
 
       if (recentActivities.length < 5) {
+        const displayName = nicknameMap[data.userId] || data.userName || "Guest";
+
         recentActivities.push({
           id: data.id,
-          user: data.userName || "Guest",
+          user: displayName,
           action: "booked session",
           amount: data.totalPrice,
           status: data.status,

@@ -37,10 +37,9 @@ async function checkData() {
     console.log(`Paid/Confirmed Bookings Count: ${bookingsPaid.size}`);
 
     if (!bookingsPaid.empty) {
-      console.log("Sample Paid Booking:", JSON.stringify(bookingsPaid.docs[0].data(), null, 2));
-    } else {
-      console.log("No Paid Bookings found. Listing all statuses:");
-      bookingsAll.docs.forEach(d => console.log(`- ${d.id}: ${d.data().status}`));
+      console.log("Sample Paid Booking FULL:", JSON.stringify(bookingsPaid.docs[0].data(), null, 2));
+    } else if (bookingsAll.size > 0) {
+      console.log("Sample Any Booking FULL:", JSON.stringify(bookingsAll.docs[0].data(), null, 2));
     }
 
     // 3. Events

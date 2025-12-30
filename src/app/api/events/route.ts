@@ -98,7 +98,8 @@ export async function POST(req: Request) {
             description, type, coachName, coachNickname,
             externalLink, organizer, allowWaitingList, // <-- Tambah ini
             allowedUserTypes, partnerMechanism, // <-- Tournament Fields
-            skillLevel, curriculum // <-- Drilling Fields
+            skillLevel, curriculum, // <-- Drilling Fields
+            playerCriteria, prizes // <-- New Tournament Fields
         } = body;
 
         // Validasi dasar
@@ -123,12 +124,13 @@ export async function POST(req: Request) {
             skillLevel: skillLevel || "all", // 'beginner' | 'intermediate' | 'advanced' | 'all'
             curriculum: curriculum || "", // Detailed topic
             // Field untuk Tournament Eksternal
-            // Field untuk Tournament Eksternal
             externalLink: externalLink || "",
             // Field Penting untuk Tournament Internal:
             allowedUserTypes: allowedUserTypes || ['member', 'guest'], // ['member'] only or both
             partnerMechanism: partnerMechanism || 'user', // 'user' (pilih sendiri) | 'coach' (ditentukan coach)
             organizer: organizer || "",
+            playerCriteria: playerCriteria || "",
+            prizes: prizes || "",
             hostId: session.user.id,
             createdAt: new Date().toISOString(),
             status: 'open'

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarPlus, Save, Loader2, Dumbbell, Users, Trophy, Info, MapPin, Clock, DollarSign, User, ArrowRight, Pencil, AlertCircle } from 'lucide-react';
+import { CalendarPlus, Save, Loader2, Dumbbell, Users, Trophy, Info, MapPin, Clock, DollarSign, User, ArrowRight, Pencil, AlertCircle, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -34,8 +34,14 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
 
   // State Date & Time
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedEndDate, setSelectedEndDate] = useState<Date | undefined>(undefined);
   const [startTime, setStartTime] = useState<string>('');
   const [endTime, setEndTime] = useState<string>('');
+
+  // Structured Criteria List
+  const [criteriaList, setCriteriaList] = useState<{ p1: string; p2: string; club: string }[]>([
+    { p1: '', p2: '', club: '' }
+  ]);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -51,7 +57,10 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
     allowedUserTypes: 'both', // 'member' | 'both' (guest allowed)
     partnerMechanism: 'user', // 'user' | 'coach'
     skillLevel: 'all', // 'beginner' | 'intermediate' | 'advanced' | 'all'
-    curriculum: '' // Drilling curriculum
+    curriculum: '', // Drilling curriculum
+    organizer: '', // Tournament Organizer
+    playerCriteria: '', // Tournament Player Criteria
+    prizes: '' // Tournament Prizes
   });
 
   // LOAD INITIAL DATA (FOR EDIT)
@@ -71,10 +80,21 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
         price: initialData.price ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(Number(initialData.price)) : '',
         quota: initialData.quota?.toString() || '12',
         description: initialData.description || '',
-        allowWaitingList: initialData.allowWaitingList || false // Load WL Setting
+        allowWaitingList: initialData.allowWaitingList || false, // Load WL Setting
+        organizer: initialData.organizer || '',
+        playerCriteria: initialData.playerCriteria || '',
+        prizes: initialData.prizes || ''
       });
 
-      if (initialData.date) setSelectedDate(new Date(initialData.date));
+      if (initialData.date) {
+        if (initialData.date.includes(' - ')) {
+          const [startStr, endStr] = initialData.date.split(' - ');
+          setSelectedDate(new Date(startStr));
+          setSelectedEndDate(new Date(endStr));
+        } else {
+          setSelectedDate(new Date(initialData.date));
+        }
+      }
       if (initialData.time) {
         const [start, end] = initialData.time.split(' - ');
         setStartTime(start || '');
@@ -123,10 +143,25 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
 
     const cleanPrice = formData.price.replace(/\D/g, '');
 
+    // Serialize Criteria List to String if it has data
+    let serializedCriteria = formData.playerCriteria;
+    if (criteriaList.some(c => c.p1 || c.p2 || c.club)) {
+      serializedCriteria = criteriaList.map((c, i) =>
+        `#${i + 1} [${c.p1} & ${c.p2}] (${c.club || 'Open'})`
+      ).join('\n');
+    }
+
+    // Format Date Range for Tournament
+    let finalDate = format(selectedDate, 'yyyy-MM-dd');
+    if (formData.type === 'tournament' && selectedEndDate) {
+      finalDate = `${format(selectedDate, 'yyyy-MM-dd')} - ${format(selectedEndDate, 'yyyy-MM-dd')}`;
+    }
+
     const finalPayload = {
       ...formData,
+      playerCriteria: serializedCriteria,
       price: cleanPrice,
-      date: format(selectedDate, 'yyyy-MM-dd'),
+      date: finalDate,
       time: `${startTime} - ${endTime}`,
       // Transform allowedUserTypes string to array for backend
       allowedUserTypes: formData.allowedUserTypes === 'both' ? ['member', 'guest'] : ['member']
@@ -283,7 +318,6 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
                     </Material3Select>
                   </div>
 
-                  {/* Partner Mechanism */}
                   <div className="space-y-1">
                     <Material3Select
                       value={formData.partnerMechanism}
@@ -298,6 +332,89 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
                       </Material3SelectContent>
                     </Material3Select>
                   </div>
+
+                  <Material3Input
+                    label="Penyelenggara (Organizer)"
+                    placeholder="Contoh: PB Djarum / Internal Club"
+                    value={formData.organizer}
+                    onChange={(e) => setFormData({ ...formData, organizer: e.target.value })}
+                  />
+
+                  {/* DYNAMIC PLAYER CRITERIA LIST */}
+                  <div className="space-y-3 bg-white/5 p-4 rounded-xl border border-white/10">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-gray-400 uppercase">Kriteria Peserta (Patokan)</label>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setCriteriaList([...criteriaList, { p1: '', p2: '', club: '' }])}
+                        className="h-6 text-[#ffbe00] hover:text-[#ffbe00] hover:bg-[#ffbe00]/10"
+                      >
+                        <Plus className="w-3 h-3 mr-1" /> Tambah
+                      </Button>
+                    </div>
+
+                    {criteriaList.map((item, index) => (
+                      <div key={index} className="flex gap-2 items-start animate-in slide-in-from-left-2">
+                        <div className="grid grid-cols-3 gap-2 flex-1">
+                          <Material3Input
+                            label={`Patokan (${index + 1})`}
+                            placeholder="Grade A"
+                            value={item.p1}
+                            onChange={(e) => {
+                              const newList = [...criteriaList];
+                              newList[index].p1 = e.target.value;
+                              setCriteriaList(newList);
+                            }}
+                          />
+                          <Material3Input
+                            label={`Partner (${index + 1})`}
+                            placeholder="Grade B"
+                            value={item.p2}
+                            onChange={(e) => {
+                              const newList = [...criteriaList];
+                              newList[index].p2 = e.target.value;
+                              setCriteriaList(newList);
+                            }}
+                          />
+                          <Material3Input
+                            label={`Asal PB (${index + 1})`}
+                            placeholder="PB Djarum"
+                            value={item.club}
+                            onChange={(e) => {
+                              const newList = [...criteriaList];
+                              newList[index].club = e.target.value;
+                              setCriteriaList(newList);
+                            }}
+                          />
+                        </div>
+                        {criteriaList.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              const newList = criteriaList.filter((_, i) => i !== index);
+                              setCriteriaList(newList);
+                            }}
+                            className="mt-1 text-red-500 hover:text-red-600 hover:bg-red-500/10 h-10 w-10 shrink-0"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    <p className="text-[10px] text-gray-500 italic">*Isi detail patokan, pasangan patokan, dan asal klub.</p>
+                  </div>
+
+                  <Material3Textarea
+                    label="Hadiah (Prizes)"
+                    placeholder="Contoh: Juara 1: Rp 1.000.000 + Trophy"
+                    value={formData.prizes}
+                    onChange={(e) => setFormData({ ...formData, prizes: e.target.value })}
+                    className="min-h-[80px]"
+                  />
 
                   <Material3Input
                     label="Link Eksternal (Opsional)"
@@ -330,9 +447,24 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
             </h3>
 
             <div className="grid grid-cols-1 gap-5">
-              <div className="space-y-2">
-                {/* Material 3 Date Picker */}
-                <Material3DatePickerDialogFinal date={selectedDate} setDate={setSelectedDate} />
+              <div className="space-y-4">
+                {/* Material 3 Date Picker (Start) */}
+                <Material3DatePickerDialogFinal
+                  date={selectedDate}
+                  setDate={setSelectedDate}
+                  label={formData.type === 'tournament' ? "Tanggal Mulai" : "Tanggal Kegiatan"}
+                />
+
+                {/* Material 3 Date Picker (End) - Tournament Only */}
+                {formData.type === 'tournament' && (
+                  <div className="animate-in fade-in slide-in-from-top-2">
+                    <Material3DatePickerDialogFinal
+                      date={selectedEndDate}
+                      setDate={setSelectedEndDate}
+                      label="Tanggal Selesai"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -434,7 +566,7 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
             </div>
           </div>
         </div>
-      </Card>
+      </Card >
     </form >
   );
 }
