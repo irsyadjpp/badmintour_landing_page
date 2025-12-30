@@ -31,28 +31,29 @@ export async function GET(req: Request) {
                 return dateB.localeCompare(dateA);
             });
 
-            // Ambil 4 Avatar Teratas dengan detail User jika ada
-            const topBookings = sortedDocs.slice(0, 4);
-            const avatars = await Promise.all(topBookings.map(async (p) => {
+            // Ambil Detail Participants (Name, Image, Id)
+            const participants = await Promise.all(sortedDocs.map(async (p) => {
                 const bData = p.data();
+                let name = bData.userName || bData.guestName || "Guest";
+                let image = bData.userImage || `https://placehold.co/100x100/1e1e1e/FFF?text=${name.charAt(0).toUpperCase()}`;
+                let id = bData.userId || null;
 
-                // Cek Collection Users (Prioritas Utama agar selalu update)
+                // Cek Collection Users untuk data terbaru
                 if (bData.userId) {
                     const userSnap = await db.collection("users").doc(bData.userId).get();
                     if (userSnap.exists) {
                         const userData = userSnap.data();
-                        if (userData?.image && userData.image !== "") return userData.image;
+                        if (userData?.name) name = userData.name; // Use real name
+                        if (userData?.nickname) name = userData.nickname; // Prefer nickname if available
+                        if (userData?.image && userData.image !== "") image = userData.image;
                     }
                 }
 
-                // Fallback: Image dari Booking (Snapshot saat booking)
-                if (bData.userImage) return bData.userImage;
-
-                // Fallback Terakhir: Placeholder Inisial
-                // Gunakan userName (member) atau guestName (tamu)
-                const name = bData.userName || bData.guestName || "Guest";
-                return `https://placehold.co/100x100/1e1e1e/FFF?text=${name.charAt(0).toUpperCase()}`;
+                return { id, name, image };
             }));
+
+            // Backward Compatibility & Top Avatars for Cards
+            const avatars = participants.slice(0, 4).map(p => p.image);
 
             // Ambil Data Host (Nickname)
             let hostNickname = "";
@@ -68,7 +69,8 @@ export async function GET(req: Request) {
                 id: doc.id,
                 ...eventData,
                 bookedSlot: realCount,
-                avatars: avatars,
+                avatars: avatars, // Keep for backward compat
+                participants: participants, // <-- NEW: Full List
                 hostNickname: hostNickname // <-- Field Baru
             };
         }));
@@ -94,7 +96,9 @@ export async function POST(req: Request) {
         const {
             title, date, time, location, price, quota,
             description, type, coachName, coachNickname,
-            externalLink, organizer, allowWaitingList // <-- Tambah ini
+            externalLink, organizer, allowWaitingList, // <-- Tambah ini
+            allowedUserTypes, partnerMechanism, // <-- Tournament Fields
+            skillLevel, curriculum // <-- Drilling Fields
         } = body;
 
         // Validasi dasar
@@ -116,8 +120,14 @@ export async function POST(req: Request) {
             type: type || "mabar", // 'mabar' | 'drilling' | 'tournament'
             coachName: coachName || "", // Hanya terisi jika type == 'drilling'
             coachNickname: coachNickname || "", // Saved Nickname
+            skillLevel: skillLevel || "all", // 'beginner' | 'intermediate' | 'advanced' | 'all'
+            curriculum: curriculum || "", // Detailed topic
+            // Field untuk Tournament Eksternal
             // Field untuk Tournament Eksternal
             externalLink: externalLink || "",
+            // Field Penting untuk Tournament Internal:
+            allowedUserTypes: allowedUserTypes || ['member', 'guest'], // ['member'] only or both
+            partnerMechanism: partnerMechanism || 'user', // 'user' (pilih sendiri) | 'coach' (ditentukan coach)
             organizer: organizer || "",
             hostId: session.user.id,
             createdAt: new Date().toISOString(),

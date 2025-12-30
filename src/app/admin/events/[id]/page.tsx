@@ -73,7 +73,7 @@ export default function AdminEventDetailPage() {
     loadData();
   }, [params, toast]);
 
-  const handleUpdateStatus = async (bookingId: string, newStatus: 'paid' | 'pending') => {
+  const handleUpdateStatus = async (bookingId: string, newStatus: 'paid' | 'pending' | 'approved' | 'rejected') => {
     try {
       const res = await fetch(`/api/bookings/${bookingId}`, {
         method: 'PATCH',
@@ -274,15 +274,28 @@ export default function AdminEventDetailPage() {
                             {p.bookingCode && <span className="font-mono text-xs bg-white/5 px-1 rounded">{p.bookingCode}</span>}
                             {p.phone || '-'}
                           </p>
+                          {p.partnerName && (
+                            <p className="text-xs text-[#00f2ea] mt-1 flex items-center gap-1 font-medium">
+                              <Users className="w-3 h-3" /> Partner: {p.partnerName}
+                            </p>
+                          )}
                         </div>
 
                         <div className="flex items-center md:justify-end gap-6 text-sm text-gray-500">
                           <span className="hidden md:inline-block">
                             {p.joinedAt ? new Date(p.joinedAt).toLocaleDateString('id-ID', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
                           </span>
-                          {p.status === 'paid' || p.status === 'CONFIRMED' ? (
+                          {p.status === 'paid' || p.status === 'CONFIRMED' || p.status === 'approved' ? (
                             <Badge className="bg-green-900/30 text-green-400 border-green-900/50 px-3 py-1 flex items-center gap-1.5">
-                              <CheckCircle2 className="w-3 h-3" /> PAID
+                              <CheckCircle2 className="w-3 h-3" /> {p.status === 'approved' ? 'APPROVED' : 'PAID'}
+                            </Badge>
+                          ) : p.status === 'pending_approval' ? (
+                            <Badge className="bg-purple-900/30 text-purple-400 border-purple-900/50 px-3 py-1 flex items-center gap-1.5">
+                              <Clock className="w-3 h-3" /> NEED APPROVAL
+                            </Badge>
+                          ) : p.status === 'rejected' ? (
+                            <Badge className="bg-red-900/30 text-red-400 border-red-900/50 px-3 py-1 flex items-center gap-1.5">
+                              <AlertCircle className="w-3 h-3" /> REJECTED
                             </Badge>
                           ) : (
                             <Badge className="bg-yellow-900/30 text-yellow-400 border-yellow-900/50 px-3 py-1 flex items-center gap-1.5">
@@ -302,6 +315,26 @@ export default function AdminEventDetailPage() {
                         <DropdownMenuContent align="end" className="w-48 bg-[#1A1A1A] border-white/10 text-white">
                           <DropdownMenuLabel className="text-xs text-gray-500 uppercase">Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator className="bg-white/10" />
+
+                          {/* Approval Actions (Tournament Only) */}
+                          {(event?.type === 'tournament' && p.status === 'pending_approval') && (
+                            <>
+                              <DropdownMenuItem
+                                className="cursor-pointer text-green-500 hover:bg-green-500/10 focus:bg-green-500/10 font-bold"
+                                onClick={() => handleUpdateStatus(p.bookingId, 'approved')}
+                              >
+                                <CheckCircle2 className="w-4 h-4 mr-2" /> Approve
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="cursor-pointer text-red-500 hover:bg-red-500/10 focus:bg-red-500/10"
+                                onClick={() => handleUpdateStatus(p.bookingId, 'rejected')}
+                              >
+                                <AlertCircle className="w-4 h-4 mr-2" /> Reject
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="bg-white/10" />
+                            </>
+                          )}
+
                           <DropdownMenuItem className="cursor-pointer hover:bg-white/5 focus:bg-white/5" onClick={() => navigator.clipboard.writeText(p.phone)}>
                             Copy WhatsApp
                           </DropdownMenuItem>

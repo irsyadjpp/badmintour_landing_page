@@ -10,16 +10,27 @@ export async function GET(req: Request) {
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     try {
+        console.log("Fetching notifications for:", session.user.id);
+
+        // Remove orderBy to prevent Index Errors or Invalid Argument on some SDK versions
         const snapshot = await db.collection("notifications")
             .where("userId", "==", session.user.id)
-            .orderBy("createdAt", "desc")
             .limit(20)
             .get();
 
         const notifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Manual Sort
+        notifications.sort((a: any, b: any) => {
+            const dateA = new Date(a.createdAt || 0).getTime();
+            const dateB = new Date(b.createdAt || 0).getTime();
+            return dateB - dateA;
+        });
+
         return NextResponse.json({ success: true, data: notifications });
-    } catch (error) {
-        return NextResponse.json({ error: "Gagal memuat notifikasi" }, { status: 500 });
+    } catch (error: any) {
+        console.error("Notification API Error:", error);
+        return NextResponse.json({ error: "Gagal memuat notifikasi: " + error.message }, { status: 500 });
     }
 }
 

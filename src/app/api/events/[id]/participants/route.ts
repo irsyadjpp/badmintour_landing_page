@@ -13,7 +13,7 @@ export async function GET(
     // Ambil booking yang statusnya PAID untuk event ini
     const bookingsSnap = await db.collection("bookings")
       .where("eventId", "==", eventId)
-      .where("status", "in", ["paid", "CONFIRMED", "pending_payment", "pending"]) // Include all active statuses
+      .where("status", "in", ["paid", "CONFIRMED", "pending_payment", "pending", "pending_approval", "approved", "rejected"]) // Include all statuses
       .get();
 
     const participants = await Promise.all(bookingsSnap.docs.map(async (doc) => {
@@ -62,7 +62,8 @@ export async function GET(
         status: data.status,
         phone: data.guestPhone || data.userPhone || "-",
         bookingCode: data.bookingCode,
-        role: role
+        role: role,
+        partnerName: data.partnerName || "" // Added Partner Name
       };
     }));
 

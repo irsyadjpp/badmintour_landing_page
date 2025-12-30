@@ -17,9 +17,9 @@ import {
     TriangleAlert
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
 import QRCode from 'react-qr-code';
@@ -38,6 +38,7 @@ export default function PublicEventPage() {
     // Guest Form State
     const [guestName, setGuestName] = useState('');
     const [guestPhone, setGuestPhone] = useState('');
+    const [partnerName, setPartnerName] = useState(''); // NEW STATE
 
     const [bookingSuccess, setBookingSuccess] = useState(false);
     const [bookingData, setBookingData] = useState<any>(null);
@@ -78,7 +79,8 @@ export default function PublicEventPage() {
                 body: JSON.stringify({
                     eventId: event.id,
                     guestName,
-                    guestPhone
+                    guestPhone,
+                    partnerName // Send Partner Name
                 })
             });
 
@@ -92,12 +94,11 @@ export default function PublicEventPage() {
                 });
                 setBookingSuccess(true);
             } else {
-                console.error("Booking Failed:", result);
-                const errorMsg = result.error?.toLowerCase() || "";
+                const errorMsg = result.error?.toLowerCase() || "terjadi kesalahan tidak diketahui";
                 if (errorMsg.includes("terdaftar") || errorMsg.includes("duplicate")) {
                     setIsDuplicateError(true);
                 } else {
-                    throw new Error(result.error);
+                    throw new Error(result.error || "Gagal memproses booking");
                 }
             }
         } catch (error: any) {
@@ -433,6 +434,33 @@ export default function PublicEventPage() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Drilling Specific Details (Skill & Curriculum) */}
+                        {event.type === 'drilling' && (
+                            <div className="mt-4 bg-[#00f2ea]/5 p-5 rounded-3xl border border-[#00f2ea]/20 space-y-3">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Dumbbell className="w-5 h-5 text-[#00f2ea]" />
+                                    <span className="text-xs font-bold text-[#00f2ea] uppercase tracking-wider">Drilling Info</span>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Target Level</p>
+                                        <Badge variant="outline" className="border-[#00f2ea] text-[#00f2ea] bg-[#00f2ea]/10 capitalize">
+                                            {event.skillLevel === 'all' ? 'Semua Level' :
+                                                event.skillLevel === 'beginner' ? 'Beginner (Pemula)' :
+                                                    event.skillLevel === 'intermediate' ? 'Intermediate (Menengah)' :
+                                                        event.skillLevel === 'advanced' ? 'Advanced (Mahir)' : 'General'}
+                                        </Badge>
+                                    </div>
+                                    {event.curriculum && (
+                                        <div>
+                                            <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Materi / Kurikulum</p>
+                                            <p className="text-sm text-gray-300 leading-relaxed">{event.curriculum}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* RIGHT SIDE: Guest Form OR QR TICKET */}
@@ -477,23 +505,23 @@ export default function PublicEventPage() {
                                         Screenshot layar ini sebagai bukti tiket valid Anda.
                                     </p>
                                 </div>
-                            ) : isTournament ? (
-                                // ... (Keep existing Tournament View)
+                            ) : (isTournament && (!event.allowedUserTypes || !event.allowedUserTypes.includes('guest'))) ? (
+                                // MEMBER ONLY VIEW
                                 <div className="text-center py-8">
-                                    <Trophy className={`w-20 h-20 ${accentColor} mx-auto mb-6 animate-bounce`} />
-                                    <h2 className="text-2xl font-black text-white mb-2">External Registration</h2>
-                                    <p className="text-gray-500 text-sm mb-8">Event ini diselenggarakan oleh pihak eksternal.</p>
+                                    <Trophy className={`w-20 h-20 ${accentColor} mx-auto mb-6 animate-pulse`} />
+                                    <Badge variant="outline" className="mb-4 border-red-500 text-red-500">MEMBER ONLY</Badge>
+                                    <h2 className="text-2xl font-black text-white mb-2">Pendaftaran Khusus Member</h2>
+                                    <p className="text-gray-500 text-sm mb-8">Silakan login untuk mendaftar turnamen ini.</p>
 
                                     <Button
-                                        onClick={() => event.externalLink ? window.open(event.externalLink, '_blank') : alert('Link tidak tersedia')}
+                                        onClick={() => router.push('/login')}
                                         className={`w-full h-16 rounded-2xl text-lg font-black text-white ${accentBg} hover:brightness-110 shadow-lg transition-all`}
                                     >
-                                        DAFTAR WEBSITE RESMI <ArrowRight className="w-5 h-5 ml-2" />
+                                        LOGIN MEMBER <ArrowRight className="w-5 h-5 ml-2" />
                                     </Button>
-                                    <p className="text-[10px] text-gray-600 mt-4">Anda akan diarahkan ke website penyelenggara.</p>
                                 </div>
                             ) : (
-                                // ... (Keep existing Guest Form View)
+                                // GUEST FORM (Used for Tournament Guest & Regular Events)
                                 <>
                                     <div className="mb-8">
                                         <h2 className="text-2xl font-black text-white mb-1">Guest Access</h2>
@@ -529,6 +557,23 @@ export default function PublicEventPage() {
                                                 />
                                             </div>
                                         </div>
+
+                                        {/* PARTNER INPUT (For Tournaments with User Pick) */}
+                                        {isTournament && event.partnerMechanism === 'user' && (
+                                            <div className="space-y-2 group">
+                                                <Label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Partner Name</Label>
+                                                <div className="relative">
+                                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                                                    <Input
+                                                        required
+                                                        value={partnerName}
+                                                        onChange={(e) => setPartnerName(e.target.value)}
+                                                        placeholder="Nama Pasangan (Partner)"
+                                                        className="h-14 pl-12 bg-white/5 border-white/10 rounded-2xl text-white"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
 
                                         <div className="pt-4">
                                             {isFull ? (
@@ -601,6 +646,6 @@ export default function PublicEventPage() {
                     onClick: () => window.location.reload()
                 }}
             />
-        </div>
+        </div >
     );
 }

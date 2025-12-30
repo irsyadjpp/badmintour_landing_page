@@ -46,7 +46,12 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
     quota: '12',
     description: '',
     allowWaitingList: false, // Default false
-    coachNickname: '' // Store Nickname
+    coachNickname: '', // Store Nickname
+    externalLink: '',
+    allowedUserTypes: 'both', // 'member' | 'both' (guest allowed)
+    partnerMechanism: 'user', // 'user' | 'coach'
+    skillLevel: 'all', // 'beginner' | 'intermediate' | 'advanced' | 'all'
+    curriculum: '' // Drilling curriculum
   });
 
   // LOAD INITIAL DATA (FOR EDIT)
@@ -57,6 +62,11 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
         type: initialData.type || 'mabar',
         coachName: initialData.coachName || '',
         coachNickname: initialData.coachNickname || '', // Load Nickname
+        externalLink: initialData.externalLink || '',
+        allowedUserTypes: initialData.allowedUserTypes?.[1] === 'guest' || initialData.allowedUserTypes?.includes('guest') ? 'both' : 'member',
+        partnerMechanism: initialData.partnerMechanism || 'user',
+        skillLevel: initialData.skillLevel || 'all',
+        curriculum: initialData.curriculum || '',
         location: initialData.location || '',
         price: initialData.price ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(Number(initialData.price)) : '',
         quota: initialData.quota?.toString() || '12',
@@ -117,7 +127,9 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
       ...formData,
       price: cleanPrice,
       date: format(selectedDate, 'yyyy-MM-dd'),
-      time: `${startTime} - ${endTime}`
+      time: `${startTime} - ${endTime}`,
+      // Transform allowedUserTypes string to array for backend
+      allowedUserTypes: formData.allowedUserTypes === 'both' ? ['member', 'guest'] : ['member']
     };
 
     try {
@@ -177,36 +189,122 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
 
               {/* LOGIC DROPDOWN COACH */}
               {formData.type === 'drilling' && (
-                <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                  <Material3Select
-                    value={formData.coachName}
-                    onValueChange={(val) => {
-                      const selectedCoach = coaches.find(c => c.name === val);
-                      setFormData({
-                        ...formData,
-                        coachName: val,
-                        coachNickname: selectedCoach?.nickname || '' // Auto-fill nickname
-                      });
-                    }}
-                  >
-                    <Material3SelectTrigger label="Pilih Coach" hasValue={!!formData.coachName}>
-                      <Material3SelectValue placeholder="Siapa pelatihnya?" />
-                    </Material3SelectTrigger>
-                    <Material3SelectContent>
-                      {coaches.length > 0 ? (
-                        coaches.map((coach) => (
-                          <Material3SelectItem key={coach.id} value={coach.name}>
-                            <span className="flex items-center gap-2">
-                              <User className="w-4 h-4 text-[#00f2ea]" />
-                              {coach.name}
-                            </span>
-                          </Material3SelectItem>
-                        ))
-                      ) : (
-                        <div className="p-2 text-xs text-gray-500 text-center">Belum ada data Coach</div>
-                      )}
-                    </Material3SelectContent>
-                  </Material3Select>
+                <>
+                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                    <Material3Select
+                      value={formData.coachName}
+                      onValueChange={(val) => {
+                        const selectedCoach = coaches.find(c => c.name === val);
+                        setFormData({
+                          ...formData,
+                          coachName: val,
+                          coachNickname: selectedCoach?.nickname || '' // Auto-fill nickname
+                        });
+                      }}
+                    >
+                      <Material3SelectTrigger label="Pilih Coach" hasValue={!!formData.coachName}>
+                        <Material3SelectValue placeholder="Siapa pelatihnya?" />
+                      </Material3SelectTrigger>
+                      <Material3SelectContent>
+                        {coaches.length > 0 ? (
+                          coaches.map((coach) => (
+                            <Material3SelectItem key={coach.id} value={coach.name}>
+                              <span className="flex items-center gap-2">
+                                <User className="w-4 h-4 text-[#00f2ea]" />
+                                {coach.name}
+                              </span>
+                            </Material3SelectItem>
+                          ))
+                        ) : (
+                          <div className="p-2 text-xs text-gray-500 text-center">Belum ada data Coach</div>
+                        )}
+                      </Material3SelectContent>
+                    </Material3Select>
+                  </div>
+
+                  {/* Skill Level & Curriculum for Drilling */}
+                  <div className="space-y-4 animate-in fade-in slide-in-from-top-2 border border-[#00f2ea]/20 bg-[#00f2ea]/5 p-4 rounded-xl mt-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Dumbbell className="w-4 h-4 text-[#00f2ea]" />
+                      <span className="text-xs font-bold text-[#00f2ea] uppercase">Drilling Details</span>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Material3Select
+                        value={formData.skillLevel}
+                        onValueChange={(val) => setFormData({ ...formData, skillLevel: val })}
+                      >
+                        <Material3SelectTrigger label="Level Skill Target" hasValue={!!formData.skillLevel}>
+                          <Material3SelectValue />
+                        </Material3SelectTrigger>
+                        <Material3SelectContent>
+                          <Material3SelectItem value="beginner">Beginner (Pemula)</Material3SelectItem>
+                          <Material3SelectItem value="intermediate">Intermediate (Menengah)</Material3SelectItem>
+                          <Material3SelectItem value="advanced">Advanced (Mahir)</Material3SelectItem>
+                          <Material3SelectItem value="all">All Levels (Semua Level)</Material3SelectItem>
+                        </Material3SelectContent>
+                      </Material3Select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Material3Textarea
+                        label="Kurikulum / Materi Latihan"
+                        placeholder="Jelaskan fokus latihan (e.g. Footwork, Smol, Defense)"
+                        value={formData.curriculum}
+                        onChange={(e) => setFormData({ ...formData, curriculum: e.target.value })}
+                        className="min-h-[80px]"
+                      />
+                    </div>
+                  </div>
+
+                </>
+              )}
+              {/* LOGIC DROPDOWN TOURNAMENT */}
+              {formData.type === 'tournament' && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 border border-white/10 bg-white/5 p-4 rounded-xl mt-2 mb-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Trophy className="w-4 h-4 text-[#ffbe00]" />
+                    <span className="text-xs font-bold text-[#ffbe00] uppercase">Pengaturan Tournament</span>
+                  </div>
+
+                  {/* Access Control */}
+                  <div className="space-y-1">
+                    <Material3Select
+                      value={formData.allowedUserTypes}
+                      onValueChange={(val) => setFormData({ ...formData, allowedUserTypes: val })}
+                    >
+                      <Material3SelectTrigger label="Akses Pendaftaran" hasValue={!!formData.allowedUserTypes}>
+                        <Material3SelectValue />
+                      </Material3SelectTrigger>
+                      <Material3SelectContent>
+                        <Material3SelectItem value="member">Hanya Member</Material3SelectItem>
+                        <Material3SelectItem value="both">Member & Guest (Umum)</Material3SelectItem>
+                      </Material3SelectContent>
+                    </Material3Select>
+                  </div>
+
+                  {/* Partner Mechanism */}
+                  <div className="space-y-1">
+                    <Material3Select
+                      value={formData.partnerMechanism}
+                      onValueChange={(val) => setFormData({ ...formData, partnerMechanism: val })}
+                    >
+                      <Material3SelectTrigger label="Mekanisme Pasangan" hasValue={!!formData.partnerMechanism}>
+                        <Material3SelectValue />
+                      </Material3SelectTrigger>
+                      <Material3SelectContent>
+                        <Material3SelectItem value="user">Pilih Pasangan Sendiri</Material3SelectItem>
+                        <Material3SelectItem value="coach">Ditentukan Coach / Panitia</Material3SelectItem>
+                      </Material3SelectContent>
+                    </Material3Select>
+                  </div>
+
+                  <Material3Input
+                    label="Link Eksternal (Opsional)"
+                    placeholder="Kosongkan jika pendaftaran internal"
+                    value={formData.externalLink}
+                    onChange={(e) => setFormData({ ...formData, externalLink: e.target.value })}
+                  />
                 </div>
               )}
 
@@ -337,6 +435,6 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
           </div>
         </div>
       </Card>
-    </form>
+    </form >
   );
 }
