@@ -55,6 +55,13 @@
   - **Features**: Tournament Bracket settings, Quota management, Partner assignments.
 - `/admin/participants`: Participant management (Approve/Reject, Mark Paid, Check-in).
 - `/admin/users`: Member database & Role assignment.
+- `/admin/finance`: Financial Control Center.
+  - **Ledger**: View all journal entries.
+  - **Transactions**: Create Expense, Income, Transfer, Journal.
+  - **Reports**: Profit & Loss, Cashflow.
+- `/admin/inventory`: Stock & Asset Management.
+  - **Stock**: Manage items, restock, and usage.
+  - **Assets**: Register fixed assets and track value.
 
 ---
 
@@ -102,6 +109,52 @@
 - `type`: 'booking' | 'system' | 'payment'
 - `isRead`: Boolean
 
+### **`finance_accounts` (Chart of Accounts)**
+- `code`: String (e.g., "1-100")
+- `name`: String (e.g., "Kas Besar")
+- `type`: 'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'EXPENSE' | 'COGS'
+- `category`: 'CASH' | 'BANK' | 'INVENTORY' | ...
+- `balance`: Number (Current Balance)
+- `isActive`: Boolean
+
+### **`finance_ledger` (Journal Entries)**
+- `id`: String
+- `date`: ISOString
+- `description`: String
+- `reference`: String (e.g., "EXP-20231001-001")
+- `type`: 'EXPENSE' | 'REVENUE' | 'TRANSFER' | 'JOURNAL' | 'COGS'
+- `amount`: Number
+- `entries`: Array
+  - `accountCode`: String
+  - `debit`: Number
+  - `credit`: Number
+- `proofImage`: String (Base64/URL)
+- `metadata`: Map (e.g., inventoryId, bookingId)
+- `createdAt`: ISOString
+- `createdBy`: String (Admin ID)
+
+### **`inventory_items`**
+- `id`: String
+- `name`: String
+- `sku`: String
+- `category`: String
+- `type`: 'CONSUMABLE' | 'ASSET'
+- `quantity`: Number
+- `unit`: String (pcs, box)
+- `costPrice`: Number (Avg Cost)
+- `sellPrice`: Number
+- `minStock`: Number
+- `location`: String
+
+### **`inventory_transactions`**
+- `id`: String
+- `itemId`: String
+- `type`: 'IN' | 'OUT' | 'ADJUSTMENT'
+- `quantity`: Number
+- `date`: ISOString
+- `relatedJournalId`: String (Ref to `finance_ledger`)
+- `reason`: String
+
 ---
 
 ## **4. Key Workflows**
@@ -122,6 +175,17 @@
   - **Revenue**: Sum of `totalPrice` from valid bookings.
   - **Fill Rate**: Percentage of booked slots vs total quota.
   - **Activity**: Live feed of new bookings (shows Nicknames).
+
+### **Financial Automation**
+1.  **Booking Payment**:
+    *   System records Debit `Cash/Bank`, Credit `Revenue`.
+    *   Generates `finance_ledger` entry automatically.
+2.  **Expense Recording**:
+    *   Admin enters expense details + split categories.
+    *   System validates Debit (Expenses) == Credit (Source Fund).
+3.  **Inventory Usage**:
+    *   Restock: Debit `Inventory`, Credit `Cash/Bank`.
+    *   Usage/Sale: Debit `COGS`, Credit `Inventory`.
 
 ---
 

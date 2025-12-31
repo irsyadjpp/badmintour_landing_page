@@ -45,6 +45,8 @@ export const COA = {
     MARKETING: '6-200', // Beban Pemasaran
     DEPRECIATION_EXPENSE: '6-300', // Beban Penyusutan Aset
     SUPPLIES: '6-400', // Beban Perlengkapan
+    MAINTENANCE: '6-500', // Beban Pemeliharaan & Perbaikan
+    OTHER: '6-900', // Beban Lain-lain (Loss/Correction)
   }
 };
 

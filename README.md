@@ -4,13 +4,13 @@ BadminTour is a comprehensive web application designed to manage badminton event
 
 ## 🚀 Tech Stack
 
-- **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
+- **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
 - **Language**: TypeScript
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components**: [Shadcn UI](https://ui.shadcn.com/) (Radix Primitives)
 - **Database**: Firebase Firestore
 - **Authentication**: NextAuth.js (Custom Credentials with Firebase)
-- **Storage**: Firebase Storage
+- **State Management**: TanStack Query v5
 - **Icons**: Lucide React
 
 ## ✨ Key Features
@@ -33,6 +33,18 @@ BadminTour is a comprehensive web application designed to manage badminton event
 - **Event Management**: Create, edit, and manage Mabar, Drilling, or Tournament events.
 - **Participant Management**: View avatar stacks, approve/reject tournament applicants, and mark payments.
 - **Host Features**: Auto-filled coach nicknames and partner assignment logic.
+
+### 💰 Finance & Ledger (New)
+- **Double-Entry Bookkeeping**: Full accounting system with Debits/Credits validation.
+- **Transaction Management**: Record Expenses (with Splits), Income, Transfers, and General Journal entries.
+- **Chart of Accounts (COA)**: Customizable account hierarchy (Assets, Liabilities, Equity, Revenue, Expenses).
+- **Reporting**: Real-time Profit & Loss (P&L) and Cashflow Analysis.
+- **Proof of Transaction**: Upload receipts directly to ledger entries.
+
+### 📦 Inventory & Assets (New)
+- **Stock Management**: Track item quantities, restocks, and usage (linked to COGS).
+- **Fixed Assets**: Register assets (Rackets, Nets, Courts) with automatic depreciation logic.
+- **Opname**: Stock-taking features to adjust inventory variances.
 
 ## 🛠️ Getting Started
 
