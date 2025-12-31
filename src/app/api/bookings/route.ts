@@ -5,6 +5,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { db } from "@/lib/firebase-admin";
 import { logActivity } from "@/lib/audit-logger";
 import { FieldValue } from 'firebase-admin/firestore';
+import { createBookingJournal } from "@/lib/finance-service";
 
 export async function POST(req: Request) {
     try {
@@ -153,6 +154,27 @@ export async function POST(req: Request) {
             entityId: bookingRef.id,
             details: loggerDetails
         });
+
+        // 5. AUTO-JOURNAL (Financial Record)
+        // Import dynamically or at top. Assuming import { createBookingJournal } from '@/lib/finance-service';
+        try {
+            // Re-construct booking data for the journal helper
+            const journalData = {
+                id: bookingRef.id,
+                bookingCode: bookingRef.code,
+                price: eventData?.price || 0,
+                userName: session ? (session.user.name || 'Unknown') : (guestName || 'Guest')
+            };
+
+            // Only record journal if price > 0
+            if ((eventData.price || 0) > 0) {
+                await createBookingJournal(journalData, eventData.type || 'mabar');
+            }
+        } catch (financeError) {
+            console.error("AUTO-JOURNAL ERROR:", financeError);
+            // Don't fail the request, just log error. 
+            // In production, we'd want a retry mechanism or alert system.
+        }
 
         return NextResponse.json({ success: true, bookingId: bookingRef.id, bookingCode: bookingRef.code, isGuest: !session });
 

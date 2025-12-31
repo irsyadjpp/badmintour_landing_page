@@ -1,14 +1,17 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { 
-    Users, 
-    Search, 
-    Loader2, 
+import {
+    Users,
+    Search,
+    Loader2,
     ChevronLeft,
     ChevronRight,
     ArrowUpDown,
-    Filter
+    Filter,
+    ShieldCheck,
+    Briefcase,
+    User
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -17,11 +20,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 
 const ITEMS_PER_PAGE = 10;
@@ -30,7 +33,7 @@ export default function AdminUserManagementPage() {
     const { toast } = useToast();
     const [allUsers, setAllUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    
+
     // States
     const [search, setSearch] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
@@ -61,8 +64,8 @@ export default function AdminUserManagementPage() {
 
         // 1. Search
         if (search) {
-            data = data.filter(user => 
-                user.name?.toLowerCase().includes(search.toLowerCase()) || 
+            data = data.filter(user =>
+                user.name?.toLowerCase().includes(search.toLowerCase()) ||
                 user.email?.toLowerCase().includes(search.toLowerCase())
             );
         }
@@ -94,151 +97,192 @@ export default function AdminUserManagementPage() {
     useEffect(() => { setCurrentPage(1); }, [search, roleFilter, sortBy]);
 
     const getRoleBadge = (role: string) => {
-        switch(role) {
-            case 'host': return <Badge className="bg-blue-500 text-white">HOST</Badge>;
-            case 'coach': return <Badge className="bg-[#00f2ea] text-black font-bold">COACH</Badge>;
-            default: return <Badge variant="outline" className="text-gray-400">MEMBER</Badge>;
+        switch (role) {
+            case 'host': return (
+                <div className="flex items-center gap-2 bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full border border-blue-500/20">
+                    <Briefcase className="w-3 h-3" /> <span className="text-[10px] font-black uppercase tracking-wider">HOST</span>
+                </div>
+            );
+            case 'coach': return (
+                <div className="flex items-center gap-2 bg-[#00f2ea]/10 text-[#00f2ea] px-3 py-1 rounded-full border border-[#00f2ea]/20">
+                    <ShieldCheck className="w-3 h-3" /> <span className="text-[10px] font-black uppercase tracking-wider">COACH</span>
+                </div>
+            );
+            case 'admin': return (
+                <div className="flex items-center gap-2 bg-[#ffbe00]/10 text-[#ffbe00] px-3 py-1 rounded-full border border-[#ffbe00]/20">
+                    <ShieldCheck className="w-3 h-3" /> <span className="text-[10px] font-black uppercase tracking-wider">ADMIN</span>
+                </div>
+            );
+            default: return (
+                <div className="flex items-center gap-2 bg-white/5 text-gray-400 px-3 py-1 rounded-full border border-white/10">
+                    <User className="w-3 h-3" /> <span className="text-[10px] font-black uppercase tracking-wider">MEMBER</span>
+                </div>
+            );
         }
     };
 
     return (
-        <div className="space-y-8 pb-20">
-            {/* Header & Controls */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div>
-                    <h1 className="text-3xl font-black text-white flex items-center gap-3">
-                        <Users className="w-8 h-8 text-[#ffbe00]" /> DATA PENGGUNA
-                    </h1>
-                    <p className="text-gray-400">Total User: {allUsers.length}</p>
-                </div>
-                
-                <div className="flex flex-wrap gap-3 w-full md:w-auto">
-                    {/* Search */}
-                    <div className="relative flex-1 md:w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                        <Input 
-                            placeholder="Cari user..." 
-                            className="pl-10 bg-[#151515] border-white/10 text-white rounded-xl"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </div>
+        <main className="pb-20 space-y-8">
 
-                    {/* Filter Role (Admin View Only) */}
+            <div className="flex flex-col md:flex-row justify-between items-end gap-6">
+                <div>
+                    <h1 className="text-5xl font-black text-white tracking-tighter uppercase mb-2">
+                        User Database
+                    </h1>
+                    <p className="text-gray-400 font-medium">Manage members, coaches, and hosts.</p>
+                </div>
+
+                <div className="bg-[#1A1A1A] border border-white/5 rounded-3xl p-6 flex flex-col items-end min-w-[200px] relative overflow-hidden group">
+                    {/* Glow User*/}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#ffbe00]/20 rounded-full blur-[50px] pointer-events-none group-hover:bg-[#ffbe00]/30 transition duration-700"></div>
+
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-2 relative z-10">
+                        Total Users <Users className="w-3 h-3 text-[#ffbe00]" />
+                    </span>
+                    <span className="text-5xl font-jersey text-white tracking-wide relative z-10">
+                        {allUsers.length}
+                    </span>
+                </div>
+            </div>
+
+            {/* Filter Bar */}
+            <div className="bg-[#1A1A1A] border border-white/5 p-4 rounded-[2rem] flex flex-col md:flex-row gap-4 items-center">
+                <div className="relative flex-1 w-full">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                    <Input
+                        placeholder="Search by name or email..."
+                        className="pl-12 bg-[#121212] border-white/5 text-white h-12 rounded-xl focus:border-[#ffbe00]/50 transition-colors placeholder:text-gray-600"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+                </div>
+
+                <div className="flex gap-2 w-full md:w-auto">
                     <Select value={roleFilter} onValueChange={setRoleFilter}>
-                        <SelectTrigger className="w-[130px] bg-[#151515] border-white/10 rounded-xl text-white">
+                        <SelectTrigger className="w-full md:w-[150px] h-12 bg-[#121212] border-white/5 rounded-xl text-gray-300 font-medium hover:text-white">
                             <div className="flex items-center gap-2">
                                 <Filter className="w-4 h-4" />
                                 <SelectValue placeholder="Role" />
                             </div>
                         </SelectTrigger>
-                        <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
-                            <SelectItem value="all">Semua</SelectItem>
-                            <SelectItem value="member">Member</SelectItem>
-                            <SelectItem value="coach">Coach</SelectItem>
-                            <SelectItem value="host">Host</SelectItem>
+                        <SelectContent className="bg-[#1A1A1A] border-white/10 text-white rounded-xl p-1">
+                            {['all', 'member', 'coach', 'host', 'admin'].map((role) => (
+                                <SelectItem key={role} value={role} className="rounded-lg focus:bg-white/10 focus:text-white cursor-pointer capitalize">
+                                    {role}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
 
-                    {/* Sort */}
                     <Select value={sortBy} onValueChange={setSortBy}>
-                        <SelectTrigger className="w-[140px] bg-[#151515] border-white/10 rounded-xl text-white">
+                        <SelectTrigger className="w-full md:w-[150px] h-12 bg-[#121212] border-white/5 rounded-xl text-gray-300 font-medium hover:text-white">
                             <div className="flex items-center gap-2">
                                 <ArrowUpDown className="w-4 h-4" />
                                 <SelectValue placeholder="Sort" />
                             </div>
                         </SelectTrigger>
-                        <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
-                            <SelectItem value="newest">Terbaru</SelectItem>
-                            <SelectItem value="oldest">Terlama</SelectItem>
-                            <SelectItem value="a-z">Nama (A-Z)</SelectItem>
-                            <SelectItem value="z-a">Nama (Z-A)</SelectItem>
+                        <SelectContent className="bg-[#1A1A1A] border-white/10 text-white rounded-xl p-1">
+                            <SelectItem value="newest" className="rounded-lg focus:bg-white/10">Newest</SelectItem>
+                            <SelectItem value="oldest" className="rounded-lg focus:bg-white/10">Oldest</SelectItem>
+                            <SelectItem value="a-z" className="rounded-lg focus:bg-white/10">Name (A-Z)</SelectItem>
+                            <SelectItem value="z-a" className="rounded-lg focus:bg-white/10">Name (Z-A)</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
             </div>
 
-            {/* Table */}
-            <Card className="bg-[#151515] border border-white/5 rounded-[2rem] overflow-hidden shadow-sm">
+            {/* List View */}
+            <div className="space-y-4">
                 {loading ? (
-                    <div className="flex justify-center p-12 text-gray-500">
-                        <Loader2 className="animate-spin w-8 h-8" />
+                    <div className="flex flex-col items-center justify-center p-20 text-gray-500 gap-4">
+                        <Loader2 className="animate-spin w-10 h-10 text-[#ffbe00]" />
+                        <p className="animate-pulse">Loading Database...</p>
                     </div>
                 ) : (
                     <>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead className="bg-[#1A1A1A] text-xs uppercase text-gray-500 font-bold border-b border-white/5">
-                                    <tr>
-                                        <th className="p-6">User Profile</th>
-                                        <th className="p-6">Role</th>
-                                        <th className="p-6">Tgl Gabung</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-white/5">
-                                    {paginatedUsers.length > 0 ? paginatedUsers.map((user) => (
-                                        <tr key={user.id} className="hover:bg-white/5 transition-colors">
-                                            <td className="p-6">
-                                                <div className="flex items-center gap-4">
-                                                    <Avatar className="w-10 h-10 border border-white/10">
-                                                        <AvatarImage src={user.image} />
-                                                        <AvatarFallback className="bg-[#222] text-white font-bold">
-                                                            {user.name?.charAt(0)}
-                                                        </AvatarFallback>
-                                                    </Avatar>
-                                                    <div>
-                                                        <p className="font-bold text-white text-sm">{user.name}</p>
-                                                        <p className="text-xs text-gray-500">{user.email}</p>
-                                                    </div>
+                        {paginatedUsers.length > 0 ? (
+                            <div className="grid grid-cols-1 gap-3">
+                                {paginatedUsers.map((user, i) => (
+                                    <div
+                                        key={user.id}
+                                        className="bg-[#1A1A1A] hover:bg-[#202020] border border-white/5 rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all duration-300 group"
+                                    >
+                                        <div className="flex items-center gap-4 w-full md:w-auto">
+                                            <div className="relative">
+                                                <Avatar className="w-14 h-14 border-2 border-[#252525] group-hover:border-[#ffbe00] transition-colors duration-300 rounded-2xl">
+                                                    <AvatarImage src={user.image} />
+                                                    <AvatarFallback className="bg-[#0a0a0a] text-gray-400 font-black text-lg rounded-2xl">
+                                                        {user.name?.charAt(0)}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div className="absolute -bottom-1 -right-1 bg-[#121212] rounded-full p-0.5 border border-white/10">
+                                                    <div className={`w-3 h-3 rounded-full ${user.role === 'admin' ? 'bg-[#ffbe00]' : 'bg-gray-500'}`}></div>
                                                 </div>
-                                            </td>
-                                            <td className="p-6">
-                                                {getRoleBadge(user.role)}
-                                            </td>
-                                            <td className="p-6 text-sm text-gray-400">
-                                                {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
-                                            </td>
-                                        </tr>
-                                    )) : (
-                                        <tr>
-                                            <td colSpan={3} className="p-12 text-center text-gray-500">Data tidak ditemukan.</td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                                            </div>
 
-                         {/* Pagination Controls */}
-                         {totalPages > 1 && (
-                            <div className="p-4 border-t border-white/5 flex items-center justify-between bg-[#1A1A1A]">
-                                <div className="text-xs text-gray-500 font-bold">
+                                            <div>
+                                                <h3 className="font-bold text-white text-lg group-hover:text-[#ffbe00] transition-colors text-left">
+                                                    {user.name}
+                                                </h3>
+                                                <p className="text-sm text-gray-500 font-mono text-left">{user.email}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center justify-between w-full md:w-auto gap-8">
+                                            <div className="flex flex-col items-end gap-1">
+                                                <span className="text-[10px] uppercase font-bold text-gray-600 tracking-widest">Role</span>
+                                                {getRoleBadge(user.role)}
+                                            </div>
+
+                                            <div className="flex flex-col items-end gap-1 min-w-[100px]">
+                                                <span className="text-[10px] uppercase font-bold text-gray-600 tracking-widest">Joined</span>
+                                                <span className="text-sm font-bold text-gray-300">
+                                                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="bg-[#1A1A1A] border border-white/5 rounded-[2.5rem] p-20 text-center">
+                                <Users className="w-16 h-16 text-gray-700 mx-auto mb-6" />
+                                <h3 className="text-2xl font-bold text-white mb-2">No Users Found</h3>
+                                <p className="text-gray-500">Try adjusting your search or filters.</p>
+                            </div>
+                        )}
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-between pt-6 border-t border-white/5">
+                                <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">
                                     Page {currentPage} of {totalPages}
-                                </div>
+                                </p>
                                 <div className="flex gap-2">
-                                    <Button 
-                                        variant="outline" 
-                                        size="sm" 
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
                                         disabled={currentPage === 1}
                                         onClick={() => setCurrentPage(p => p - 1)}
-                                        className="border-white/10 bg-[#151515] text-white hover:bg-white/10"
+                                        className="w-10 h-10 rounded-xl border-white/10 bg-[#151515] text-white hover:bg-white/10"
                                     >
-                                        <ChevronLeft className="w-4 h-4" /> Prev
+                                        <ChevronLeft className="w-4 h-4" />
                                     </Button>
-                                    <Button 
-                                        variant="outline" 
-                                        size="sm" 
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
                                         disabled={currentPage === totalPages}
                                         onClick={() => setCurrentPage(p => p + 1)}
-                                        className="border-white/10 bg-[#151515] text-white hover:bg-white/10"
+                                        className="w-10 h-10 rounded-xl border-white/10 bg-[#151515] text-white hover:bg-white/10"
                                     >
-                                        Next <ChevronRight className="w-4 h-4" />
+                                        <ChevronRight className="w-4 h-4" />
                                     </Button>
                                 </div>
                             </div>
                         )}
                     </>
                 )}
-            </Card>
-        </div>
+            </div>
+        </main>
     );
 }

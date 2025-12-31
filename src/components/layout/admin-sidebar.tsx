@@ -19,7 +19,8 @@ import {
     UserCog,
     ArrowLeft,
     DollarSign,
-    FileSpreadsheet
+    FileSpreadsheet,
+    Package
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -27,8 +28,7 @@ import RoleSwitcher from './role-switcher'; // IMPORT RoleSwitcher
 
 const menuItems = [
     { title: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
-    { title: "Transactions", href: "/admin/transactions", icon: DollarSign },
-    { title: "Reports", href: "/admin/reports", icon: FileSpreadsheet },
+    { title: "Finance", href: "/admin/finance", icon: DollarSign },
     { title: "Users / Members", href: "/admin/users", icon: Users },
     { title: "Events Management", href: "/admin/events", icon: Calendar },
     { title: "Jersey Orders", href: "/admin/jersey", icon: Shirt },
@@ -80,7 +80,7 @@ export default function AdminSidebar() {
                 {menuItems.map((item) => {
                     const isActive = pathname.startsWith(item.href);
                     return (
-                        <Link key={item.href} href={item.href}>
+                        <Link key={item.href} href={item.href} title={item.title}>
                             <div className={cn(
                                 "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 relative group",
                                 isActive

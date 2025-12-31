@@ -1,14 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { 
-    Shield, 
-    Lock, 
-    Eye, 
-    Server, 
-    UserCheck, 
-    Cookie, 
-    Mail, 
+import {
+    Shield,
+    Lock,
+    Eye,
+    Server,
+    UserCheck,
+    Cookie,
+    Mail,
     ChevronLeft,
     FileText
 } from 'lucide-react';
@@ -18,12 +18,12 @@ import { Card } from '@/components/ui/card';
 export default function PrivacyPage() {
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#ffbe00] selection:text-black font-sans">
-            
+
             {/* 1. HERO HEADER */}
             <div className="relative pt-32 pb-20 px-6 overflow-hidden">
                 {/* Background Ambience */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none"></div>
-                
+
                 <div className="max-w-4xl mx-auto text-center relative z-10">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 text-xs font-bold uppercase tracking-widest mb-6">
                         <Shield className="w-3 h-3" />
@@ -43,7 +43,7 @@ export default function PrivacyPage() {
 
             {/* 2. MAIN CONTENT */}
             <div className="max-w-5xl mx-auto px-6 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-12">
-                
+
                 {/* LEFT: TABLE OF CONTENTS (Sticky) */}
                 <div className="hidden lg:block lg:col-span-4">
                     <div className="sticky top-24 space-y-2">
@@ -54,11 +54,11 @@ export default function PrivacyPage() {
                         <TOCLink href="#security" label="4. Keamanan & Enkripsi" />
                         <TOCLink href="#rights" label="5. Hak Kendali Lo" />
                         <TOCLink href="#contact" label="6. Kontak Kami" />
-                        
+
                         <div className="pt-8 px-4">
                             <Link href="/">
                                 <Button variant="outline" className="w-full border-white/10 hover:bg-white text-white hover:text-black rounded-xl gap-2 font-bold">
-                                    <ChevronLeft className="w-4 h-4"/> Back to Home
+                                    <ChevronLeft className="w-4 h-4" /> Back to Home
                                 </Button>
                             </Link>
                         </div>
@@ -67,7 +67,7 @@ export default function PrivacyPage() {
 
                 {/* RIGHT: POLICY CONTENT */}
                 <div className="lg:col-span-8 space-y-12">
-                    
+
                     {/* Section 1 */}
                     <section id="data-collection" className="scroll-mt-24">
                         <div className="flex items-center gap-4 mb-6">
@@ -124,11 +124,11 @@ export default function PrivacyPage() {
                             <h2 className="text-2xl font-black uppercase tracking-tight">3. Keamanan Data</h2>
                         </div>
                         <p className="text-gray-400 leading-relaxed mb-6">
-                            Kami pake standar enkripsi industri (SSL/TLS) buat ngirim data Lo. Database kami (Firestore) dilindungi Google Cloud Security yang ketat. 
+                            Kami pake standar enkripsi industri (SSL/TLS) buat ngirim data Lo. Database kami (Firestore) dilindungi Google Cloud Security yang ketat.
                             PIN Login Lo di-hash (diacak) jadi admin pun nggak bisa baca PIN aslinya.
                         </p>
                         <div className="bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-xl flex gap-4 items-start">
-                            <div className="mt-1 text-yellow-500"><Lock className="w-5 h-5"/></div>
+                            <div className="mt-1 text-yellow-500"><Lock className="w-5 h-5" /></div>
                             <div>
                                 <h4 className="font-bold text-yellow-500 text-sm uppercase mb-1">Penting</h4>
                                 <p className="text-xs text-gray-400">
@@ -176,7 +176,7 @@ export default function PrivacyPage() {
             {/* Footer Simple */}
             <footer className="border-t border-white/10 py-12 text-center">
                 <p className="text-gray-600 text-sm">
-                    &copy; 2026 BadminTour. All rights reserved.<br/>
+                    &copy; {new Date().getFullYear()} BadminTour. All rights reserved.<br />
                     <span className="text-xs opacity-50">Dibuat dengan keringat dan shuttlecock.</span>
                 </p>
             </footer>
@@ -189,13 +189,12 @@ export default function PrivacyPage() {
 
 function TOCLink({ href, label, active = false }: { href: string, label: string, active?: boolean }) {
     return (
-        <a 
-            href={href} 
-            className={`block px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
-                active 
-                ? 'bg-blue-600/10 text-blue-500 border border-blue-600/20' 
-                : 'text-gray-500 hover:text-white hover:bg-white/5'
-            }`}
+        <a
+            href={href}
+            className={`block px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${active
+                    ? 'bg-blue-600/10 text-blue-500 border border-blue-600/20'
+                    : 'text-gray-500 hover:text-white hover:bg-white/5'
+                }`}
         >
             {label}
         </a>

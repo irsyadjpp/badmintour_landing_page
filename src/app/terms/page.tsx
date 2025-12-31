@@ -1,13 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { 
-    Gavel, 
-    UserX, 
-    CreditCard, 
-    AlertTriangle, 
-    ShieldAlert, 
-    Users, 
+import {
+    Gavel,
+    UserX,
+    CreditCard,
+    AlertTriangle,
+    ShieldAlert,
+    Users,
     ChevronLeft,
     ScrollText,
     Flag
@@ -18,12 +18,12 @@ import { Card } from '@/components/ui/card';
 export default function TermsPage() {
     return (
         <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#ca1f3d] selection:text-white font-sans">
-            
+
             {/* 1. HERO HEADER */}
             <div className="relative pt-32 pb-20 px-6 overflow-hidden border-b border-white/5">
                 {/* Background Ambience */}
                 <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-[#ca1f3d]/10 blur-[120px] rounded-full pointer-events-none"></div>
-                
+
                 <div className="max-w-4xl mx-auto text-center relative z-10">
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#ffbe00]/10 border border-[#ffbe00]/20 text-[#ffbe00] text-xs font-black uppercase tracking-widest mb-6">
                         <Gavel className="w-3 h-3" />
@@ -43,7 +43,7 @@ export default function TermsPage() {
 
             {/* 2. MAIN CONTENT */}
             <div className="max-w-6xl mx-auto px-6 py-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
-                
+
                 {/* LEFT: TABLE OF CONTENTS (Sticky) */}
                 <div className="hidden lg:block lg:col-span-4">
                     <div className="sticky top-28 space-y-2">
@@ -54,12 +54,12 @@ export default function TermsPage() {
                         <TOCLink href="#cancellation" label="4. Ghosting & Cancel" />
                         <TOCLink href="#liability" label="5. Risiko Cedera (Penting)" />
                         <TOCLink href="#termination" label="6. Banned Policy" />
-                        
+
                         <div className="pt-8 px-4">
                             <Link href="/">
                                 {/* UPDATE: High Contrast Yellow Theme Button */}
                                 <Button className="w-full bg-transparent border-2 border-[#ffbe00] text-[#ffbe00] hover:bg-[#ffbe00] hover:text-black rounded-xl gap-2 font-black h-12 transition-all uppercase tracking-wide">
-                                    <ChevronLeft className="w-5 h-5"/> Back to Home
+                                    <ChevronLeft className="w-5 h-5" /> Back to Home
                                 </Button>
                             </Link>
                         </div>
@@ -68,7 +68,7 @@ export default function TermsPage() {
 
                 {/* RIGHT: TERMS CONTENT */}
                 <div className="lg:col-span-8 space-y-16">
-                    
+
                     {/* 1. Account */}
                     <section id="account" className="scroll-mt-32">
                         <SectionHeader number="01" title="Akun & Identitas" icon={Users} />
@@ -77,17 +77,17 @@ export default function TermsPage() {
                                 BadminTour adalah tempat buat manusia asli, bukan bot atau akun smurf.
                             </p>
                             <ul className="grid gap-4 list-none pl-0">
-                                <RuleCard 
-                                    title="Real Name Policy" 
-                                    desc="Gunakan nama asli atau nickname yang dikenal. Jangan menyamar jadi atlet Pelatnas kalau skill masih 'tepok bulu'." 
+                                <RuleCard
+                                    title="Real Name Policy"
+                                    desc="Gunakan nama asli atau nickname yang dikenal. Jangan menyamar jadi atlet Pelatnas kalau skill masih 'tepok bulu'."
                                 />
-                                <RuleCard 
-                                    title="One Person, One Account" 
-                                    desc="Dilarang keras bikin multiple account buat manipulasi sistem ranking/level." 
+                                <RuleCard
+                                    title="One Person, One Account"
+                                    desc="Dilarang keras bikin multiple account buat manipulasi sistem ranking/level."
                                 />
-                                <RuleCard 
-                                    title="Security" 
-                                    desc="Lo bertanggung jawab penuh atas PIN login Lo. Jangan kasih tau siapapun." 
+                                <RuleCard
+                                    title="Security"
+                                    desc="Lo bertanggung jawab penuh atas PIN login Lo. Jangan kasih tau siapapun."
                                 />
                             </ul>
                         </div>
@@ -164,7 +164,7 @@ export default function TermsPage() {
                             </h4>
                             <p className="text-gray-300 text-sm leading-relaxed">
                                 Badminton adalah olahraga fisik intensitas tinggi. Dengan bergabung di event BadminTour, Lo menyadari risiko cedera (terkilir, otot ketarik, dll) adalah tanggung jawab pribadi.
-                                <br/><br/>
+                                <br /><br />
                                 BadminTour maupun Host <strong>tidak bertanggung jawab</strong> atas cedera fisik, kehilangan barang berharga di GOR, atau kerusakan raket akibat benturan saat bermain (clash).
                             </p>
                         </div>
@@ -194,8 +194,8 @@ export default function TermsPage() {
                     <span className="font-bold text-white">BadminTour Legal</span>
                 </div>
                 <p className="text-gray-600 text-sm">
-                    Play Fair. Respect Others. Smash Hard.<br/>
-                    &copy; 2026 BadminTour.
+                    Play Fair. Respect Others. Smash Hard.<br />
+                    &copy; {new Date().getFullYear()} BadminTour.
                 </p>
             </footer>
 
@@ -207,13 +207,12 @@ export default function TermsPage() {
 
 function TOCLink({ href, label, active = false }: { href: string, label: string, active?: boolean }) {
     return (
-        <a 
-            href={href} 
-            className={`block px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
-                active 
-                ? 'bg-[#ca1f3d] text-white shadow-lg shadow-[#ca1f3d]/20 scale-105' 
-                : 'text-gray-500 hover:text-white hover:bg-white/5'
-            }`}
+        <a
+            href={href}
+            className={`block px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${active
+                    ? 'bg-[#ca1f3d] text-white shadow-lg shadow-[#ca1f3d]/20 scale-105'
+                    : 'text-gray-500 hover:text-white hover:bg-white/5'
+                }`}
         >
             {label}
         </a>

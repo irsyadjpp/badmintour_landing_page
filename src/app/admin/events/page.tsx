@@ -14,7 +14,9 @@ import {
     Dumbbell,
     Trophy,
     AlertTriangle,
-    CalendarDays
+    CalendarDays,
+    ClipboardCheck,
+    Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +38,8 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AdminEventsPage() {
@@ -44,6 +48,13 @@ export default function AdminEventsPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [deleteId, setDeleteId] = useState<string | null>(null);
+
+    // Close Session State
+    const [closeEventId, setCloseEventId] = useState<string | null>(null);
+    const [shuttlecockQty, setShuttlecockQty] = useState('');
+    const [courtFee, setCourtFee] = useState('');
+    const [coachFee, setCoachFee] = useState('');
+    const [isCloseLoading, setIsCloseLoading] = useState(false);
 
     // Fetch Events
     const fetchEvents = async () => {
@@ -81,6 +92,36 @@ export default function AdminEventsPage() {
             toast({ title: "Error", description: "Gagal menghapus event.", variant: "destructive" });
         } finally {
             setDeleteId(null);
+        }
+    };
+
+    // Handle Close Session
+    const handleCloseSession = async () => {
+        if (!closeEventId) return;
+        setIsCloseLoading(true);
+        try {
+            const res = await fetch('/api/admin/finance/close-session', {
+                method: 'POST',
+                body: JSON.stringify({
+                    eventId: closeEventId,
+                    shuttlecockUsedQty: parseInt(shuttlecockQty),
+                    courtFee: parseInt(courtFee),
+                    coachFee: parseInt(coachFee),
+                    shuttlecockItemId: 'sc-001' // HARDCODED FOR DEMO (Should be select)
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast({ title: "Sesi Ditutup", description: "Laporan keuangan sesi telah dibuat." });
+                setCloseEventId(null);
+                fetchEvents();
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (error: any) {
+            toast({ title: "Gagal", description: error.message, variant: "destructive" });
+        } finally {
+            setIsCloseLoading(false);
         }
     };
 
@@ -155,6 +196,9 @@ export default function AdminEventsPage() {
                                         <DropdownMenuItem className="text-red-500 focus:text-red-500 focus:bg-red-500/10 cursor-pointer" onClick={() => setDeleteId(event.id)}>
                                             <Trash2 className="w-4 h-4 mr-2" /> Hapus Event
                                         </DropdownMenuItem>
+                                        <DropdownMenuItem className="text-blue-500 focus:text-blue-500 focus:bg-blue-500/10 cursor-pointer" onClick={() => setCloseEventId(event.id)}>
+                                            <ClipboardCheck className="w-4 h-4 mr-2" /> Tutup Buku (Close)
+                                        </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
@@ -228,6 +272,55 @@ export default function AdminEventsPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* CLOSE SESSION MODAL */}
+            <Dialog open={!!closeEventId} onOpenChange={(open) => !open && setCloseEventId(null)}>
+                <DialogContent className="bg-[#1A1A1A] border-white/10 text-white rounded-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Tutup Buku Sesi (Close Session)</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Shuttlecock Terpakai (Slop)</Label>
+                            <Input
+                                type="number"
+                                value={shuttlecockQty}
+                                onChange={(e) => setShuttlecockQty(e.target.value)}
+                                className="bg-[#121212] border-white/10"
+                                placeholder="Jml Slop"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Biaya Sewa Lapangan (Rp)</Label>
+                            <Input
+                                type="number"
+                                value={courtFee}
+                                onChange={(e) => setCourtFee(e.target.value)}
+                                className="bg-[#121212] border-white/10"
+                                placeholder="Total Bayar GOR"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Fee Pelatih (Opsional)</Label>
+                            <Input
+                                type="number"
+                                value={coachFee}
+                                onChange={(e) => setCoachFee(e.target.value)}
+                                className="bg-[#121212] border-white/10"
+                                placeholder="Fee Coach"
+                            />
+                        </div>
+                        <Button
+                            className="w-full bg-blue-600 text-white font-bold h-12 rounded-xl mt-4 hover:bg-blue-500"
+                            onClick={handleCloseSession}
+                            disabled={isCloseLoading}
+                        >
+                            {isCloseLoading ? <Loader2 className="animate-spin mr-2" /> : null}
+                            Hitung Profit & Tutup
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
