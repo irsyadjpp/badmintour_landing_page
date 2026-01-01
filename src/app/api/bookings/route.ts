@@ -50,32 +50,47 @@ export async function POST(req: Request) {
                 return NextResponse.json({ error: "Nama dan No. WhatsApp wajib diisi" }, { status: 400 });
             }
 
-            // Cek apakah No. HP ini terdaftar sebagai Member
+            // Cek apakah No. HP ini terdaftar (Member atau sudah pernah jadi Guest)
             const userCheckSnapshot = await db.collection("users").where("phoneNumber", "==", guestPhone).limit(1).get();
 
             if (!userCheckSnapshot.empty) {
-                // LINK TO EXISTING MEMBER ACCOUNT
+                // LINK TO EXISTING ACCOUNT (Member or Previous Guest)
                 const userDoc = userCheckSnapshot.docs[0];
                 const userData = userDoc.data();
 
                 participantData = {
                     userId: userDoc.id,
-                    userName: userData.name || guestName,
-                    userEmail: userData.email,
-                    userImage: userData.image,
-                    userRole: userData.role || 'member',
-                    type: 'member', // Treated as member
-                    guestPhone: guestPhone // Keep phone for reference
+                    userName: userData.name || guestName, // Prefer DB name if available
+                    userEmail: userData.email || "",
+                    userImage: userData.image || "",
+                    userRole: userData.role || 'guest',
+                    type: userData.role === 'member' ? 'member' : 'guest',
+                    guestPhone: guestPhone
                 };
-                loggerDetails = `Member ${userData.name} (via Guest Form ${guestPhone}) booking event`;
+                loggerDetails = `${userData.role === 'member' ? 'Member' : 'Guest'} ${userData.name} (via Guest Form ${guestPhone}) booking event`;
             } else {
-                // PURE GUEST
+                // NEW GUEST -> CREATE SHADOW USER
+                // Kita buatkan ID agar bisa ditautkan dengan Assessment / Coach
+                const newGuestRef = db.collection("users").doc();
+                await newGuestRef.set({
+                    id: newGuestRef.id,
+                    name: guestName,
+                    phoneNumber: guestPhone,
+                    role: 'guest', // Mark as guest
+                    createdAt: new Date().toISOString(),
+                    isShadow: true, // Marker bahwa ini akun otomatis
+                    image: `https://ui-avatars.com/api/?name=${encodeURIComponent(guestName)}&background=random` // Auto avatar
+                });
+
                 participantData = {
-                    guestName: guestName,
+                    userId: newGuestRef.id,
+                    userName: guestName,
+                    userRole: 'guest',
+                    type: 'guest',
                     guestPhone: guestPhone,
-                    type: 'guest'
+                    userImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(guestName)}&background=random`
                 };
-                loggerDetails = `Guest ${guestName} (${guestPhone}) booking event`;
+                loggerDetails = `New Guest ${guestName} (${guestPhone}) auto-registered & booked event`;
             }
         }
 
