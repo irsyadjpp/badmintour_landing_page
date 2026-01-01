@@ -50,7 +50,7 @@ export default function CoachFinancePage() {
             return json;
         },
         onSuccess: () => {
-            toast({ title: 'Request Submitted', description: 'Your withdrawal request is pending approval.' });
+            toast({ title: 'Request Submitted', description: 'Your withdrawal request is pending approval.', className: "bg-green-600 text-white border-none" });
             setIsWithdrawOpen(false);
             setWithdrawAmount('');
             setNotes('');
@@ -67,7 +67,7 @@ export default function CoachFinancePage() {
     };
 
     if (isLoading) {
-        return <div className="flex h-screen items-center justify-center bg-black text-white"><Loader2 className="animate-spin w-10 h-10 text-[#00f2ea]" /></div>;
+        return <div className="flex h-screen items-center justify-center bg-black text-white"><Loader2 className="animate-spin w-10 h-10 text-[#ca1f3d]" /></div>;
     }
 
     return (
@@ -75,13 +75,13 @@ export default function CoachFinancePage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-white flex items-center gap-3">
-                        <DollarSign className="w-8 h-8 text-[#00f2ea]" /> EARNINGS
+                    <h1 className="text-3xl font-black text-white flex items-center gap-3 uppercase italic tracking-tighter">
+                        <DollarSign className="w-8 h-8 text-[#ca1f3d]" /> EARNINGS
                     </h1>
-                    <p className="text-gray-400">Laporan pendapatan dari sesi coaching.</p>
+                    <p className="text-gray-400 font-medium">Laporan pendapatan dari sesi coaching.</p>
                 </div>
                 {/* BUTTON FIX: Solid White Background -> Black Text (High Contrast) */}
-                <Button className="bg-white text-black hover:bg-gray-200 rounded-xl h-12 font-bold transition-colors w-full md:w-auto shadow-lg border-none">
+                <Button className="bg-white text-black hover:bg-gray-200 rounded-xl h-12 font-bold transition-colors w-full md:w-auto shadow-lg border-none hover:scale-105">
                     <Download className="w-4 h-4 mr-2" /> Export Report
                 </Button>
             </div>
@@ -90,9 +90,9 @@ export default function CoachFinancePage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 {/* Main Balance Card */}
-                <Card className="col-span-1 lg:col-span-2 bg-gradient-to-br from-[#151515] to-[#0a0a0a] border-white/10 p-8 rounded-[2.5rem] relative overflow-hidden group">
+                <Card className="col-span-1 lg:col-span-2 bg-[#151515] border-white/5 p-8 rounded-[2.5rem] relative overflow-hidden group shadow-2xl">
                     {/* Background Effect */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-[#00f2ea]/5 rounded-full blur-[80px] group-hover:bg-[#00f2ea]/10 transition-all duration-700"></div>
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-[#22c55e]/5 rounded-full blur-[80px] group-hover:bg-[#22c55e]/10 transition-all duration-700"></div>
 
                     <div className="relative z-10">
                         <div className="flex items-center gap-2 mb-2">
@@ -104,62 +104,62 @@ export default function CoachFinancePage() {
                         </h2>
 
                         <div className="flex flex-col sm:flex-row gap-4">
-                            {/* Primary Action: Cyan (Signature) */}
+                            {/* Primary Action: Red/Brand for high impact */}
                             <Dialog open={isWithdrawOpen} onOpenChange={setIsWithdrawOpen}>
                                 <DialogTrigger asChild>
                                     <Button
                                         onClick={handleWithdrawClick}
                                         disabled={summary.balance <= 0}
-                                        className="bg-[#00f2ea] text-black hover:bg-[#00c2bb] font-black h-14 px-8 rounded-xl shadow-[0_0_20px_rgba(0,242,234,0.3)] hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100"
+                                        className="bg-[#ca1f3d] text-white hover:bg-[#a61932] font-black h-14 px-8 rounded-xl shadow-[0_0_20px_rgba(202,31,61,0.3)] hover:scale-105 transition-transform disabled:opacity-50 disabled:hover:scale-100 uppercase tracking-wide"
                                     >
                                         WITHDRAW FUNDS
                                     </Button>
                                 </DialogTrigger>
-                                <DialogContent className="bg-[#1A1A1A] border-white/10 text-white rounded-[2rem] p-6">
+                                <DialogContent className="bg-[#1A1A1A] border-white/10 text-white rounded-[2rem] p-6 shadow-2xl">
                                     <DialogHeader>
-                                        <DialogTitle>Request Payout</DialogTitle>
+                                        <DialogTitle className="text-xl font-black uppercase italic">Request Payout</DialogTitle>
                                     </DialogHeader>
                                     <div className="space-y-4 py-4">
                                         <div className="space-y-2">
-                                            <Label>Amount to Withdraw</Label>
+                                            <Label className="text-gray-400 uppercase text-xs font-bold">Amount to Withdraw</Label>
                                             <Input
                                                 type="number"
                                                 value={withdrawAmount}
                                                 onChange={(e) => setWithdrawAmount(e.target.value)}
-                                                className="bg-[#121212] border-white/10 h-12 text-lg font-bold"
+                                                className="bg-[#0a0a0a] border-white/10 h-14 text-lg font-bold rounded-xl focus:border-[#ca1f3d]"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label>Bank Details (Bank Name - Account No - Name)</Label>
+                                            <Label className="text-gray-400 uppercase text-xs font-bold">Bank Details (Bank - Acc - Name)</Label>
                                             <Input
                                                 placeholder="e.g. BCA 1234567890 Budi"
                                                 value={bankDetails}
                                                 onChange={(e) => setBankDetails(e.target.value)}
-                                                className="bg-[#121212] border-white/10"
+                                                className="bg-[#0a0a0a] border-white/10 h-12 rounded-xl focus:border-[#ca1f3d]"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <Label>Notes (Optional)</Label>
+                                            <Label className="text-gray-400 uppercase text-xs font-bold">Notes (Optional)</Label>
                                             <Input
                                                 placeholder="Urgent..."
                                                 value={notes}
                                                 onChange={(e) => setNotes(e.target.value)}
-                                                className="bg-[#121212] border-white/10"
+                                                className="bg-[#0a0a0a] border-white/10 h-12 rounded-xl focus:border-[#ca1f3d]"
                                             />
                                         </div>
                                         <Button
-                                            className="w-full h-12 bg-[#00f2ea] text-black font-bold hover:bg-[#00c2bb] mt-4"
+                                            className="w-full h-14 bg-[#ca1f3d] text-white font-bold hover:bg-[#a61932] mt-4 rounded-xl shadow-lg"
                                             onClick={() => withdrawMutation.mutate()}
                                             disabled={withdrawMutation.isPending || !withdrawAmount || parseInt(withdrawAmount) <= 0}
                                         >
-                                            {withdrawMutation.isPending ? <Loader2 className="animate-spin" /> : 'Confirm Request'}
+                                            {withdrawMutation.isPending ? <Loader2 className="animate-spin" /> : 'CONFIRM REQUEST'}
                                         </Button>
                                     </div>
                                 </DialogContent>
                             </Dialog>
 
                             {/* Secondary Action: Transparent White Border */}
-                            <Button variant="outline" className="bg-transparent border-2 border-white/20 text-white hover:bg-white hover:text-black h-14 px-6 rounded-xl font-bold transition-all">
+                            <Button variant="outline" className="bg-transparent border-2 border-white/10 text-white hover:bg-white hover:text-black h-14 px-6 rounded-xl font-bold transition-all uppercase tracking-wide">
                                 Add Bank Account
                             </Button>
                         </div>
@@ -167,19 +167,19 @@ export default function CoachFinancePage() {
                 </Card>
 
                 {/* Secondary Stats */}
-                <Card className="bg-[#151515] border-white/10 p-6 rounded-[2.5rem] flex flex-col justify-center space-y-6">
-                    <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#0a0a0a] border border-white/5">
-                        <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center text-green-500 border border-green-500/20">
-                            <TrendingUp className="w-6 h-6" />
+                <Card className="bg-[#151515] border-white/5 p-6 rounded-[2.5rem] flex flex-col justify-center space-y-6">
+                    <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#0a0a0a] border border-white/5 hover:border-green-500/30 transition-colors">
+                        <div className="w-14 h-14 bg-green-500/10 rounded-2xl flex items-center justify-center text-green-500 border border-green-500/10">
+                            <TrendingUp className="w-7 h-7" />
                         </div>
                         <div>
                             <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Total Earned</p>
                             <p className="text-xl font-black text-white">Rp {summary.totalEarned.toLocaleString('id-ID')}</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#0a0a0a] border border-white/5">
-                        <div className="w-12 h-12 bg-[#ff0099]/10 rounded-xl flex items-center justify-center text-[#ff0099] border border-[#ff0099]/20">
-                            <CreditCard className="w-6 h-6" />
+                    <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#0a0a0a] border border-white/5 hover:border-[#ffbe00]/30 transition-colors">
+                        <div className="w-14 h-14 bg-[#ffbe00]/10 rounded-2xl flex items-center justify-center text-[#ffbe00] border border-[#ffbe00]/10">
+                            <CreditCard className="w-7 h-7" />
                         </div>
                         <div>
                             <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Pending Clearance</p>
@@ -191,25 +191,27 @@ export default function CoachFinancePage() {
 
             {/* Transaction History */}
             <div>
-                <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                    <ArrowUpRight className="w-5 h-5 text-[#00f2ea]" /> Recent Transactions
+                <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2 uppercase italic">
+                    <ArrowUpRight className="w-5 h-5 text-[#ca1f3d]" /> Recent Transactions
                 </h3>
                 <div className="space-y-3">
                     {summary.history.length > 0 ? summary.history.map((trx: any) => (
-                        <div key={trx.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 rounded-2xl bg-[#151515] border border-white/10 hover:border-[#00f2ea]/30 transition group gap-4">
+                        <div key={trx.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 rounded-2xl bg-[#151515] border border-white/5 hover:border-[#ca1f3d]/30 transition group gap-4 relative overflow-hidden">
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#ca1f3d] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
                             <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-2xl bg-[#0a0a0a] flex items-center justify-center font-bold border border-white/5 transition-colors ${trx.type === 'EARNING' ? 'text-green-500' : 'text-[#ff0099]'}`}>
+                                <div className={`w-12 h-12 rounded-2xl bg-[#0a0a0a] flex items-center justify-center font-bold border border-white/5 transition-colors ${trx.type === 'EARNING' ? 'text-green-500' : 'text-[#ffbe00]'}`}>
                                     {trx.type === 'EARNING' ? <ArrowUpRight className="w-5 h-5" /> : <CreditCard className="w-5 h-5" />}
                                 </div>
                                 <div>
-                                    <p className="text-white font-bold text-sm group-hover:text-[#00f2ea] transition-colors">{trx.description}</p>
+                                    <p className="text-white font-bold text-sm group-hover:text-[#ca1f3d] transition-colors">{trx.description}</p>
                                     <p className="text-xs text-gray-500 mt-0.5">
                                         {format(new Date(trx.date), 'dd MMM yyyy • HH:mm', { locale: idLocale })}
                                     </p>
                                 </div>
                             </div>
                             <div className="text-left sm:text-right w-full sm:w-auto pl-16 sm:pl-0">
-                                <p className={`font-mono font-bold text-lg ${trx.type === 'EARNING' ? 'text-[#00f2ea]' : 'text-gray-400'}`}>
+                                <p className={`font-mono font-bold text-lg ${trx.type === 'EARNING' ? 'text-[#22c55e]' : 'text-gray-400'}`}>
                                     {trx.type === 'EARNING' ? '+' : '-'} Rp {Math.abs(trx.amount).toLocaleString('id-ID')}
                                 </p>
                                 {trx.status && (
@@ -220,8 +222,9 @@ export default function CoachFinancePage() {
                             </div>
                         </div>
                     )) : (
-                        <div className="text-center py-10 text-gray-500 border border-white/5 rounded-2xl">
-                            No transactions found.
+                        <div className="text-center py-12 text-gray-500 border border-white/5 border-dashed rounded-[2rem] bg-[#151515]/50">
+                            <Wallet className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                            <p className="font-bold">No transactions found.</p>
                         </div>
                     )}
                 </div>

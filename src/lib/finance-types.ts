@@ -73,11 +73,14 @@ export type JournalTransaction = {
   metadata?: {
     breakdown?: TxBreakdownItem[]; // Added for Detailed Unit Economics
     sessionId?: string;
+    eventId?: string; // Alias for sessionId
+    coachId?: string; // Added for Payroll
     notes?: string;
     proofImage?: string; // Base64 or URL
+    type?: string; // e.g. 'PAYROLL_GENERATED'
+    status: 'posted' | 'draft';
+    createdBy?: string;
   };
-  status: 'posted' | 'draft';
-  createdBy?: string;
 };
 
 export type PayoutRequest = {

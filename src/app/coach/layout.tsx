@@ -13,18 +13,19 @@ export default function CoachLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="min-h-screen w-full flex flex-col bg-[#0a0a0a] text-white font-sans antialiased selection:bg-[#00f2ea] selection:text-black relative overflow-x-hidden">
-       
-       {/* Background Ambience (Cyan Tint for Coach) */}
-       <div className="fixed inset-0 w-full h-full bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-[#00f2ea]/10 via-transparent to-transparent pointer-events-none z-0"></div>
+    <div className="min-h-screen w-full flex flex-col bg-[#0a0a0a] text-white font-sans antialiased selection:bg-[#ffbe00] selection:text-black relative overflow-x-hidden">
 
-       <CoachSidebar />
-       
-       <main className="relative z-10 w-full flex-1 pl-0 md:pl-32 pr-0 md:pr-8 py-4 md:py-8">
-          <div className="max-w-[1400px] mx-auto w-full">
-            {children}
-          </div>
-       </main>
+      {/* Background Ambience (Brand Red/Yellow for Coach) */}
+      <div className="fixed inset-0 w-full h-full bg-[radial-gradient(circle_at_top_left,_var(--tw-gradient-stops))] from-[#ca1f3d]/10 via-transparent to-transparent pointer-events-none z-0"></div>
+      <div className="fixed bottom-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-[#ffbe00]/5 via-transparent to-transparent pointer-events-none z-0"></div>
+
+      <CoachSidebar />
+
+      <main className="relative z-10 w-full flex-1 pl-0 md:pl-32 pr-0 md:pr-8 py-4 md:py-8">
+        <div className="max-w-[1400px] mx-auto w-full">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }

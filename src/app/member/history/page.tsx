@@ -1,6 +1,6 @@
 'use client';
 
-import { History, Calendar, Clock, MapPin, Loader2, XCircle, CheckCircle } from 'lucide-react';
+import { History, Calendar, Clock, MapPin, Loader2, XCircle, CheckCircle, Dumbbell } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
@@ -97,6 +97,24 @@ export default function HistoryPage() {
                     <h3 className="text-xl font-black text-white leading-tight group-hover:text-[#ffbe00] transition-colors">
                       {item.event?.title || item.eventTitle}
                     </h3>
+
+                    {/* CURRICULUM ACCORDION */}
+                    {item.event?.curriculum && (
+                      <div className="bg-white/5 rounded-xl border border-white/5 overflow-hidden">
+                        <details className="group/details">
+                          <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-white/5 transition-colors list-none">
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                              <Dumbbell className="w-3 h-3 text-[#ffbe00]" />
+                              Materi Latihan
+                            </span>
+                            <span className="text-white group-open/details:rotate-180 transition-transform text-xs">▼</span>
+                          </summary>
+                          <div className="p-3 pt-0 text-sm text-gray-300 font-mono whitespace-pre-wrap leading-relaxed border-t border-white/5 border-dashed">
+                            {item.event.curriculum}
+                          </div>
+                        </details>
+                      </div>
+                    )}
 
                     <div className="space-y-2 pt-4 border-t border-white/5">
                       <div className="flex items-center gap-3 text-sm text-gray-400">

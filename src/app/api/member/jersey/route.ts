@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // Menggunakan absolute path agar lebih aman
+import { authOptions } from "@/lib/auth"; // Menggunakan absolute path agar lebih aman
 import { db } from "@/lib/firebase-admin";
 import { logActivity } from "@/lib/audit-logger";
 

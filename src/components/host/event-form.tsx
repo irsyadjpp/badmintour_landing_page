@@ -119,6 +119,21 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
     fetchCoaches();
   }, []);
 
+  // LOAD MODULES
+  const [modules, setModules] = useState<any[]>([]);
+  useEffect(() => {
+    const fetchModules = async () => {
+      try {
+        const res = await fetch('/api/coach/modules'); // Fetch all modules
+        const data = await res.json();
+        if (data.data) setModules(data.data);
+      } catch (error) {
+        console.error("Gagal load modules", error);
+      }
+    };
+    fetchModules();
+  }, []);
+
   // AUTO-SET END TIME
   useEffect(() => {
     if (startTime && !endTime && mode === 'create') { // Only auto-set on create or if empty
@@ -226,6 +241,7 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
               {formData.type === 'drilling' && (
                 <>
                   <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                    {/* COACH SELECTION */}
                     <Material3Select
                       value={formData.coachName}
                       onValueChange={(val) => {
@@ -255,6 +271,52 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
                         )}
                       </Material3SelectContent>
                     </Material3Select>
+
+                    {/* MODULE SELECTION (Only show if Coach is Selected) */}
+                    {formData.coachName && (
+                      <div className="mt-4 pt-4 border-t border-white/5 animate-in slide-in-from-left-2">
+                        <Material3Select
+                          value={(formData as any).moduleId || ""}
+                          onValueChange={(val) => {
+                            const selectedModule = modules.find(m => m.id === val);
+                            if (selectedModule) {
+                              setFormData({
+                                ...formData,
+                                // @ts-ignore
+                                moduleId: selectedModule.id,
+                                // @ts-ignore
+                                moduleTitle: selectedModule.title,
+                                // Auto-fill details from module
+                                skillLevel: selectedModule.level?.toLowerCase() === 'advance' ? 'advanced' : selectedModule.level?.toLowerCase() || 'all',
+                                curriculum: `[Module: ${selectedModule.title}]\n\nDrills:\n- ${selectedModule.drills?.join('\n- ')}`
+                              });
+                              toast({ title: "Modul Dipilih", description: `Materi "${selectedModule.title}" telah dimuat.` });
+                            }
+                          }}
+                        >
+                          <Material3SelectTrigger label="Pilih Modul Latihan (Opsional)" hasValue={!!(formData as any).moduleId}>
+                            <Material3SelectValue placeholder="Gunakan Modul dari Library?" />
+                          </Material3SelectTrigger>
+                          <Material3SelectContent>
+                            {modules.filter(m => m.coachName === formData.coachName || !m.coachName).length > 0 ? (
+                              modules
+                                .filter(m => m.coachName === formData.coachName || !m.coachName) // Filter by Coach
+                                .map((mod) => (
+                                  <Material3SelectItem key={mod.id} value={mod.id}>
+                                    <span className="flex items-center gap-2">
+                                      <Dumbbell className="w-4 h-4 text-primary" />
+                                      {mod.title}
+                                    </span>
+                                  </Material3SelectItem>
+                                ))
+                            ) : (
+                              <div className="p-2 text-xs text-gray-500 text-center">Coach ini belum punya Modul</div>
+                            )}
+                          </Material3SelectContent>
+                        </Material3Select>
+                        <p className="text-[10px] text-gray-400 mt-1 ml-1">*Memilih modul akan mengisi otomatis detail kurikulum.</p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Skill Level & Curriculum for Drilling */}

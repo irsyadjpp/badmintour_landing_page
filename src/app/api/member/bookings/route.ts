@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 
@@ -153,6 +153,11 @@ export async function GET(req: Request) {
                         time: event?.time || "",
                         location: event?.location || "",
                         coach: event?.coachNickname || event?.coachName || "",
+                        // Added for Curriculum Visibility
+                        curriculum: event?.curriculum || "",
+                        moduleId: event?.moduleId || null,
+                        moduleTitle: event?.moduleTitle || null,
+                        type: event?.type || 'mabar',
                     }
                 };
             }));

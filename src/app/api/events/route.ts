@@ -2,7 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/firebase-admin";
 import { logActivity } from "@/lib/audit-logger";
 
@@ -131,6 +131,10 @@ export async function POST(req: Request) {
             organizer: organizer || "",
             playerCriteria: playerCriteria || "",
             prizes: prizes || "",
+            // Module Link (Coaching System)
+            moduleId: body.moduleId || null,
+            moduleTitle: body.moduleTitle || null,
+
             hostId: session.user.id,
             createdAt: new Date().toISOString(),
             status: 'open'

@@ -12,4 +12,5 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
-export { db, admin };
+const adminDb = db; // Alias for backward compatibility
+export { db, admin, adminDb };
