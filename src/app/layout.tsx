@@ -18,8 +18,14 @@ const oswald = Oswald({
 });
 
 export const metadata: Metadata = {
-  title: 'BadminTour - Komunitas Badminton Modern',
+  title: {
+    default: 'BADMINTOUR - Komunitas Badminton Modern',
+    template: '%s | BADMINTOUR',
+  },
   description: 'Platform Mabar, Sparring, dan Coaching Badminton.',
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({

@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service',
-  description: 'Aturan main dan kode etik di komunitas BadminTour.',
+  title: 'Moments Gallery',
+  description: 'Kumpulan momen seru komunitas BadminTour.',
 };
 
-export default function TermsLayout({
+export default function MomentsLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

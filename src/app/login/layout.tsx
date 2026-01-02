@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service',
-  description: 'Aturan main dan kode etik di komunitas BadminTour.',
+  title: 'Login',
+  description: 'Masuk ke akun BadminTour.',
 };
 
-export default function TermsLayout({
+export default function LoginLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

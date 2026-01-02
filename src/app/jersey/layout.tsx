@@ -3,7 +3,7 @@ import '../globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Exclusive Drop | BADMINTOUR',
+  title: 'Exclusive Drop',
   description: 'Limited edition merchandise drop for Badmintour community members.',
 };
 
@@ -14,8 +14,8 @@ export default function MerchDropLayout({
 }>) {
   return (
     <>
-        {children}
-        <Toaster />
+      {children}
+      <Toaster />
     </>
   );
 }

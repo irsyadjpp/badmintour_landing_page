@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import CoachSidebar from '@/components/layout/coach-sidebar';
 
 export const metadata: Metadata = {
-  title: 'Coach Dashboard | BadminTour',
+  title: 'Coach Dashboard',
   description: 'Manage your coaching sessions.',
 };
 

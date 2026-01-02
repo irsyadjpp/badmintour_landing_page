@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service',
-  description: 'Aturan main dan kode etik di komunitas BadminTour.',
+  title: 'Event Details',
+  description: 'Informasi lengkap event badminton.',
 };
 
-export default function TermsLayout({
+export default function EventDetailLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

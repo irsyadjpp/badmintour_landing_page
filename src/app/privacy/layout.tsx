@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | BadminTour',
+  title: 'Privacy Policy',
   description: 'Kebijakan privasi dan keamanan data di BadminTour.',
 };
 
