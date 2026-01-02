@@ -17,20 +17,20 @@ import { Card } from '@/components/ui/card';
 
 export default function PrivacyPage() {
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#ffbe00] selection:text-black font-sans">
+        <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-[#ca1f3d] selection:text-white font-sans">
 
             {/* 1. HERO HEADER */}
             <div className="relative pt-32 pb-20 px-6 overflow-hidden">
                 {/* Background Ambience */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none"></div>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[#ca1f3d]/10 blur-[120px] rounded-full pointer-events-none"></div>
 
                 <div className="max-w-4xl mx-auto text-center relative z-10">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 text-xs font-bold uppercase tracking-widest mb-6">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#ffbe00]/10 border border-[#ffbe00]/20 text-[#ffbe00] text-xs font-bold uppercase tracking-widest mb-6">
                         <Shield className="w-3 h-3" />
                         Trust & Safety
                     </div>
                     <h1 className="text-5xl md:text-7xl font-black tracking-tighter mb-6">
-                        Privacy <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500">Policy</span>
+                        Privacy <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ca1f3d] to-[#ffbe00]">Policy</span>
                     </h1>
                     <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
                         Kami menjaga privasi data Lo biar bisa mabar dengan tenang. Transparan, aman, dan nggak neko-neko.
@@ -57,8 +57,8 @@ export default function PrivacyPage() {
 
                         <div className="pt-8 px-4">
                             <Link href="/">
-                                <Button variant="outline" className="w-full border-white/10 hover:bg-white text-white hover:text-black rounded-xl gap-2 font-bold">
-                                    <ChevronLeft className="w-4 h-4" /> Back to Home
+                                <Button className="w-full bg-transparent border-2 border-[#ffbe00] text-[#ffbe00] hover:bg-[#ffbe00] hover:text-black rounded-xl gap-2 font-black h-12 transition-all uppercase tracking-wide">
+                                    <ChevronLeft className="w-5 h-5" /> Back to Home
                                 </Button>
                             </Link>
                         </div>
@@ -71,7 +71,7 @@ export default function PrivacyPage() {
                     {/* Section 1 */}
                     <section id="data-collection" className="scroll-mt-24">
                         <div className="flex items-center gap-4 mb-6">
-                            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                            <div className="w-12 h-12 rounded-2xl bg-[#ca1f3d]/10 flex items-center justify-center text-[#ca1f3d]">
                                 <Eye className="w-6 h-6" />
                             </div>
                             <h2 className="text-2xl font-black uppercase tracking-tight">1. Data yang Kami Kumpulkan</h2>
@@ -97,7 +97,7 @@ export default function PrivacyPage() {
                     {/* Section 2 */}
                     <section id="data-usage" className="scroll-mt-24">
                         <div className="flex items-center gap-4 mb-6">
-                            <div className="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-500">
+                            <div className="w-12 h-12 rounded-2xl bg-[#ffbe00]/10 flex items-center justify-center text-[#ffbe00]">
                                 <Server className="w-6 h-6" />
                             </div>
                             <h2 className="text-2xl font-black uppercase tracking-tight">2. Cara Kami Pakai Data</h2>
@@ -118,7 +118,7 @@ export default function PrivacyPage() {
                     {/* Section 3 */}
                     <section id="data-sharing" className="scroll-mt-24">
                         <div className="flex items-center gap-4 mb-6">
-                            <div className="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500">
+                            <div className="w-12 h-12 rounded-2xl bg-[#ca1f3d]/10 flex items-center justify-center text-[#ca1f3d]">
                                 <Lock className="w-6 h-6" />
                             </div>
                             <h2 className="text-2xl font-black uppercase tracking-tight">3. Keamanan Data</h2>
@@ -141,13 +141,13 @@ export default function PrivacyPage() {
                     {/* Section 4 */}
                     <section id="rights" className="scroll-mt-24">
                         <div className="flex items-center gap-4 mb-6">
-                            <div className="w-12 h-12 rounded-2xl bg-pink-500/10 flex items-center justify-center text-pink-500">
+                            <div className="w-12 h-12 rounded-2xl bg-[#ffbe00]/10 flex items-center justify-center text-[#ffbe00]">
                                 <UserCheck className="w-6 h-6" />
                             </div>
                             <h2 className="text-2xl font-black uppercase tracking-tight">4. Hak Kendali Lo</h2>
                         </div>
                         <p className="text-gray-400 mb-4">Lo punya kendali penuh atas akun Lo:</p>
-                        <ul className="list-disc pl-5 space-y-2 text-gray-400 marker:text-pink-500">
+                        <ul className="list-disc pl-5 space-y-2 text-gray-400 marker:text-[#ffbe00]">
                             <li><strong className="text-white">Akses & Edit:</strong> Bisa ganti foto, nickname, atau data diri kapan aja di menu Profile.</li>
                             <li><strong className="text-white">Hapus Akun:</strong> Kalau mau pensiun dini, Lo bisa request hapus akun permanen. Semua data history & rank bakal ilang selamanya.</li>
                             <li><strong className="text-white">Opt-out:</strong> Bisa matiin notifikasi email/WA kalau dirasa ganggu.</li>
@@ -192,8 +192,8 @@ function TOCLink({ href, label, active = false }: { href: string, label: string,
         <a
             href={href}
             className={`block px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${active
-                    ? 'bg-blue-600/10 text-blue-500 border border-blue-600/20'
-                    : 'text-gray-500 hover:text-white hover:bg-white/5'
+                ? 'bg-[#ca1f3d] text-white shadow-lg shadow-[#ca1f3d]/20 scale-105'
+                : 'text-gray-500 hover:text-white hover:bg-white/5'
                 }`}
         >
             {label}
@@ -204,7 +204,7 @@ function TOCLink({ href, label, active = false }: { href: string, label: string,
 function ListItem({ title, children }: { title: string, children: React.ReactNode }) {
     return (
         <li className="bg-[#151515] border border-white/5 p-4 rounded-xl flex gap-4 items-start">
-            <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 shrink-0"></div>
+            <div className="w-2 h-2 rounded-full bg-[#ffbe00] mt-2 shrink-0"></div>
             <div>
                 <strong className="text-white block mb-1">{title}</strong>
                 <span className="text-sm">{children}</span>
