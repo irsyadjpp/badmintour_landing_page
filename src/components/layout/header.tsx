@@ -18,78 +18,78 @@ import {
 import { useSession } from 'next-auth/react';
 
 function MobileMenu() {
-    const [isMobileOpen, setIsMobileOpen] = React.useState(false);
-    const { data: session } = useSession();
-    // @ts-ignore
-    const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'superadmin';
+  const [isMobileOpen, setIsMobileOpen] = React.useState(false);
+  const { data: session } = useSession();
+  // @ts-ignore
+  const isAdmin = session?.user?.role === 'admin' || session?.user?.role === 'superadmin';
 
-    return (
-        <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                className={cn(
-                  'p-2 rounded-full transition flex items-center justify-center text-gray-900 bg-gray-100 hover:bg-gray-200'
-                )}
-              >
-                <Menu className="w-6 h-6" />
-              </Button>
-            </SheetTrigger>
-            
-            {/* DRAWER CONTENT */}
-            <SheetContent side="top" className="w-full border-b border-border bg-background/95 backdrop-blur-xl p-6 rounded-b-[2rem]">
-                <SheetHeader className="mb-6 flex flex-row items-center justify-between">
-                    <SheetTitle className="flex items-center gap-2">
-                        <Image src="/images/logo.png" alt="Badmintour Logo" width={28} height={28} />
-                        <span className="font-heading text-xl font-black tracking-tight">
-                            BADMIN<span className="text-primary">TOUR</span>
-                        </span>
-                    </SheetTitle>
-                    {/* Tombol Close otomatis ada di kanan atas oleh SheetContent */}
-                </SheetHeader>
-                
-                <div className="flex flex-col gap-2">
-                    <div className="grid gap-2">
-                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-4 mt-2 mb-1">Play Area</p>
-                        <SheetClose asChild>
-                            <Link href="/#schedule" className="flex items-center justify-between py-3 px-4 text-sm font-bold bg-secondary/50 rounded-xl">
-                                Mabar Rutin <ArrowRight className="w-4 h-4 text-muted-foreground"/>
-                            </Link>
-                        </SheetClose>
-                        <SheetClose asChild>
-                            <Link href="/#services" className="flex items-center justify-between py-3 px-4 text-sm font-bold bg-secondary/50 rounded-xl">
-                                Turnamen <ArrowRight className="w-4 h-4 text-muted-foreground"/>
-                            </Link>
-                        </SheetClose>
-                    </div>
-                    
-                    <div className="grid gap-2 mt-4">
-                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-4 mt-2 mb-1">Training</p>
-                        <SheetClose asChild>
-                            <Link href="/#services" className="flex items-center justify-between py-3 px-4 text-sm font-bold bg-secondary/50 rounded-xl">
-                                Drilling Program <ArrowRight className="w-4 h-4 text-muted-foreground"/>
-                            </Link>
-                        </SheetClose>
-                    </div>
+  return (
+    <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+      <SheetTrigger asChild>
+        <Button
+          variant="ghost"
+          className={cn(
+            'p-2 rounded-full transition flex items-center justify-center text-gray-900 bg-gray-100 hover:bg-gray-200'
+          )}
+        >
+          <Menu className="w-6 h-6" />
+        </Button>
+      </SheetTrigger>
 
-                     <div className="mt-6 pt-6 border-t border-border">
-                        {isAdmin && (
-                            <SheetClose asChild>
-                                <Link href="/admin/dashboard" className="flex items-center justify-center w-full h-12 rounded-xl text-base font-bold bg-destructive text-white shadow-lg hover:bg-destructive/90 transition mb-2">
-                                    Admin Panel
-                                </Link>
-                            </SheetClose>
-                        )}
-                        <SheetClose asChild>
-                            <Link href="/login" className="flex items-center justify-center w-full h-12 rounded-xl text-base font-bold bg-primary text-white shadow-lg hover:bg-primary/90 transition">
-                                Login Member
-                            </Link>
-                        </SheetClose>
-                    </div>
-                </div>
-            </SheetContent>
-        </Sheet>
-      );
+      {/* DRAWER CONTENT */}
+      <SheetContent side="top" className="w-full border-b border-border bg-background/95 backdrop-blur-xl p-6 rounded-b-[2rem]">
+        <SheetHeader className="mb-6 flex flex-row items-center justify-between">
+          <SheetTitle className="flex items-center gap-2">
+            <Image src="/images/logo.png" alt="Badmintour Logo" width={28} height={28} />
+            <span className="font-heading text-xl font-black tracking-tight">
+              BADMIN<span className="text-primary">TOUR</span>
+            </span>
+          </SheetTitle>
+          {/* Tombol Close otomatis ada di kanan atas oleh SheetContent */}
+        </SheetHeader>
+
+        <div className="flex flex-col gap-2">
+          <div className="grid gap-2">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-4 mt-2 mb-1">Play Area</p>
+            <SheetClose asChild>
+              <Link href="/#schedule" className="flex items-center justify-between py-3 px-4 text-sm font-bold bg-secondary/50 rounded-xl">
+                Mabar Rutin <ArrowRight className="w-4 h-4 text-muted-foreground" />
+              </Link>
+            </SheetClose>
+            <SheetClose asChild>
+              <Link href="/#services" className="flex items-center justify-between py-3 px-4 text-sm font-bold bg-secondary/50 rounded-xl">
+                Turnamen <ArrowRight className="w-4 h-4 text-muted-foreground" />
+              </Link>
+            </SheetClose>
+          </div>
+
+          <div className="grid gap-2 mt-4">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-4 mt-2 mb-1">Training</p>
+            <SheetClose asChild>
+              <Link href="/#services" className="flex items-center justify-between py-3 px-4 text-sm font-bold bg-secondary/50 rounded-xl">
+                Drilling Program <ArrowRight className="w-4 h-4 text-muted-foreground" />
+              </Link>
+            </SheetClose>
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-border">
+            {isAdmin && (
+              <SheetClose asChild>
+                <Link href="/admin/dashboard" className="flex items-center justify-center w-full h-12 rounded-xl text-base font-bold bg-destructive text-white shadow-lg hover:bg-destructive/90 transition mb-2">
+                  Admin Panel
+                </Link>
+              </SheetClose>
+            )}
+            <SheetClose asChild>
+              <Link href="/login" className="flex items-center justify-center w-full h-12 rounded-xl text-base font-bold bg-primary text-white shadow-lg hover:bg-primary/90 transition">
+                Login Member
+              </Link>
+            </SheetClose>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
 }
 
 
@@ -108,7 +108,7 @@ export default function Header() {
       setIsScrolled(window.scrollY > SCROLL_THRESHOLD);
     };
 
-    handleScroll(); 
+    handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -118,16 +118,16 @@ export default function Header() {
       <nav
         id="island"
         className={cn(
-          'pointer-events-auto relative flex items-center justify-between transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]',
+          'pointer-events-auto relative flex items-center justify-between transition-all duration-700 ease-expo',
           isScrolled ? 'text-white' : 'text-gray-900',
           isScrolled
             ? 'w-auto max-w-5xl py-3 px-5'
             : 'w-full max-w-7xl py-5 px-6'
         )}
       >
-        <Link href="/" className="flex items-center gap-3 group z-20" onClick={() => window.scrollTo(0,0)}>
+        <Link href="/" className="flex items-center gap-3 group z-20" onClick={() => window.scrollTo(0, 0)}>
           <div className={cn("h-8 w-auto transition-transform duration-500 origin-left flex items-center", isScrolled ? 'scale-0 w-0' : 'scale-100')}>
-             <Image src="/images/logo.png" alt="Badmintour Logo" width={28} height={28} className="object-contain" />
+            <Image src="/images/logo.png" alt="Badmintour Logo" width={28} height={28} className="object-contain" />
           </div>
           <span
             id="brand-text"
@@ -169,57 +169,57 @@ export default function Header() {
               Training
               <ChevronDown className="w-3 h-3 opacity-50 group-hover:rotate-180 transition-transform" strokeWidth={3} />
             </button>
-             <div className="absolute top-full left-1/2 -translate-x-1/2 mt-6 w-48 opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300 ease-out pt-2">
-                    <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-2xl p-2 shadow-xl ring-1 ring-black/5 text-left">
-                        <Link href="/#services" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-primary hover:text-white transition text-sm font-bold">🚀 Drilling Program</Link>
-                        <Link href="#" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-primary hover:text-white transition text-sm font-bold">👟 Private Coach</Link>
-                    </div>
-                </div>
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-6 w-48 opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300 ease-out pt-2">
+              <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-2xl p-2 shadow-xl ring-1 ring-black/5 text-left">
+                <Link href="/#services" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-primary hover:text-white transition text-sm font-bold">🚀 Drilling Program</Link>
+                <Link href="#" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-primary hover:text-white transition text-sm font-bold">👟 Private Coach</Link>
+              </div>
+            </div>
           </div>
-          
+
           {/* Menu Item 3: Community */}
           <div className="relative group">
             <button className={cn('menu-link px-5 py-2 font-black uppercase tracking-wider text-sm transition flex items-center gap-1', isScrolled ? 'hover:text-accent' : 'hover:text-primary')}>
               Community
-               <ChevronDown className="w-3 h-3 opacity-50 group-hover:rotate-180 transition-transform" strokeWidth={3} />
+              <ChevronDown className="w-3 h-3 opacity-50 group-hover:rotate-180 transition-transform" strokeWidth={3} />
             </button>
-             <div className="absolute top-full right-0 mt-6 w-48 opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300 ease-out pt-2">
-                    <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-2xl p-2 shadow-xl ring-1 ring-black/5 text-left">
-                        <Link href="/moments" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-accent hover:text-black transition text-sm font-bold">📸 Momen Seru</Link>
-                        <Link href="#" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-primary hover:text-white transition text-sm font-bold">👑 Hall of Fame</Link>
-                    </div>
-                </div>
+            <div className="absolute top-full right-0 mt-6 w-48 opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300 ease-out pt-2">
+              <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-2xl p-2 shadow-xl ring-1 ring-black/5 text-left">
+                <Link href="/moments" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-accent hover:text-black transition text-sm font-bold">📸 Momen Seru</Link>
+                <Link href="#" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-primary hover:text-white transition text-sm font-bold">👑 Hall of Fame</Link>
+              </div>
+            </div>
           </div>
 
         </div>
 
         <div className="flex items-center gap-3 z-20">
-            {/* --- TOMBOL KHUSUS ADMIN --- */}
-            {isAdmin && (
-                <Link href="/admin/dashboard">
-                    <Button className="bg-[#ca1f3d] hover:bg-[#a01830] text-white font-bold rounded-full gap-2 shadow-[0_0_15px_rgba(202,31,61,0.4)] h-9 text-xs animate-pulse hover:animate-none">
-                        <LayoutDashboard className="w-3 h-3" />
-                        Admin Panel
-                    </Button>
-                </Link>
-            )}
+          {/* --- TOMBOL KHUSUS ADMIN --- */}
+          {isAdmin && (
+            <Link href="/admin/dashboard">
+              <Button className="bg-[#ca1f3d] hover:bg-[#a01830] text-white font-bold rounded-full gap-2 shadow-[0_0_15px_rgba(202,31,61,0.4)] h-9 text-xs animate-pulse hover:animate-none">
+                <LayoutDashboard className="w-3 h-3" />
+                Admin Panel
+              </Button>
+            </Link>
+          )}
 
-            {/* Jika tidak login, tampilkan tombol Login */}
-            {!session && (
-                <Link
-                    href="/login"
-                    id="btn-login"
-                    className={cn(
-                    'rounded-full text-sm font-black hover:scale-105 transition-all duration-300 shadow-lg whitespace-nowrap',
-                    isScrolled
-                        ? 'bg-white text-black px-6 py-2'
-                        : 'bg-primary text-white px-7 py-3'
-                    )}
-                >
-                    LOGIN
-                </Link>
-            )}
-          
+          {/* Jika tidak login, tampilkan tombol Login */}
+          {!session && (
+            <Link
+              href="/login"
+              id="btn-login"
+              className={cn(
+                'rounded-full text-sm font-black hover:scale-105 transition-all duration-300 shadow-lg whitespace-nowrap',
+                isScrolled
+                  ? 'bg-white text-black px-6 py-2'
+                  : 'bg-primary text-white px-7 py-3'
+              )}
+            >
+              LOGIN
+            </Link>
+          )}
+
           {/* MOBILE MENU TOGGLE (SHEET) */}
           <div className="lg:hidden">
             {isClient ? <MobileMenu /> : null}
@@ -230,7 +230,7 @@ export default function Header() {
         <div
           id="island-bg"
           className={cn(
-            'absolute inset-0 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] -z-10',
+            'absolute inset-0 transition-all duration-700 ease-expo -z-10',
             isScrolled
               ? 'bg-[#1A1A1A]/90 backdrop-blur-xl rounded-full border-white/10 shadow-2xl border'
               : 'bg-white/0 backdrop-blur-0 rounded-none border-transparent shadow-none'

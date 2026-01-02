@@ -120,6 +120,9 @@ export default {
           },
         },
       },
+      transitionTimingFunction: {
+        'expo': 'cubic-bezier(0.16, 1, 0.3, 1)',
+      },
       boxShadow: {
         'glow-green': '0 0 20px rgba(50, 215, 75, 0.3)',
         'glow-red': '0 0 20px rgba(255, 59, 48, 0.3)',
