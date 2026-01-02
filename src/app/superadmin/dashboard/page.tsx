@@ -2,12 +2,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { 
-    Server, 
-    Database, 
-    ShieldAlert, 
-    Activity, 
-    Users, 
+import {
+    Server,
+    Database,
+    ShieldAlert,
+    Activity,
+    Users,
     HardDrive,
     Cpu,
     CheckCircle2,
@@ -53,7 +53,7 @@ export default function SuperAdminDashboard() {
 
     // Helper: Warna status dot berdasarkan action log
     const getActionColor = (action: string) => {
-        switch(action) {
+        switch (action) {
             case 'delete': return 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]';
             case 'create': return 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]';
             case 'update': return 'bg-blue-500';
@@ -80,33 +80,33 @@ export default function SuperAdminDashboard() {
 
             {/* 1. TOP SYSTEM METRICS (No Finance) */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard 
-                    label="Total User Database" 
-                    value={stats.userStats.total} 
+                <StatCard
+                    label="Total User Database"
+                    value={stats.userStats.total}
                     sub="Registered Identities"
                     icon={Users}
                     color="text-blue-500"
                     bg="bg-blue-500/10"
                 />
-                <StatCard 
-                    label="Database Records" 
-                    value={stats.system.totalRecords.toLocaleString()} 
+                <StatCard
+                    label="Database Records"
+                    value={stats.system.totalRecords.toLocaleString()}
                     sub="Total Documents Stored"
                     icon={Database}
-                    color="text-[#00f2ea]"
-                    bg="bg-[#00f2ea]/10"
+                    color="text-[#ca1f3d]"
+                    bg="bg-[#ca1f3d]/10"
                 />
-                <StatCard 
-                    label="Security Logs" 
-                    value={stats.system.totalLogs.toLocaleString()} 
+                <StatCard
+                    label="Security Logs"
+                    value={stats.system.totalLogs.toLocaleString()}
                     sub="Recorded Activities"
                     icon={ShieldAlert}
                     color="text-[#ffbe00]"
                     bg="bg-[#ffbe00]/10"
                 />
-                <StatCard 
-                    label="Active Events" 
-                    value={stats.operational.activeEvents} 
+                <StatCard
+                    label="Active Events"
+                    value={stats.operational.activeEvents}
                     sub="Scheduled Tasks"
                     icon={Cpu}
                     color="text-[#ca1f3d]"
@@ -115,40 +115,40 @@ export default function SuperAdminDashboard() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
+
                 {/* 2. USER BREAKDOWN (System Access) */}
                 <Card className="lg:col-span-1 bg-[#151515] border border-white/5 p-6 rounded-[2rem]">
                     <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                         <HardDrive className="w-5 h-5 text-gray-400" /> Access Distribution
                     </h3>
-                    
+
                     <div className="space-y-5">
-                        <DemographicBar 
-                            label="Member (End User)" 
-                            count={stats.userStats.members} 
-                            total={stats.userStats.total} 
-                            color="bg-gray-500" 
+                        <DemographicBar
+                            label="Member (End User)"
+                            count={stats.userStats.members}
+                            total={stats.userStats.total}
+                            color="bg-gray-500"
                             icon={User}
                         />
-                        <DemographicBar 
-                            label="Coach (Trainer)" 
-                            count={stats.userStats.coaches} 
-                            total={stats.userStats.total} 
-                            color="bg-[#00f2ea]" 
+                        <DemographicBar
+                            label="Coach (Trainer)"
+                            count={stats.userStats.coaches}
+                            total={stats.userStats.total}
+                            color="bg-[#ffbe00]"
                             icon={Dumbbell}
                         />
-                        <DemographicBar 
-                            label="Host (Manager)" 
-                            count={stats.userStats.hosts} 
-                            total={stats.userStats.total} 
-                            color="bg-blue-600" 
+                        <DemographicBar
+                            label="Host (Manager)"
+                            count={stats.userStats.hosts}
+                            total={stats.userStats.total}
+                            color="bg-blue-600"
                             icon={Calendar}
                         />
-                        <DemographicBar 
-                            label="Admin (System)" 
-                            count={stats.userStats.admins} 
-                            total={stats.userStats.total} 
-                            color="bg-[#ca1f3d]" 
+                        <DemographicBar
+                            label="Admin (System)"
+                            count={stats.userStats.admins}
+                            total={stats.userStats.total}
+                            color="bg-[#ca1f3d]"
                             icon={Crown}
                         />
                     </div>
@@ -179,17 +179,17 @@ export default function SuperAdminDashboard() {
                             stats.recentLogs.map((log: any) => (
                                 <div key={log.id} className="flex items-center gap-4 p-3 rounded-xl bg-black/40 border border-white/5 hover:bg-white/5 transition-colors group">
                                     <div className={`w-2 h-2 rounded-full ${getActionColor(log.action)}`}></div>
-                                    
+
                                     <Avatar className="w-8 h-8 border border-white/10">
                                         <AvatarFallback className="bg-[#222] text-[10px] font-bold text-white">
                                             {log.userName?.charAt(0) || "?"}
                                         </AvatarFallback>
                                     </Avatar>
-                                    
+
                                     <div className="flex-1 min-w-0">
                                         <div className="flex justify-between items-center mb-0.5">
                                             <p className="text-sm font-bold text-gray-200 truncate">
-                                                {log.userName} 
+                                                {log.userName}
                                                 <span className="text-gray-500 font-normal text-xs ml-2">[{log.role}]</span>
                                             </p>
                                             <span className="text-[10px] text-gray-600 font-mono whitespace-nowrap">
@@ -237,7 +237,7 @@ function StatCard({ label, value, sub, icon: Icon, color, bg }: any) {
 
 function DemographicBar({ label, count, total, color, icon: Icon }: any) {
     const percentage = total > 0 ? (count / total) * 100 : 0;
-    
+
     return (
         <div>
             <div className="flex justify-between items-center text-xs mb-2">
@@ -248,8 +248,8 @@ function DemographicBar({ label, count, total, color, icon: Icon }: any) {
                 <span className="font-bold text-white font-mono">{count}</span>
             </div>
             <div className="h-1.5 w-full bg-[#222] rounded-full overflow-hidden">
-                <div 
-                    className={`h-full ${color} transition-all duration-1000 ease-out`} 
+                <div
+                    className={`h-full ${color} transition-all duration-1000 ease-out`}
                     style={{ width: `${percentage}%` }}
                 ></div>
             </div>

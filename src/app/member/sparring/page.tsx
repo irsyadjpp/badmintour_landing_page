@@ -76,8 +76,8 @@ export default function SparringPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen pt-32 text-center text-white flex flex-col items-center">
-        <Loader2 className="animate-spin w-10 h-10 text-[#00f2ea] mb-4" />
-        <p className="font-mono text-[#00f2ea]">LOADING ARENA...</p>
+        <Loader2 className="animate-spin w-10 h-10 text-[#ca1f3d] mb-4" />
+        <p className="font-mono text-[#ca1f3d]">LOADING ARENA...</p>
       </div>
     );
   }
@@ -87,15 +87,15 @@ export default function SparringPage() {
 
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-white/10 pb-6 px-6 relative">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[#00f2ea]/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[#ca1f3d]/10 rounded-full blur-[100px] pointer-events-none"></div>
 
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-[#00f2ea]/10 flex items-center justify-center border border-[#00f2ea]/20">
-            <Target className="w-8 h-8 text-[#00f2ea]" />
+          <div className="w-16 h-16 rounded-2xl bg-[#ca1f3d]/10 flex items-center justify-center border border-[#ca1f3d]/20">
+            <Target className="w-8 h-8 text-[#ca1f3d]" />
           </div>
           <div>
             <h1 className="text-4xl font-black text-white tracking-tighter">
-              SPARRING <span className="text-[#00f2ea]">MATCH</span>
+              SPARRING <span className="text-[#ca1f3d]">MATCH</span>
             </h1>
             <p className="text-gray-400 mt-1 max-w-xl text-sm">
               Tantang diri Anda melawan lawan sepadan atau tim lain.
@@ -138,11 +138,11 @@ export default function SparringPage() {
                       <Badge variant="outline" className="bg-white/5 border-white/10 text-white font-mono uppercase tracking-wider">
                         {new Date(event.date).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })}
                       </Badge>
-                      <span className="text-[#00f2ea] font-black tracking-tight">{event.time}</span>
+                      <span className="text-[#ca1f3d] font-black tracking-tight">{event.time}</span>
                     </div>
 
                     <div className="space-y-1">
-                      <h3 className="text-2xl font-black text-white leading-none group-hover:text-[#00f2ea] transition-colors">{event.title}</h3>
+                      <h3 className="text-2xl font-black text-white leading-none group-hover:text-[#ca1f3d] transition-colors">{event.title}</h3>
                       <div className="flex items-center gap-2 text-sm text-gray-400">
                         <MapPin className="w-4 h-4 text-[#ca1f3d]" /> {event.location}
                       </div>
@@ -166,7 +166,7 @@ export default function SparringPage() {
                       disabled={isJoined || seatLeft <= 0}
                       className={`w-full h-12 rounded-xl font-bold text-lg ${isJoined
                         ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
-                        : 'bg-white text-black hover:bg-[#00f2ea] hover:shadow-[0_0_20px_rgba(0,242,234,0.4)]'}`}
+                        : 'bg-white text-black hover:bg-[#ca1f3d] hover:text-white hover:shadow-[0_0_20px_rgba(202,31,61,0.4)]'}`}
                     >
                       {isJoined ? "LIHAT TICKET" : (seatLeft <= 0 ? "FULL" : "JOIN SPARRING")}
                     </Button>
@@ -210,7 +210,7 @@ export default function SparringPage() {
             <Button
               onClick={handleJoin}
               disabled={bookingLoading}
-              className="bg-[#00f2ea] text-black hover:bg-[#00c2bb] rounded-xl font-bold px-8"
+              className="bg-[#ca1f3d] text-white hover:bg-[#a61932] rounded-xl font-bold px-8"
             >
               {bookingLoading ? "Proses..." : "ACCEPT CHALLENGE"}
             </Button>

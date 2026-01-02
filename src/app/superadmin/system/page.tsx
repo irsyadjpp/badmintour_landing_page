@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-    Activity, 
-    Cpu, 
-    HardDrive, 
-    Zap, 
-    Server, 
-    AlertOctagon, 
-    Terminal, 
+import {
+    Activity,
+    Cpu,
+    HardDrive,
+    Zap,
+    Server,
+    AlertOctagon,
+    Terminal,
     RefreshCw,
     Wifi,
     CheckCircle2
@@ -69,15 +69,15 @@ export default function SystemHealthPage() {
             <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
                 <div>
                     <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter">
-                        System <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">Vitality</span>
+                        System <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ca1f3d] to-[#ffbe00]">Vitality</span>
                     </h1>
                     <p className="text-gray-400 mt-2 font-medium">Real-time server monitoring & crash analytics.</p>
                 </div>
-                
+
                 <div className="flex items-center gap-3">
-                    <Button 
+                    <Button
                         onClick={() => setIsLive(!isLive)}
-                        variant="outline" 
+                        variant="outline"
                         className={`h-10 border-white/10 ${isLive ? 'text-green-500 bg-green-500/10' : 'text-gray-500'}`}
                     >
                         <Activity className={`w-4 h-4 mr-2 ${isLive ? 'animate-pulse' : ''}`} />
@@ -91,36 +91,36 @@ export default function SystemHealthPage() {
 
             {/* 1. VITAL SIGNS (Top Stats) */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                
+
                 {/* Uptime */}
                 <div className="bg-[#151515] p-6 rounded-[2rem] border border-white/5 relative overflow-hidden group">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-green-500/10 text-green-500 rounded-lg"><Activity className="w-5 h-5"/></div>
+                        <div className="p-2 bg-green-500/10 text-green-500 rounded-lg"><Activity className="w-5 h-5" /></div>
                         <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Uptime</span>
                     </div>
                     <div className="flex items-end gap-2">
                         <h3 className="text-4xl font-jersey text-white">99.9<span className="text-xl text-gray-600">%</span></h3>
                     </div>
                     <p className="text-[10px] text-gray-500 mt-2 font-bold flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-green-500"/> Stable (30d)
+                        <CheckCircle2 className="w-3 h-3 text-green-500" /> Stable (30d)
                     </p>
                 </div>
 
                 {/* CPU Load */}
                 <div className="bg-[#151515] p-6 rounded-[2rem] border border-white/5 relative overflow-hidden group">
-                     {/* Background Animation */}
-                    <div className="absolute right-0 bottom-0 w-24 h-24 bg-blue-500/5 blur-2xl"></div>
-                    
+                    {/* Background Animation */}
+                    <div className="absolute right-0 bottom-0 w-24 h-24 bg-[#ca1f3d]/5 blur-2xl"></div>
+
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-blue-500/10 text-blue-500 rounded-lg"><Cpu className="w-5 h-5"/></div>
+                        <div className="p-2 bg-[#ca1f3d]/10 text-[#ca1f3d] rounded-lg"><Cpu className="w-5 h-5" /></div>
                         <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">CPU Core</span>
                     </div>
                     <div className="flex items-end gap-2">
                         <h3 className="text-4xl font-jersey text-white">{cpuLoad}<span className="text-xl text-gray-600">%</span></h3>
                     </div>
                     <div className="w-full bg-[#222] rounded-full h-1.5 mt-3 overflow-hidden">
-                        <div 
-                            className={`h-full rounded-full transition-all duration-500 ${cpuLoad > 80 ? 'bg-red-500' : 'bg-blue-500'}`} 
+                        <div
+                            className={`h-full rounded-full transition-all duration-500 ${cpuLoad > 80 ? 'bg-red-500' : 'bg-[#ca1f3d]'}`}
                             style={{ width: `${cpuLoad}%` }}
                         ></div>
                     </div>
@@ -129,7 +129,7 @@ export default function SystemHealthPage() {
                 {/* Memory / RAM */}
                 <div className="bg-[#151515] p-6 rounded-[2rem] border border-white/5 relative overflow-hidden group">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-purple-500/10 text-purple-500 rounded-lg"><HardDrive className="w-5 h-5"/></div>
+                        <div className="p-2 bg-[#ffbe00]/10 text-[#ffbe00] rounded-lg"><HardDrive className="w-5 h-5" /></div>
                         <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Memory</span>
                     </div>
                     <div className="flex items-end gap-2">
@@ -144,12 +144,12 @@ export default function SystemHealthPage() {
                 <div className="bg-[#151515] p-6 rounded-[2rem] border border-white/5 relative overflow-hidden group">
                     <div className="absolute top-4 right-4">
                         <span className="relative flex h-3 w-3">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                         </span>
                     </div>
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-yellow-500/10 text-yellow-500 rounded-lg"><Wifi className="w-5 h-5"/></div>
+                        <div className="p-2 bg-yellow-500/10 text-yellow-500 rounded-lg"><Wifi className="w-5 h-5" /></div>
                         <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Latency</span>
                     </div>
                     <div className="flex items-end gap-2">
@@ -162,20 +162,20 @@ export default function SystemHealthPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
+
                 {/* 2. PERFORMANCE CHART (Main) */}
                 <div className="lg:col-span-2 bg-[#1A1A1A] border border-white/5 rounded-[2.5rem] p-8">
                     <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center gap-3">
-                            <Zap className="w-6 h-6 text-blue-500" />
+                            <Zap className="w-6 h-6 text-[#ca1f3d]" />
                             <div>
                                 <h3 className="text-xl font-black text-white">Load Analysis</h3>
                                 <p className="text-xs text-gray-500">Traffic vs Resources</p>
                             </div>
                         </div>
                         <div className="flex gap-2">
-                            <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-0">CPU</Badge>
-                            <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-0">RAM</Badge>
+                            <Badge variant="outline" className="bg-[#ca1f3d]/10 text-[#ca1f3d] border-0">CPU</Badge>
+                            <Badge variant="outline" className="bg-[#ffbe00]/10 text-[#ffbe00] border-0">RAM</Badge>
                         </div>
                     </div>
 
@@ -184,23 +184,23 @@ export default function SystemHealthPage() {
                             <AreaChart data={performanceData}>
                                 <defs>
                                     <linearGradient id="colorCpu" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                        <stop offset="5%" stopColor="#ca1f3d" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#ca1f3d" stopOpacity={0} />
                                     </linearGradient>
                                     <linearGradient id="colorRam" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3}/>
-                                        <stop offset="95%" stopColor="#a855f7" stopOpacity={0}/>
+                                        <stop offset="5%" stopColor="#ffbe00" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#ffbe00" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333" />
-                                <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{fill: '#666', fontSize: 10}} />
-                                <YAxis axisLine={false} tickLine={false} tick={{fill: '#666', fontSize: 10}} />
-                                <Tooltip 
+                                <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#666', fontSize: 10 }} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#666', fontSize: 10 }} />
+                                <Tooltip
                                     contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '12px' }}
                                     itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
                                 />
-                                <Area type="monotone" dataKey="cpu" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorCpu)" />
-                                <Area type="monotone" dataKey="ram" stroke="#a855f7" strokeWidth={3} fillOpacity={1} fill="url(#colorRam)" />
+                                <Area type="monotone" dataKey="cpu" stroke="#ca1f3d" strokeWidth={3} fillOpacity={1} fill="url(#colorCpu)" />
+                                <Area type="monotone" dataKey="ram" stroke="#ffbe00" strokeWidth={3} fillOpacity={1} fill="url(#colorRam)" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -227,20 +227,18 @@ export default function SystemHealthPage() {
                             <div className="space-y-4">
                                 {logs.map((log) => (
                                     <div key={log.id} className="text-[10px] leading-relaxed border-l-2 pl-3 py-1 relative group">
-                                        <div className={`absolute left-[-2px] top-0 bottom-0 w-[2px] ${
-                                            log.level === 'ERROR' ? 'bg-red-500' : 
-                                            log.level === 'WARN' ? 'bg-yellow-500' : 'bg-blue-500'
-                                        }`}></div>
-                                        
+                                        <div className={`absolute left-[-2px] top-0 bottom-0 w-[2px] ${log.level === 'ERROR' ? 'bg-red-500' :
+                                                log.level === 'WARN' ? 'bg-yellow-500' : 'bg-gray-500'
+                                            }`}></div>
+
                                         <div className="flex justify-between items-start opacity-70 mb-0.5">
                                             <span className="text-gray-500">[{log.timestamp}]</span>
-                                            <span className={`font-bold ${
-                                                log.level === 'ERROR' ? 'text-red-500' : 
-                                                log.level === 'WARN' ? 'text-yellow-500' : 'text-blue-400'
-                                            }`}>{log.level}</span>
+                                            <span className={`font-bold ${log.level === 'ERROR' ? 'text-red-500' :
+                                                    log.level === 'WARN' ? 'text-yellow-500' : 'text-gray-400'
+                                                }`}>{log.level}</span>
                                         </div>
                                         <p className="text-gray-300 group-hover:text-white transition-colors">
-                                            <span className="text-purple-400">[{log.service}]</span> {log.message}
+                                            <span className="text-[#ffbe00]">[{log.service}]</span> {log.message}
                                         </p>
                                     </div>
                                 ))}
@@ -250,7 +248,7 @@ export default function SystemHealthPage() {
                                 </div>
                             </div>
                         </ScrollArea>
-                        
+
                         <Button variant="secondary" className="w-full mt-4 h-10 rounded-xl text-xs font-bold bg-white/5 text-gray-400 hover:text-white hover:bg-white/10">
                             Download Full Log
                         </Button>
@@ -260,8 +258,8 @@ export default function SystemHealthPage() {
 
             {/* Bottom: Server Node Status */}
             <div className="mt-8">
-                 <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2">
-                    <Server className="w-5 h-5"/> Nodes Distribution
+                <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2">
+                    <Server className="w-5 h-5" /> Nodes Distribution
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {['Node-Alpha (Primary)', 'Node-Beta (Replica)', 'Node-Gamma (Backup)'].map((node, i) => (

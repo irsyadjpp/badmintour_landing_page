@@ -105,15 +105,15 @@ export default function TournamentPage() {
 
       {/* STANDARD HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-white/10 pb-6 px-6 relative">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[#ca1f3d]/10 rounded-full blur-[100px] pointer-events-none"></div>
 
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-purple-600/10 flex items-center justify-center border border-purple-600/20">
-            <Trophy className="w-8 h-8 text-purple-500" />
+          <div className="w-16 h-16 rounded-2xl bg-[#ca1f3d]/10 flex items-center justify-center border border-[#ca1f3d]/20">
+            <Trophy className="w-8 h-8 text-[#ca1f3d]" />
           </div>
           <div>
             <h1 className="text-4xl font-black text-white tracking-tighter">
-              INFO <span className="text-purple-500">TURNAMEN</span>
+              INFO <span className="text-[#ca1f3d]">TURNAMEN</span>
             </h1>
             <p className="text-gray-400 mt-1 max-w-xl text-sm">
               Kompetisi resmi, liga, dan turnamen terbuka.
@@ -144,13 +144,13 @@ export default function TournamentPage() {
                 <Card className="bg-[#151515] border-white/5 overflow-hidden group hover:border-purple-500/30 transition-all duration-300 relative rounded-[2rem] h-full flex flex-col">
                   {/* Type Banner */}
                   <div className="absolute top-4 right-4 z-20">
-                    <Badge className={`${event.externalLink ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-purple-500/10 text-purple-400 border-purple-500/20'}`}>
+                    <Badge className={`${event.externalLink ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-[#ca1f3d]/10 text-[#ca1f3d] border-[#ca1f3d]/20'}`}>
                       {event.externalLink ? 'EXTERNAL' : 'INTERNAL'}
                     </Badge>
                   </div>
 
                   {/* Image Placeholder or Gradient */}
-                  <div className="h-32 bg-gradient-to-br from-purple-900/20 to-black relative">
+                  <div className="h-32 bg-gradient-to-br from-[#ca1f3d]/20 to-black relative">
                     <div className="absolute bottom-4 left-6">
                       <Badge variant="outline" className="bg-black/50 backdrop-blur border-white/10 text-white font-mono uppercase tracking-wider mb-2">
                         {new Date(event.date).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })}
@@ -183,7 +183,7 @@ export default function TournamentPage() {
                       disabled={isJoined}
                       className={`w-full h-12 rounded-xl font-bold text-lg ${isJoined
                         ? 'bg-green-500/10 text-green-500'
-                        : (event.externalLink ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-purple-600 hover:bg-purple-700 text-white')}`}
+                        : (event.externalLink ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-[#ca1f3d] hover:bg-[#a61932] text-white')}`}
                     >
                       {isJoined ? "SUDAH DAFTAR" : (event.externalLink ? "INFO LENGKAP" : "DAFTAR SEKARANG")}
                       {event.externalLink && !isJoined && <ExternalLink className="w-4 h-4 ml-2" />}
@@ -223,9 +223,9 @@ export default function TournamentPage() {
                   />
                 </div>
               )}
-              <div className="bg-purple-500/10 p-4 rounded-xl border border-purple-500/20 text-center">
-                <p className="text-sm text-purple-300">Biaya Pendaftaran</p>
-                <p className="text-xl font-black text-purple-400">Rp {selectedEvent.price.toLocaleString('id-ID')}</p>
+              <div className="bg-[#ca1f3d]/10 p-4 rounded-xl border border-[#ca1f3d]/20 text-center">
+                <p className="text-sm text-[#ca1f3d]">Biaya Pendaftaran</p>
+                <p className="text-xl font-black text-[#ffbe00]">Rp {selectedEvent.price.toLocaleString('id-ID')}</p>
               </div>
             </div>
           )}
@@ -235,7 +235,7 @@ export default function TournamentPage() {
             <Button
               onClick={handleJoin}
               disabled={bookingLoading}
-              className="bg-purple-600 text-white hover:bg-purple-700 rounded-xl font-bold px-8"
+              className="bg-[#ca1f3d] text-white hover:bg-[#a61932] rounded-xl font-bold px-8"
             >
               {bookingLoading ? "Proses..." : (selectedEvent?.externalLink ? "Buka Link" : "Kirim Pendaftaran")}
             </Button>

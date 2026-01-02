@@ -49,11 +49,11 @@ export default function FindCoachPage() {
 
             {/* STANDARD HEADER */}
             <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-white/10 pb-6 px-6 relative">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-[#00f2ea]/10 rounded-full blur-[100px] pointer-events-none"></div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#ffbe00]/10 rounded-full blur-[100px] pointer-events-none"></div>
 
                 <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl bg-[#00f2ea]/10 flex items-center justify-center border border-[#00f2ea]/20">
-                        <GraduationCap className="w-8 h-8 text-[#00f2ea]" />
+                    <div className="w-16 h-16 rounded-2xl bg-[#ffbe00]/10 flex items-center justify-center border border-[#ffbe00]/20">
+                        <GraduationCap className="w-8 h-8 text-[#ffbe00]" />
                     </div>
                     <div>
                         <h1 className="text-4xl font-black text-white tracking-tighter">
@@ -72,7 +72,7 @@ export default function FindCoachPage() {
                         placeholder="Cari Coach..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9 bg-[#1A1A1A] border-white/10 rounded-xl text-white focus:border-[#00f2ea]"
+                        className="pl-9 bg-[#1A1A1A] border-white/10 rounded-xl text-white focus:border-[#ffbe00]"
                     />
                 </div>
             </div>
@@ -88,7 +88,7 @@ export default function FindCoachPage() {
                         className="bg-[#1A1A1A] border-2 border-dashed border-white/10 h-full rounded-[2rem] flex flex-col items-center justify-center p-8 hover:border-[#00f2ea] hover:bg-[#00f2ea]/5 transition-all text-center min-h-[300px]"
                     >
                         <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border-2 border-white/10 mb-4 group-hover:scale-110 transition-transform">
-                            <UserPlus className="w-8 h-8 text-[#00f2ea]" />
+                            <UserPlus className="w-8 h-8 text-[#ffbe00]" />
                         </div>
                         <h3 className="text-xl font-black text-white">Join as Coach</h3>
                         <p className="text-xs text-gray-500 mt-2">Daftar jadi pelatih & buka kelas.</p>
@@ -102,8 +102,8 @@ export default function FindCoachPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                     >
-                        <Card className="bg-[#151515] border-white/5 p-6 rounded-[2rem] h-full relative overflow-hidden group hover:border-[#00f2ea]/50 transition-all hover:-translate-y-1">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#00f2ea]/5 rounded-full blur-[40px] group-hover:bg-[#00f2ea]/10 transition"></div>
+                        <Card className="bg-[#151515] border-white/5 p-6 rounded-[2rem] h-full relative overflow-hidden group hover:border-[#ffbe00]/50 transition-all hover:-translate-y-1">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#ffbe00]/5 rounded-full blur-[40px] group-hover:bg-[#ffbe00]/10 transition"></div>
 
                             <div className="flex gap-4 mb-6 relative z-10">
                                 <Avatar className="w-16 h-16 border-2 border-[#1A1A1A] shadow-lg">
@@ -123,7 +123,7 @@ export default function FindCoachPage() {
 
                             <div className="space-y-3 mb-6 relative z-10">
                                 <div className="flex items-center gap-2 text-sm text-gray-400">
-                                    <MapPin className="w-4 h-4 text-[#00f2ea]" /> GOR BadminTour
+                                    <MapPin className="w-4 h-4 text-[#ffbe00]" /> GOR BadminTour
                                 </div>
                                 <div className="text-xs text-gray-500 line-clamp-2">
                                     Specialist in Single & Double Strategy. Former National Athlete.
@@ -137,7 +137,7 @@ export default function FindCoachPage() {
                                 </div>
                                 <Button
                                     onClick={() => handleWhatsApp(coach.nickname || coach.name)}
-                                    className="rounded-xl bg-[#00f2ea] text-black font-bold hover:bg-[#00c2bb] shadow-[0_0_15px_rgba(0,242,234,0.3)]"
+                                    className="rounded-xl bg-[#ffbe00] text-black font-bold hover:bg-[#e6ac00] shadow-[0_0_15px_rgba(255,190,0,0.3)]"
                                 >
                                     Chat Coach <ChevronRight className="w-4 h-4 ml-1" />
                                 </Button>

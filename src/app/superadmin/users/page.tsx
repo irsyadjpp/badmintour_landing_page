@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { 
-    ShieldAlert, 
-    Search, 
-    MoreHorizontal, 
-    UserCog, 
+import {
+    ShieldAlert,
+    Search,
+    MoreHorizontal,
+    UserCog,
     Loader2,
     Users,
     Trophy,
@@ -20,23 +20,23 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -47,13 +47,13 @@ export default function SuperAdminUsersPage() {
     const { toast } = useToast();
     const [allUsers, setAllUsers] = useState<any[]>([]); // Data mentah dari API
     const [loading, setLoading] = useState(true);
-    
+
     // States untuk Filter & Sort & Pagination
     const [search, setSearch] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
     const [sortBy, setSortBy] = useState('newest'); // 'newest', 'oldest', 'a-z', 'z-a'
     const [currentPage, setCurrentPage] = useState(1);
-    
+
     // State untuk Modal Edit Role
     const [selectedUser, setSelectedUser] = useState<any>(null);
     const [newRole, setNewRole] = useState('');
@@ -86,8 +86,8 @@ export default function SuperAdminUsersPage() {
 
         // 1. Filter Search
         if (search) {
-            data = data.filter(user => 
-                user.name?.toLowerCase().includes(search.toLowerCase()) || 
+            data = data.filter(user =>
+                user.name?.toLowerCase().includes(search.toLowerCase()) ||
                 user.email?.toLowerCase().includes(search.toLowerCase())
             );
         }
@@ -134,7 +134,7 @@ export default function SuperAdminUsersPage() {
 
             if (res.ok) {
                 toast({ title: "Sukses", description: `Role diubah menjadi ${newRole.toUpperCase()}.`, className: "bg-green-600 text-white" });
-                fetchUsers(); 
+                fetchUsers();
                 setSelectedUser(null);
             } else {
                 throw new Error("Gagal update role");
@@ -147,11 +147,11 @@ export default function SuperAdminUsersPage() {
     };
 
     const getRoleBadge = (role: string) => {
-        switch(role) {
+        switch (role) {
             case 'superadmin': return <Badge className="bg-red-600 text-white border-none">SUPERADMIN</Badge>;
             case 'admin': return <Badge className="bg-orange-500 text-white border-none">ADMIN</Badge>;
-            case 'host': return <Badge className="bg-blue-500 text-white border-none">HOST</Badge>;
-            case 'coach': return <Badge className="bg-[#00f2ea] text-black border-none font-bold">COACH</Badge>;
+            case 'host': return <Badge className="bg-[#ca1f3d] text-white border-none">HOST</Badge>;
+            case 'coach': return <Badge className="bg-[#ffbe00] text-black border-none font-bold">COACH</Badge>;
             default: return <Badge variant="outline" className="text-gray-400 border-gray-600">MEMBER</Badge>;
         }
     };
@@ -166,14 +166,14 @@ export default function SuperAdminUsersPage() {
                     </h1>
                     <p className="text-gray-400">Total User: {allUsers.length} | Menampilkan: {paginatedUsers.length}</p>
                 </div>
-                
+
                 {/* Controls */}
                 <div className="flex flex-wrap gap-3 w-full md:w-auto">
                     {/* Search */}
                     <div className="relative flex-1 md:w-64">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                        <Input 
-                            placeholder="Cari user..." 
+                        <Input
+                            placeholder="Cari user..."
                             className="pl-10 bg-[#151515] border-white/10 text-white rounded-xl focus:border-[#ca1f3d]"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
@@ -265,7 +265,7 @@ export default function SuperAdminUsersPage() {
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end" className="bg-[#1A1A1A] border-white/10 text-white">
-                                                        <DropdownMenuItem 
+                                                        <DropdownMenuItem
                                                             className="cursor-pointer focus:bg-[#ca1f3d]/10 focus:text-[#ca1f3d]"
                                                             onClick={() => {
                                                                 setSelectedUser(user);
@@ -296,18 +296,18 @@ export default function SuperAdminUsersPage() {
                                     Page {currentPage} of {totalPages}
                                 </div>
                                 <div className="flex gap-2">
-                                    <Button 
-                                        variant="outline" 
-                                        size="sm" 
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
                                         disabled={currentPage === 1}
                                         onClick={() => setCurrentPage(p => p - 1)}
                                         className="border-white/10 text-white hover:bg-white/10"
                                     >
                                         <ChevronLeft className="w-4 h-4" /> Prev
                                     </Button>
-                                    <Button 
-                                        variant="outline" 
-                                        size="sm" 
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
                                         disabled={currentPage === totalPages}
                                         onClick={() => setCurrentPage(p => p + 1)}
                                         className="border-white/10 text-white hover:bg-white/10"
@@ -350,23 +350,23 @@ export default function SuperAdminUsersPage() {
                                 </SelectTrigger>
                                 <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
                                     <SelectItem value="member">
-                                        <span className="flex items-center gap-2"><Users className="w-4 h-4"/> Member (User Biasa)</span>
+                                        <span className="flex items-center gap-2"><Users className="w-4 h-4" /> Member (User Biasa)</span>
                                     </SelectItem>
                                     <SelectItem value="coach">
-                                        <span className="flex items-center gap-2"><Trophy className="w-4 h-4"/> Coach (Pelatih)</span>
+                                        <span className="flex items-center gap-2"><Trophy className="w-4 h-4" /> Coach (Pelatih)</span>
                                     </SelectItem>
                                     <SelectItem value="host">
-                                        <span className="flex items-center gap-2"><CheckCircle className="w-4 h-4"/> Host (Pengelola GOR)</span>
+                                        <span className="flex items-center gap-2"><CheckCircle className="w-4 h-4" /> Host (Pengelola GOR)</span>
                                     </SelectItem>
                                     <SelectItem value="admin">
-                                        <span className="flex items-center gap-2"><ShieldAlert className="w-4 h-4"/> Admin</span>
+                                        <span className="flex items-center gap-2"><ShieldAlert className="w-4 h-4" /> Admin</span>
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
 
-                        <Button 
-                            onClick={handleUpdateRole} 
+                        <Button
+                            onClick={handleUpdateRole}
                             disabled={updating}
                             className="w-full h-12 bg-[#ca1f3d] hover:bg-[#a01830] text-white font-black rounded-xl"
                         >

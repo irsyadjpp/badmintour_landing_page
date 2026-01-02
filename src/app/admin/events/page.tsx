@@ -169,12 +169,15 @@ export default function AdminEventsPage() {
                     {filteredEvents.map((event) => (
                         <Card key={event.id} className="bg-[#151515] border border-white/5 p-6 rounded-[2rem] group hover:border-[#ffbe00]/50 transition-all relative overflow-hidden shadow-xl">
 
+                            {/* CLICKABLE OVERLAY */}
+                            <Link href={`/admin/events/${event.id}`} className="absolute inset-0 z-0" />
+
                             {/* Status Badge & Actions */}
-                            <div className="flex justify-between items-start mb-4">
+                            <div className="flex justify-between items-start mb-4 relative z-10">
                                 <Badge className={`
                                     text-[10px] font-bold uppercase tracking-wider border-0 px-3 py-1
                                     ${event.type === 'drilling'
-                                        ? 'bg-[#00f2ea]/10 text-[#00f2ea] border border-[#00f2ea]/20'  // Cyan untuk Drilling (Khas Coach)
+                                        ? 'bg-[#ca1f3d]/10 text-[#ca1f3d] border border-[#ca1f3d]/20'  // Red untuk Drilling
                                         : 'bg-[#ffbe00]/10 text-[#ffbe00] border border-[#ffbe00]/20'} // Kuning untuk Mabar
                                 `}>
                                     {event.type === 'drilling' ? <Dumbbell className="w-3 h-3 mr-1" /> : <Trophy className="w-3 h-3 mr-1" />}
@@ -183,7 +186,7 @@ export default function AdminEventsPage() {
 
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full relative z-20">
                                             <MoreHorizontal className="w-4 h-4" />
                                         </Button>
                                     </DropdownMenuTrigger>
@@ -193,10 +196,10 @@ export default function AdminEventsPage() {
                                                 <Users className="w-4 h-4 mr-2" /> Lihat Peserta
                                             </Link>
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem className="text-red-500 focus:text-red-500 focus:bg-red-500/10 cursor-pointer" onClick={() => setDeleteId(event.id)}>
+                                        <DropdownMenuItem className="text-red-500 focus:text-red-500 focus:bg-red-500/10 cursor-pointer" onClick={(e) => { e.stopPropagation(); setDeleteId(event.id); }}>
                                             <Trash2 className="w-4 h-4 mr-2" /> Hapus Event
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem className="text-blue-500 focus:text-blue-500 focus:bg-blue-500/10 cursor-pointer" onClick={() => setCloseEventId(event.id)}>
+                                        <DropdownMenuItem className="text-blue-500 focus:text-blue-500 focus:bg-blue-500/10 cursor-pointer" onClick={(e) => { e.stopPropagation(); setCloseEventId(event.id); }}>
                                             <ClipboardCheck className="w-4 h-4 mr-2" /> Tutup Buku (Close)
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>

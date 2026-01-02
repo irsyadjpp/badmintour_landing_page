@@ -174,7 +174,13 @@ export default function SessionAssessmentPage() {
                 </div>
 
                 {/* CLICK AREA FOR LINK */}
-                <Link href={`/coach/session/${sessionId}/assess/${player.userId}`} className="flex-1 text-left outline-none">
+                <Link
+                  href={player.hasAssessment
+                    ? `/coach/reports/${player.bookingId}`
+                    : `/coach/session/${sessionId}/assess/${player.userId}`
+                  }
+                  className="flex-1 text-left outline-none"
+                >
                   <div className="flex items-center gap-5">
                     <Avatar className={`w-16 h-16 border-2 transition-colors ${player.hasAssessment ? 'border-green-500/20' : 'border-[#ca1f3d]'}`}>
                       <AvatarImage src={player.userImage} className="object-cover" />

@@ -7,7 +7,7 @@ import { COA } from "@/lib/finance-types";
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'COACH') {
+    if (!session || session.user.role !== 'coach') {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

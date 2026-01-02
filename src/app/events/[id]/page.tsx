@@ -86,7 +86,7 @@ export default function PublicEventPage() {
 
             const result = await res.json();
             if (res.ok) {
-                toast({ title: "Booking Berhasil!", description: "Tiket Anda telah terbit.", className: "bg-[#00f2ea] text-black border-none" });
+                toast({ title: "Booking Berhasil!", description: "Tiket Anda telah terbit.", className: "bg-[#10b981] text-black border-none" });
                 setBookingData({
                     id: result.bookingCode || 'BT-TICKET-SV',
                     name: guestName,
@@ -364,7 +364,7 @@ export default function PublicEventPage() {
     const accentColor = 'text-[#ca1f3d]';
     const accentBg = 'bg-[#ca1f3d]';
     const accentBorder = 'border-[#ca1f3d]/20';
-    const badgeBg = isDrilling ? 'bg-[#00f2ea]/10 text-[#00f2ea] border-[#00f2ea]/20' :
+    const badgeBg = isDrilling ? 'bg-[#ffbe00]/10 text-[#ffbe00] border-[#ffbe00]/20' :
         isTournament ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' :
             'bg-[#ffbe00]/10 text-[#ffbe00] border-[#ffbe00]/20';
 
@@ -448,20 +448,22 @@ export default function PublicEventPage() {
 
                         {/* Drilling Specific Details (Skill & Curriculum) */}
                         {event.type === 'drilling' && (
-                            <div className="mt-4 bg-[#00f2ea]/5 p-5 rounded-3xl border border-[#00f2ea]/20 space-y-3">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Dumbbell className="w-5 h-5 text-[#00f2ea]" />
-                                    <span className="text-xs font-bold text-[#00f2ea] uppercase tracking-wider">Drilling Info</span>
+                            <div className="mt-4 bg-[#ffbe00]/5 p-5 rounded-3xl border border-[#ffbe00]/20 space-y-3">
+                                <div className="flex items-center gap-2 mb-2 border-b border-[#ffbe00]/20 pb-2">
+                                    <Dumbbell className="w-5 h-5 text-[#ffbe00]" />
+                                    <span className="text-xs font-bold text-[#ffbe00] uppercase tracking-wider">Drilling Info</span>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Target Level</p>
-                                        <Badge variant="outline" className="border-[#00f2ea] text-[#00f2ea] bg-[#00f2ea]/10 capitalize">
-                                            {event.skillLevel === 'all' ? 'Semua Level' :
-                                                event.skillLevel === 'beginner' ? 'Beginner (Pemula)' :
-                                                    event.skillLevel === 'intermediate' ? 'Intermediate (Menengah)' :
-                                                        event.skillLevel === 'advanced' ? 'Advanced (Mahir)' : 'General'}
-                                        </Badge>
+                                        <p className="text-[10px] uppercase text-gray-500 font-bold mb-1">Focus Area</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            <Badge variant="outline" className="border-[#ffbe00] text-[#ffbe00] bg-[#ffbe00]/10 capitalize">
+                                                {event.skillLevel === 'all' ? 'Semua Level' :
+                                                    event.skillLevel === 'beginner' ? 'Beginner (Pemula)' :
+                                                        event.skillLevel === 'intermediate' ? 'Intermediate (Menengah)' :
+                                                            event.skillLevel === 'advanced' ? 'Advanced (Mahir)' : 'General'}
+                                            </Badge>
+                                        </div>
                                     </div>
                                     {event.curriculum && (
                                         <div>

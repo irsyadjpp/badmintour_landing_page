@@ -196,9 +196,9 @@ export default function AdminEventDetailPage() {
             <div className="flex items-center gap-3 mb-1">
               <h1 className="text-3xl font-black text-white uppercase tracking-tighter">{event.title}</h1>
               <Badge variant="outline" className={`
-                                border-0 font-bold uppercase tracking-wider px-3 py-1
-                                ${event.type === 'drilling' ? 'bg-[#00f2ea]/20 text-[#00f2ea]' :
-                  event.type === 'tournament' ? 'bg-purple-500/20 text-purple-500' : 'bg-[#ffbe00]/20 text-[#ffbe00]'}
+                                border-0 font-bold uppercase tracking-wider px-3 py-1 color-white
+                                ${event.type === 'drilling' ? 'bg-[#ffbe00]/20 text-[#ffbe00]' :
+                  event.type === 'tournament' ? 'bg-[#ca1f3d]/20 text-[#ca1f3d]' : 'bg-[#ffbe00]/20 text-[#ffbe00]'}
                             `}>
                 {event.type}
               </Badge>
@@ -214,13 +214,17 @@ export default function AdminEventDetailPage() {
         </div>
 
         <div className="flex gap-2">
-          {/* Quick Actions */}
-          <Button variant="secondary" onClick={handleExtend} className="bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 border border-blue-600/30">
-            <Clock className="w-4 h-4 mr-2" /> +1 Jam
-          </Button>
-          <Button variant="secondary" onClick={handleAddCourt} className="bg-green-600/20 text-green-400 hover:bg-green-600/30 border border-green-600/30">
-            <Users className="w-4 h-4 mr-2" /> +1 Court
-          </Button>
+          {/* Quick Actions (Mabar Only) */}
+          {event.type === 'mabar' && (
+            <>
+              <Button variant="secondary" onClick={handleExtend} className="bg-white/5 text-white hover:bg-white/10 border border-white/10">
+                <Clock className="w-4 h-4 mr-2" /> +1 Jam
+              </Button>
+              <Button variant="secondary" onClick={handleAddCourt} className="bg-white/5 text-white hover:bg-white/10 border border-white/10">
+                <Users className="w-4 h-4 mr-2" /> +1 Court
+              </Button>
+            </>
+          )}
 
           <Link href={`/host/events/${event.id}/edit`}>
             <Button variant="outline" className="border-white/10 text-white bg-[#1A1A1A] hover:bg-white/10 gap-2 h-10 px-4 rounded-xl">
@@ -252,10 +256,10 @@ export default function AdminEventDetailPage() {
 
             <Card className="bg-[#151515] border-white/5 p-5 rounded-3xl relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                <DollarSign className="w-16 h-16 text-[#00f2ea]" />
+                <DollarSign className="w-16 h-16 text-[#ffbe00]" />
               </div>
               <p className="text-xs text-gray-500 uppercase font-bold mb-1">Est. Revenue</p>
-              <h3 className="text-2xl font-black text-[#00f2ea]">
+              <h3 className="text-2xl font-black text-[#ffbe00]">
                 {totalRevenue > 1000000 ? `${(totalRevenue / 1000000).toFixed(1)}M` : `${(totalRevenue / 1000).toFixed(0)}K`}
               </h3>
               <p className="text-[10px] text-gray-500 mt-1">IDR {totalRevenue.toLocaleString('id-ID')}</p>
@@ -269,6 +273,7 @@ export default function AdminEventDetailPage() {
             </h3>
 
             <div className="space-y-4">
+              {/* GLOBAL INFO */}
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
                   <MapPin className="w-5 h-5 text-gray-400" />
@@ -284,25 +289,91 @@ export default function AdminEventDetailPage() {
 
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
-                  <CreditCard className="w-5 h-5 text-gray-400" />
+                  <Clock className="w-5 h-5 text-gray-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 uppercase font-bold">Price per Slot</p>
-                  <p className="text-white font-medium">Rp {Number(event.price).toLocaleString('id-ID')}</p>
+                  <p className="text-xs text-gray-500 uppercase font-bold">Schedule</p>
+                  <p className="text-white font-medium">{event.time}</p>
+                  <p className="text-xs text-gray-400">{new Date(event.date).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
                 </div>
               </div>
 
               <Separator className="bg-white/5" />
 
-              <div className="flex items-start gap-4">
+              {/* TYPE SPECIFIC INFO */}
+              {event.type === 'drilling' && (
+                <div className="bg-[#ffbe00]/5 border border-[#ffbe00]/20 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge className="bg-[#ffbe00]/10 text-[#ffbe00] border-0">DRILLING DETAILS</Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 font-bold">Coach</p>
+                    <p className="text-white font-bold">{event.coachName} <span className="text-gray-500 font-normal">({event.coachNickname})</span></p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 font-bold">Curriculum</p>
+                    <p className="text-sm text-gray-300 italic">"{event.curriculum || '-'}"</p>
+                  </div>
+                  <Separator className="bg-[#ffbe00]/10" />
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <p className="text-gray-500">Court Cost</p>
+                      <p className="text-white">Rp {Number(event.cost_court || 0).toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Coach Fee</p>
+                      <p className="text-white">Rp {Number(event.cost_coach || 0).toLocaleString()}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {event.type === 'sparring' && (
+                <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge className="bg-red-500/10 text-red-500 border-0">SPARRING INFO</Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 font-bold">Opponent (Lawan)</p>
+                    <p className="text-xl font-black text-white uppercase italic">{event.sparringOpponent || 'OPEN SPARRING'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 font-bold">Looking For Level</p>
+                    <Badge variant="outline" className="border-white/20 text-white mt-1">{event.skillLevel?.toUpperCase()}</Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 font-bold">Format</p>
+                    <p className="text-sm text-gray-300">{event.matchFormat || '-'}</p>
+                  </div>
+                </div>
+              )}
+
+              {event.type === 'tournament' && (
+                <div className="bg-[#ca1f3d]/5 border border-[#ca1f3d]/20 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge className="bg-[#ca1f3d]/10 text-[#ca1f3d] border-0">TOURNAMENT INFO</Badge>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 font-bold">Prizes</p>
+                    <p className="text-sm text-yellow-400 font-bold">{event.prizes || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 font-bold">Criteria</p>
+                    <p className="text-sm text-gray-300">{event.playerCriteria || '-'}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-start gap-4 pt-2">
                 <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
-                  <User className="w-5 h-5 text-gray-400" />
+                  <CreditCard className="w-5 h-5 text-gray-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 uppercase font-bold">Host / Coach</p>
-                  <p className="text-white font-medium">{event.coachName || 'Admin'}</p>
+                  <p className="text-xs text-gray-500 uppercase font-bold">Tiket per Slot</p>
+                  <p className="text-white font-medium">Rp {Number(event.price).toLocaleString('id-ID')}</p>
                 </div>
               </div>
+
             </div>
           </Card>
         </div>
@@ -329,7 +400,11 @@ export default function AdminEventDetailPage() {
               {participants.length > 0 ? (
                 <div className="divide-y divide-white/5">
                   {participants.map((p, i) => (
-                    <div key={p.id || i} className="p-4 px-6 flex items-center gap-4 hover:bg-white/5 transition-colors group">
+                    <div key={p.id || i} className="p-4 px-6 flex items-center gap-4 hover:bg-white/5 transition-colors group relative">
+                      {/* LINK TO REPORT (IF DRILLING) */}
+                      {event.type === 'drilling' && (
+                        <Link href={`/admin/reports/${p.bookingId}`} className="absolute inset-0 z-0" />
+                      )}
 
                       {/* Index / Avatar */}
                       <Avatar className="w-10 h-10 border border-white/10">
@@ -347,7 +422,7 @@ export default function AdminEventDetailPage() {
                             {(() => {
                               const r = (p.role || '').toLowerCase();
                               if (r.includes('admin')) return <Badge className="bg-red-500/10 text-red-500 border-0 h-5 text-[10px] font-bold">ADMIN</Badge>;
-                              if (r.includes('coach')) return <Badge className="bg-[#00f2ea]/10 text-[#00f2ea] border-0 h-5 text-[10px] font-bold">COACH</Badge>;
+                              if (r.includes('coach')) return <Badge className="bg-[#ffbe00]/10 text-[#ffbe00] border-0 h-5 text-[10px] font-bold">COACH</Badge>;
                               if (r === 'member') return <Badge className="bg-blue-500/10 text-blue-400 border-0 h-5 text-[10px]">MEMBER</Badge>;
                               return <Badge className="bg-gray-700/30 text-gray-400 border-0 h-5 text-[10px]">GUEST</Badge>;
                             })()}
@@ -360,7 +435,7 @@ export default function AdminEventDetailPage() {
                             <Badge className="bg-[#ffbe00] text-black border-0 h-5 text-[10px] font-bold mt-1 w-fit">SPONSORED BY BADMINTOUR</Badge>
                           )}
                           {p.partnerName && (
-                            <p className="text-xs text-[#00f2ea] mt-1 flex items-center gap-1 font-medium">
+                            <p className="text-xs text-[#ffbe00] mt-1 flex items-center gap-1 font-medium">
                               <Users className="w-3 h-3" /> Partner: {p.partnerName}
                             </p>
                           )}
@@ -393,7 +468,7 @@ export default function AdminEventDetailPage() {
                       {/* Actions */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity relative z-10">
                             <MoreHorizontal className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -401,11 +476,15 @@ export default function AdminEventDetailPage() {
                           <DropdownMenuLabel className="text-xs text-gray-500 uppercase">Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator className="bg-white/10" />
 
-                          {/* Approval Actions (Tournament Only) */}
-                          <DropdownMenuItem className="cursor-pointer font-bold" onClick={() => openEdit(p)}>
-                            <Users className="w-4 h-4 mr-2" /> Atur Pasangan & Sponsor
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator className="bg-white/10" />
+                          {/* Approval Actions (Sparring Only for Partner/Sponsor) */}
+                          {event?.type === 'sparring' && (
+                            <>
+                              <DropdownMenuItem className="cursor-pointer font-bold" onClick={() => openEdit(p)}>
+                                <Users className="w-4 h-4 mr-2" /> Atur Pasangan & Sponsor
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="bg-white/10" />
+                            </>
+                          )}
 
                           {(event?.type === 'tournament' && p.status === 'pending_approval') && (
                             <>

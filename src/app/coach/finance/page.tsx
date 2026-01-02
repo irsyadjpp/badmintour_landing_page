@@ -67,7 +67,7 @@ export default function CoachFinancePage() {
     };
 
     if (isLoading) {
-        return <div className="flex h-screen items-center justify-center bg-black text-white"><Loader2 className="animate-spin w-10 h-10 text-[#ca1f3d]" /></div>;
+        return <div className="flex min-h-[50vh] items-center justify-center bg-transparent"><Loader2 className="animate-spin w-10 h-10 text-[#ca1f3d]" /></div>;
     }
 
     return (

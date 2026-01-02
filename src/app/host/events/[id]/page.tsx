@@ -125,14 +125,14 @@ export default function EventDetailPage() {
               </div>
               <div className="w-full h-2 bg-white/10 rounded-full mt-2 overflow-hidden">
                 <div
-                  className="h-full bg-[#00f2ea]"
+                  className="h-full bg-[#ca1f3d]"
                   style={{ width: `${Math.min(100, ((event.bookedSlot || 0) / event.quota) * 100)}%` }}
                 ></div>
               </div>
             </div>
             <div className="p-4 bg-black/30 rounded-2xl border border-white/5">
               <p className="text-xs text-gray-500 uppercase font-bold">Total Revenue</p>
-              <p className="text-2xl font-black text-[#00f2ea]">
+              <p className="text-2xl font-black text-[#ca1f3d]">
                 Rp {((event.bookedSlot || 0) * event.price).toLocaleString('id-ID')}
               </p>
             </div>

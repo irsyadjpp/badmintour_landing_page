@@ -3,7 +3,7 @@ import { Instagram } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-black text-white pt-24 pb-0 relative overflow-hidden mt-20">
+    <footer className="bg-black text-white pt-24 pb-0 relative overflow-hidden mt-20 font-oswald">
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-20">
           <div>
@@ -68,7 +68,7 @@ export default function Footer() {
                 Komunitas
               </h4>
               <ul className="space-y-3 text-gray-400">
-                 <li>
+                <li>
                   <a href="#" className="hover:text-white transition">
                     Hall of Fame
                   </a>
@@ -78,7 +78,7 @@ export default function Footer() {
                     Jadi Member VIP
                   </a>
                 </li>
-                 <li>
+                <li>
                   <a href="/jersey" className="hover:text-white transition">
                     Official Merchandise
                   </a>
@@ -115,12 +115,12 @@ export default function Footer() {
           </div>
         </div>
       </div>
-      
-       <div className="absolute bottom-0 left-0 right-0 h-32 opacity-5 pointer-events-none select-none flex items-end overflow-hidden">
+
+      <div className="absolute bottom-0 left-0 right-0 h-32 opacity-5 pointer-events-none select-none flex items-end overflow-hidden">
         <div className="whitespace-nowrap animate-marquee text-[10rem] font-black leading-none text-white">
-            BADMINTOUR BANDUNG • BADMINTOUR BANDUNG • BADMINTOUR BANDUNG •
+          BADMINTOUR BANDUNG • BADMINTOUR BANDUNG • BADMINTOUR BANDUNG •
         </div>
-    </div>
+      </div>
     </footer>
   );
 }

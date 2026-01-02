@@ -70,7 +70,8 @@ export async function GET(
         nickname,
         level,
         hasAssessment: assessedPlayerIds.has(userId),
-        status: booking.status // Added status
+        status: booking.status,
+        checkInAt: booking.checkInAt ? booking.checkInAt.toDate() : null
       };
     });
 

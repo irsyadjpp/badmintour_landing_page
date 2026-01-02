@@ -168,7 +168,7 @@ export function LiveAssessmentForm({ playerId, sessionId, playerName, onSubmitSu
               <p className="text-sm font-medium text-gray-400 mb-1">Prediksi Level</p>
               <span className={`inline-block px-4 py-1.5 rounded-full font-bold text-xs uppercase tracking-wide
                 ${result.level === 'Advance (Elite)' ? 'bg-[#ca1f3d] text-white shadow-[0_0_15px_rgba(202,31,61,0.5)]' :
-                  result.level === 'Intermediate' ? 'bg-[#ffbe00] text-black shadow-[0_0_15px_rgba(255,190,0,0.5)]' : 'bg-green-600 text-white shadow-green-600/20 shadow-lg'}`}>
+                  result.level === 'Intermediate' ? 'bg-[#ffbe00] text-black shadow-[0_0_15px_rgba(255,190,0,0.5)]' : 'bg-zinc-700 text-white border border-white/10'}`}>
                 {result.level}
               </span>
             </div>

@@ -65,12 +65,12 @@ export function FeedbackModal({
       btn: 'bg-[#ffbe00] text-black hover:bg-[#ffbe00]/90'
     },
     success: {
-      color: 'text-[#00f2ea]',
-      bg: 'bg-[#00f2ea]',
-      border: 'border-[#00f2ea]',
-      glow: 'shadow-[0_0_50px_rgba(0,242,234,0.3)]',
+      color: 'text-[#10b981]',
+      bg: 'bg-[#10b981]',
+      border: 'border-[#10b981]',
+      glow: 'shadow-[0_0_50px_rgba(16,185,129,0.3)]',
       icon: CheckCircle2,
-      btn: 'bg-[#00f2ea] text-black hover:bg-[#00f2ea]/90'
+      btn: 'bg-[#10b981] text-black hover:bg-[#10b981]/90'
     }
   };
 
