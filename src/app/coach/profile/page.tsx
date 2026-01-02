@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { User, Phone, Save, Loader2, ShieldCheck, Award, DollarSign, UserCog, Trophy } from 'lucide-react';
+import { User, Phone, Save, Loader2, ShieldCheck, Award, DollarSign, UserCog, Trophy, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Material3Input } from '@/components/ui/material-3-input';
 import { Material3Textarea } from '@/components/ui/material-3-textarea';
@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
 import { UserPinCard } from '@/components/profile/user-pin-card';
+import { StatusModal } from '@/components/ui/status-modal';
 
 export default function CoachProfilePage() {
     const { data: session, update } = useSession();
@@ -24,6 +25,19 @@ export default function CoachProfilePage() {
         bio: ''
     });
     const [pin, setPin] = useState<string>('');
+    const [isPhoneLocked, setIsPhoneLocked] = useState(false);
+    const [statusModal, setStatusModal] = useState<{
+        isOpen: boolean;
+        type: 'success' | 'error';
+        title: string;
+        description: string;
+        actionLabel?: string;
+    }>({
+        isOpen: false,
+        type: 'success',
+        title: '',
+        description: ''
+    });
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -38,10 +52,66 @@ export default function CoachProfilePage() {
                     bio: data.data.coachProfile?.bio || '',
                 });
                 setPin(data.data.pin || '');
+                if (data.data.phoneNumber) {
+                    setIsPhoneLocked(true);
+                }
             }
         };
         if (session) fetchProfile();
     }, [session]);
+
+    // SYNC GOOGLE LOGIC
+    const handleSyncGoogle = async () => {
+        if (!session?.user) return;
+        setIsLoading(true);
+
+        try {
+            setFormData(prev => ({
+                ...prev,
+                name: session.user?.name || prev.name
+            }));
+
+            const res = await fetch('/api/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...formData,
+                    name: session.user?.name,
+                    image: session.user?.image,
+                })
+            });
+
+            if (res.ok) {
+                await update({
+                    ...session,
+                    user: {
+                        ...session?.user,
+                        name: session.user?.name,
+                        image: session.user?.image
+                    }
+                });
+                toast({ title: "Synced!", description: "Data profile disinkronisasi dengan Google.", className: "bg-blue-600 text-white" });
+
+                setStatusModal({
+                    isOpen: true,
+                    type: 'success',
+                    title: 'SYNCHRONIZED!',
+                    description: 'Data coach Anda berhasil disinkronisasi dengan Google.',
+                    actionLabel: "OK, SIAP"
+                });
+            }
+        } catch (e) {
+            setStatusModal({
+                isOpen: true,
+                type: 'error',
+                title: 'SYNC FAILED!',
+                description: 'Gagal menghubungkan ke Google. Silakan coba lagi nanti.',
+                actionLabel: "COBA LAGI"
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -55,10 +125,24 @@ export default function CoachProfilePage() {
             const data = await res.json();
             if (res.ok) {
                 await update();
-                toast({ title: "Profile Updated", description: "Data berhasil disimpan.", className: "bg-[#00f2ea] text-black border-none font-bold" });
+                // toast({ title: "Profile Updated", description: "Data berhasil disimpan.", className: "bg-[#00f2ea] text-black border-none font-bold" });
+                setStatusModal({
+                    isOpen: true,
+                    type: 'success',
+                    title: 'COACH SAVED!',
+                    description: "Data profil, rate, dan spesialisasi coach berhasil disimpan.",
+                    actionLabel: "KEMBALI"
+                });
+
             } else { throw new Error(data.error); }
         } catch (error: any) {
-            toast({ title: "Gagal", description: error.message, variant: "destructive" });
+            setStatusModal({
+                isOpen: true,
+                type: 'error',
+                title: 'DOUBLE FAULT!',
+                description: error.message || "Gagal menyimpan data coach.",
+                actionLabel: "ULANGI"
+            });
         } finally { setIsLoading(false); }
     };
 
@@ -102,7 +186,17 @@ export default function CoachProfilePage() {
                     </div>
 
                     <h2 className="text-xl font-black text-white">{session?.user?.name}</h2>
-                    <p className="text-gray-500 text-sm font-mono mb-6">{session?.user?.email}</p>
+                    <p className="text-gray-500 text-sm font-mono mb-4">{session?.user?.email}</p>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleSyncGoogle}
+                        className="mb-6 h-8 text-[10px] font-bold border-white/10 hover:bg-white/10 text-gray-400 hover:text-white rounded-full bg-white/5"
+                    >
+                        <RefreshCw className="w-3 h-3 mr-2" />
+                        SYNC GOOGLE DATA
+                    </Button>
 
                     <div className="w-full space-y-3">
                         <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/5">
@@ -141,7 +235,11 @@ export default function CoachProfilePage() {
                                 onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                                 className="bg-[#0a0a0a]"
                                 type="tel"
+                                disabled={isPhoneLocked}
                             />
+                            {isPhoneLocked && (
+                                <p className="text-[10px] text-gray-500 mt-1">*Nomor terkunci. Hubungi admin untuk ubah.</p>
+                            )}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -184,6 +282,15 @@ export default function CoachProfilePage() {
                     </form>
                 </Card>
             </div>
+            {/* STATUS MODAL */}
+            <StatusModal
+                isOpen={statusModal.isOpen}
+                onClose={() => setStatusModal(prev => ({ ...prev, isOpen: false }))}
+                type={statusModal.type}
+                title={statusModal.title}
+                description={statusModal.description}
+                actionLabel={statusModal.actionLabel}
+            />
         </div>
     );
 }

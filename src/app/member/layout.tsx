@@ -27,7 +27,7 @@ export default function MemberLayout({
       {/* Main Content Wrapper */}
       {/* Tambahkan 'flex-1' agar main mengisi sisa ruang jika konten sedikit */}
       <main className="relative z-10 w-full flex-1 pl-0 md:pl-32 pr-0 md:pr-8 py-4 md:py-8">
-        <div className="max-w-[1400px] mx-auto w-full h-full">
+        <div className="w-full h-full">
           {children}
         </div>
       </main>

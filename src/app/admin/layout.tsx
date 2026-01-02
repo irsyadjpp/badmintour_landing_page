@@ -30,7 +30,7 @@ export default function AdminLayout({
       */}
       <main className="flex-1 w-full pl-6 md:pl-28 pr-6 py-8">
         {/* Wrapper Opsional: Membatasi lebar konten agar rapi di layar monitor lebar (Ultrawide) */}
-        <div className="max-w-[1600px] mx-auto w-full">
+        <div className="w-full">
           {children}
         </div>
       </main>

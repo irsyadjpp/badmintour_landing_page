@@ -27,31 +27,38 @@ export async function PUT(req: Request) {
         }
 
         const body = await req.json();
-        const { phoneNumber, name, nickname, domicile } = body;
+        const { phoneNumber, name, nickname, domicile, image } = body;
 
         // Validasi
         if (!phoneNumber) {
             return NextResponse.json({ error: "Nomor WhatsApp wajib diisi untuk pairing akun." }, { status: 400 });
         }
 
-        // --- LOGIKA PAIRING: CEK DUPLIKASI ---
-        // Cari apakah nomor HP ini sudah dipakai user LAIN
+        // --- LOGIKA PAIRING: CEK DUPLIKASI & AUTO-MERGE ---
         const duplicateCheck = await db.collection("users")
             .where("phoneNumber", "==", phoneNumber)
             .get();
 
-        let isDuplicate = false;
+        let conflictingGuestId: string | null = null;
+        let isRealUserConflict = false;
+
         duplicateCheck.forEach(doc => {
-            // Jika ketemu doc dengan No HP sama, TAPI ID-nya beda dengan user yang login sekarang
             if (doc.id !== session.user.id) {
-                isDuplicate = true;
+                const data = doc.data();
+                // Jika memiliki email, berarti ini akun Google User lain -> BLOCK
+                if (data.email) {
+                    isRealUserConflict = true;
+                } else {
+                    // Jika TIDAK punya email, asumsi ini akun Guest lama -> MERGE
+                    conflictingGuestId = doc.id;
+                }
             }
         });
 
-        if (isDuplicate) {
+        if (isRealUserConflict) {
             return NextResponse.json({
                 success: false,
-                error: "GAGAL PAIRING: Nomor WhatsApp ini sudah tertaut dengan akun Google lain."
+                error: "DOUBE FAULT! Nomor ini sudah dipakai akun lain."
             }, { status: 409 });
         }
 
@@ -59,6 +66,7 @@ export async function PUT(req: Request) {
         await db.collection("users").doc(session.user.id).update({
             phoneNumber: phoneNumber, // Field kunci pairing
             name: name || session.user.name,
+            image: image || session.user.image, // New: Update Image if provided
             nickname: nickname || (session.user as any).nickname || "",
             domicile: domicile || "",
             updatedAt: new Date().toISOString(),
@@ -125,6 +133,29 @@ export async function PUT(req: Request) {
             });
         }
 
+        // D. Sync Data from Conflicting Guest ID (Auto-Merge)
+        if (conflictingGuestId) {
+            console.log(`[MERGE] Merging data from Guest ID: ${conflictingGuestId} to User: ${session.user.id}`);
+
+            // 1. Migrate Bookings by UserID
+            const oldUserBookings = await db.collection("bookings").where("userId", "==", conflictingGuestId).get();
+            oldUserBookings.forEach(doc => {
+                batch.update(doc.ref, { userId: session.user.id, userName: session.user.name, type: "MEMBER" });
+                totalSynced++;
+            });
+
+            // 2. Migrate Jersey Orders by UserID
+            const oldUserJersey = await db.collection("jersey_orders").where("userId", "==", conflictingGuestId).get();
+            oldUserJersey.forEach(doc => {
+                batch.update(doc.ref, { userId: session.user.id, type: "MEMBER", isMember: true });
+                totalSynced++;
+            });
+
+            // 3. Delete Old Guest Document
+            batch.delete(db.collection("users").doc(conflictingGuestId));
+            console.log(`[MERGE] Deleting old guest document: ${conflictingGuestId}`);
+        }
+
         if (totalSynced > 0) {
             await batch.commit();
             console.log(`[PAIRING] ${totalSynced} items (Bookings/Jersey/WL) synced to user ${session.user.name}`);
@@ -134,7 +165,6 @@ export async function PUT(req: Request) {
             success: true,
             message: `Profile disimpan. ${totalSynced > 0 ? totalSynced + ' aktivitas lama berhasil ditautkan!' : 'Data berhasil diperbarui.'}`
         });
-
     } catch (error) {
         console.error("[PROFILE_UPDATE_ERROR]", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

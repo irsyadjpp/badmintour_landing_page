@@ -23,7 +23,7 @@ export default function CoachLayout({
       <CoachSidebar />
 
       <main className="relative z-10 w-full flex-1 pl-0 md:pl-32 pr-0 md:pr-8 py-4 md:py-8">
-        <div className="max-w-[1400px] mx-auto w-full">
+        <div className="w-full">
           {children}
         </div>
       </main>
