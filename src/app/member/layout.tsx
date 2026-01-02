@@ -21,7 +21,7 @@ export default function MemberLayout({
       {/* Background Ambience Global - Fixed position agar tetap di tempat saat scroll */}
       <div className="fixed inset-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-[#ffbe00]/5 via-transparent to-transparent pointer-events-none z-0"></div>
 
-      {/* Sidebar Navigation */}
+      {/* Sidebar Navigation (Main) */}
       <MemberSidebar />
 
       {/* Main Content Wrapper */}

@@ -232,7 +232,7 @@ export default function MemberDashboard() {
                 <div className="flex gap-3 w-full md:w-auto relative z-10">
                     <Link href="/member/profile" className="w-full md:w-auto">
                         <Button className="w-full md:w-auto h-12 px-8 rounded-xl bg-[#ffbe00] text-black hover:bg-yellow-400 font-black shadow-[0_0_20px_rgba(255,190,0,0.4)] hover:scale-105 transition-transform">
-                            <UserCog className="w-4 h-4 mr-2" /> LENGKAPI PROFILE
+                            <UserCog className="w-4 h-4 mr-2" /> PROFILE
                         </Button>
                     </Link>
                 </div>
@@ -309,9 +309,9 @@ export default function MemberDashboard() {
                                 <div className="flex justify-between md:justify-start gap-4 mb-1">
                                     <p className="font-bold text-white">{booking.event.title}</p>
                                     <Badge variant="outline" className={`text-[10px] ${booking.status === 'paid' || booking.status === 'confirmed' || booking.status === 'CONFIRMED' ? 'text-green-500 border-green-500/20 bg-green-500/10' :
-                                            booking.status === 'pending_payment' ? 'text-yellow-500 border-yellow-500/20 bg-yellow-500/10' :
-                                                booking.status === 'pending_approval' ? 'text-blue-500 border-blue-500/20 bg-blue-500/10' :
-                                                    'text-gray-500 border-gray-500/20'
+                                        booking.status === 'pending_payment' ? 'text-yellow-500 border-yellow-500/20 bg-yellow-500/10' :
+                                            booking.status === 'pending_approval' ? 'text-blue-500 border-blue-500/20 bg-blue-500/10' :
+                                                'text-gray-500 border-gray-500/20'
                                         }`}>
                                         {booking.status === 'paid' || booking.status === 'confirmed' || booking.status === 'CONFIRMED' ? 'CONFIRMED' :
                                             booking.status === 'pending_payment' ? 'MENUNGGU PEMBAYARAN' :

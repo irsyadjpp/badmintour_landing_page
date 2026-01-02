@@ -123,6 +123,19 @@ export default function MemberSidebar() {
                             </Link>
                         );
                     })}
+
+                    {/* MOBILE LOGOUT */}
+                    <button
+                        onClick={() => signOut({ callbackUrl: '/' })}
+                        className="flex flex-col items-center gap-1"
+                    >
+                        <div className="p-2 rounded-xl text-red-500 bg-red-500/10 border border-red-500/20">
+                            <LogOut className="w-5 h-5" />
+                        </div>
+                        <span className="text-[9px] font-bold text-red-500">
+                            Keluar
+                        </span>
+                    </button>
                 </nav>
             </div>
         </>

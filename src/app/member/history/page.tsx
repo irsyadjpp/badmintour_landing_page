@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 export default function HistoryPage() {
   const { data: session } = useSession();
@@ -133,6 +134,18 @@ export default function HistoryPage() {
                       )}
                     </div>
                   </div>
+
+                  {/* Actions Footer */}
+                  {item.status === 'completed' && (
+                    <div className="mt-4 pt-4 border-t border-white/5 relative z-10 flex justify-end">
+                      <Link href={`/member/history/${item.id}/report`}>
+                        <Badge className="bg-[#ffbe00]/10 text-[#ffbe00] hover:bg-[#ffbe00] hover:text-black border border-[#ffbe00]/20 cursor-pointer h-9 px-4 transition-all">
+                          <Dumbbell className="w-3.5 h-3.5 mr-2" />
+                          LIHAT RAPOR
+                        </Badge>
+                      </Link>
+                    </div>
+                  )}
 
                   {/* Footer Stripe */}
                   <div className={`absolute bottom-0 left-0 right-0 h-1 ${isFailed ? 'bg-red-500/20' : 'bg-green-500/20'} opacity-0 group-hover:opacity-100 transition-opacity`}></div>
