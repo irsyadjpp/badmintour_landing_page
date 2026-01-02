@@ -43,6 +43,9 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
     { p1: '', p2: '', club: '' }
   ]);
 
+  // Recurring Schedule State
+  const [isRecurring, setIsRecurring] = useState(false);
+
   const [formData, setFormData] = useState({
     title: '',
     type: 'mabar',
@@ -60,7 +63,17 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
     curriculum: '', // Drilling curriculum
     organizer: '', // Tournament Organizer
     playerCriteria: '', // Tournament Player Criteria
-    prizes: '' // Tournament Prizes
+    prizes: '', // Tournament Prizes
+    sparringOpponent: '', // Sparring: Opponent Team Name (Optional)
+    matchFormat: '' // Sparring: e.g. "5 Partai (3MD, 2XD)"
+  });
+
+  // Drilling Costs State
+  const [drillCosts, setDrillCosts] = useState({
+    court: '175000',
+    shuttle: '83000',
+    tool: '20000',
+    coach: '300000'
   });
 
   // LOAD INITIAL DATA (FOR EDIT)
@@ -83,7 +96,9 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
         allowWaitingList: initialData.allowWaitingList || false, // Load WL Setting
         organizer: initialData.organizer || '',
         playerCriteria: initialData.playerCriteria || '',
-        prizes: initialData.prizes || ''
+        prizes: initialData.prizes || '',
+        sparringOpponent: initialData.sparringOpponent || '', // Load Sparring
+        matchFormat: initialData.matchFormat || '' // Load Sparring
       });
 
       if (initialData.date) {
@@ -179,7 +194,13 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
       date: finalDate,
       time: `${startTime} - ${endTime}`,
       // Transform allowedUserTypes string to array for backend
-      allowedUserTypes: formData.allowedUserTypes === 'both' ? ['member', 'guest'] : ['member']
+      allowedUserTypes: formData.allowedUserTypes === 'both' ? ['member', 'guest'] : ['member'],
+      isRecurring, // Include Recurring Flag
+      // Drilling Costs
+      cost_court: drillCosts.court,
+      cost_shuttle: drillCosts.shuttle,
+      cost_tool: drillCosts.tool,
+      cost_coach: drillCosts.coach
     };
 
     try {
@@ -231,6 +252,7 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
                   </Material3SelectTrigger>
                   <Material3SelectContent>
                     <Material3SelectItem value="mabar"><span className="flex items-center gap-2"><Users className="w-4 h-4" /> Mabar (Fun Game)</span></Material3SelectItem>
+                    <Material3SelectItem value="sparring"><span className="flex items-center gap-2"><Users className="w-4 h-4 text-red-500" /> Sparring (Vs Team)</span></Material3SelectItem>
                     <Material3SelectItem value="drilling"><span className="flex items-center gap-2"><Dumbbell className="w-4 h-4" /> Drilling / Clinic</span></Material3SelectItem>
                     <Material3SelectItem value="tournament"><span className="flex items-center gap-2"><Trophy className="w-4 h-4" /> Turnamen</span></Material3SelectItem>
                   </Material3SelectContent>
@@ -354,7 +376,94 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
                     </div>
                   </div>
 
+                  {/* DRILLING FINANCIALS & SIMULATION */}
+                  <div className="space-y-4 animate-in fade-in slide-in-from-top-2 border border-[#00f2ea]/20 bg-[#00f2ea]/5 p-4 rounded-xl mt-4">
+                    <div className="flex items-center gap-2 mb-2 p-2 bg-[#00f2ea]/10 rounded-lg">
+                      <DollarSign className="w-4 h-4 text-[#00f2ea]" />
+                      <span className="text-xs font-bold text-[#00f2ea] uppercase">Estimasi Biaya & Harga (Drilling)</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <Material3Input label="Sewa Lapangan" type="number" value={drillCosts.court} onChange={(e) => setDrillCosts({ ...drillCosts, court: e.target.value })} />
+                      <Material3Input label="Shuttlecock" type="number" value={drillCosts.shuttle} onChange={(e) => setDrillCosts({ ...drillCosts, shuttle: e.target.value })} />
+                      <Material3Input label="Sewa Alat" type="number" value={drillCosts.tool} onChange={(e) => setDrillCosts({ ...drillCosts, tool: e.target.value })} />
+                      <Material3Input label="Honor Coach" type="number" value={drillCosts.coach} onChange={(e) => setDrillCosts({ ...drillCosts, coach: e.target.value })} />
+                    </div>
+
+                    {/* Price Simulation Table */}
+                    <div className="bg-[#1A1A1A] rounded-lg p-3 border border-white/10 mt-2">
+                      <p className="text-[10px] text-gray-500 font-bold uppercase mb-2">Simulasi Harga Jual (Quota: {formData.quota})</p>
+                      <div className="space-y-1">
+                        {(() => {
+                          const totalCost = Number(drillCosts.court) + Number(drillCosts.shuttle) + Number(drillCosts.tool) + Number(drillCosts.coach);
+                          const quotaNum = Number(formData.quota) || 12;
+                          const hpp = totalCost / quotaNum;
+                          const calc = (margin: number) => Math.ceil((hpp + (hpp * margin)) / 5000) * 5000;
+
+                          const tiers = [
+                            { l: 'Trial (-14%)', p: calc(-0.14), c: 'text-green-400' },
+                            { l: 'Pelajar (+3%)', p: calc(0.03), c: 'text-blue-400' },
+                            { l: 'Member (+12%)', p: calc(0.12), c: 'text-white' },
+                            { l: 'Normal (+20%)', p: calc(0.20), c: 'text-yellow-400' },
+                            { l: 'Drop-In (+29%)', p: calc(0.29), c: 'text-red-400' },
+                          ];
+
+                          return tiers.map((t, idx) => (
+                            <div key={idx} className="flex justify-between text-xs border-b border-white/5 pb-1 last:border-0 hover:bg-white/5 px-2 py-0.5 rounded">
+                              <span className="text-gray-400 w-24">{t.l}</span>
+                              <span className={`font-mono font-bold ${t.c}`}>Rp {t.p.toLocaleString('id-ID')}</span>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                      <div className="flex justify-between text-[10px] text-gray-600 mt-2 pt-2 border-t border-white/10">
+                        <span>HPP per Orang:</span>
+                        <span>Rp {Math.ceil((Number(drillCosts.court) + Number(drillCosts.shuttle) + Number(drillCosts.tool) + Number(drillCosts.coach)) / (Number(formData.quota) || 12)).toLocaleString('id-ID')}</span>
+                      </div>
+                    </div>
+                  </div>
+
                 </>
+              )}
+
+              {/* LOGIC DROPDOWN SPARRING */}
+              {formData.type === 'sparring' && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 border border-red-500/20 bg-red-500/5 p-4 rounded-xl mt-2 mb-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Users className="w-4 h-4 text-red-500" />
+                    <span className="text-xs font-bold text-red-500 uppercase">Detail Sparring</span>
+                  </div>
+
+                  <Material3Input
+                    label="Tim Lawan (Opponent)"
+                    placeholder="Nama Klub / Tim Lawan (Kosongkan jika mencari lawan)"
+                    value={formData.sparringOpponent}
+                    onChange={(e) => setFormData({ ...formData, sparringOpponent: e.target.value })}
+                  />
+
+                  <Material3Select
+                    value={formData.skillLevel}
+                    onValueChange={(val) => setFormData({ ...formData, skillLevel: val })}
+                  >
+                    <Material3SelectTrigger label="Level Lawan Dicari" hasValue={!!formData.skillLevel}>
+                      <Material3SelectValue />
+                    </Material3SelectTrigger>
+                    <Material3SelectContent>
+                      <Material3SelectItem value="beginner">Beginner (C)</Material3SelectItem>
+                      <Material3SelectItem value="intermediate">Intermediate (B)</Material3SelectItem>
+                      <Material3SelectItem value="advanced">Advanced (A)</Material3SelectItem>
+                      <Material3SelectItem value="all">Open (Semua Level)</Material3SelectItem>
+                    </Material3SelectContent>
+                  </Material3Select>
+
+                  <Material3Textarea
+                    label="Format Pertandingan"
+                    placeholder="Contoh: 5 Partai (3 Ganda Putra, 2 Ganda Campuran)"
+                    value={formData.matchFormat}
+                    onChange={(e) => setFormData({ ...formData, matchFormat: e.target.value })}
+                    className="min-h-[80px]"
+                  />
+                </div>
               )}
               {/* LOGIC DROPDOWN TOURNAMENT */}
               {formData.type === 'tournament' && (
@@ -602,6 +711,25 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
                   className="data-[state=checked]:bg-[#ffbe00]"
                 />
               </div>
+
+              {/* RECURRING SCHEDULE TOGGLE (Create Mode Only) */}
+              {mode === 'create' && (
+                <div className="flex items-center justify-between bg-[#00f2ea]/5 p-4 rounded-xl border border-[#00f2ea]/20">
+                  <div className="space-y-0.5">
+                    <label className="text-sm font-bold text-white flex items-center gap-2">
+                      <CalendarPlus className="w-4 h-4 text-[#00f2ea]" /> Jadwal Rutin (4 Sesi)
+                    </label>
+                    <p className="text-[10px] text-gray-400">
+                      Otomatis buat 4 event berturut-turut (Setiap Minggu).
+                    </p>
+                  </div>
+                  <Switch
+                    checked={isRecurring}
+                    onCheckedChange={setIsRecurring}
+                    className="data-[state=checked]:bg-[#00f2ea]"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="pt-8">

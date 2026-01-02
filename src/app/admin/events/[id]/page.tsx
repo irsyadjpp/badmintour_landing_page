@@ -24,6 +24,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function AdminEventDetailPage() {
   const params = useParams();
@@ -37,6 +41,8 @@ export default function AdminEventDetailPage() {
 
   // Modal State
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [editParticipant, setEditParticipant] = useState<any>(null);
+  const [editForm, setEditForm] = useState({ partnerName: '', isSponsored: false });
 
   const loadData = async () => {
     // Handle async params in Next.js 15
@@ -92,6 +98,75 @@ export default function AdminEventDetailPage() {
     }
   };
 
+  const openEdit = (p: any) => {
+    setEditParticipant(p);
+    setEditForm({
+      partnerName: p.partnerName || '',
+      isSponsored: !!p.isSponsored
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editParticipant) return;
+    try {
+      const res = await fetch(`/api/bookings/${editParticipant.bookingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          partnerName: editForm.partnerName,
+          isSponsored: editForm.isSponsored,
+          price: editForm.isSponsored ? 0 : undefined, // Auto-free if sponsored
+          status: editForm.isSponsored ? 'paid' : undefined // Optional: Auto-pay if sponsored?
+        })
+      });
+
+      if (res.ok) {
+        toast({ title: "Sukses", description: "Data peserta diperbarui" });
+        setEditParticipant(null);
+        loadData();
+      } else {
+        throw new Error("Gagal update");
+      }
+    } catch (error) {
+      toast({ title: "Error", description: "Gagal menyimpan perubahan", variant: "destructive" });
+    }
+  };
+
+  // HANDLERS
+  const handleExtend = async () => {
+    if (!confirm("Extend waktu 1 jam?")) return;
+    try {
+      const res = await fetch(`/api/events/${event.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'extend_time', additionalMinutes: 60 })
+      });
+      if (res.ok) {
+        toast({ title: "Success", description: "Waktu diperpanjang 1 jam" });
+        loadData();
+      } else throw new Error();
+    } catch (e) {
+      toast({ title: "Error", description: "Gagal extend waktu", variant: "destructive" });
+    }
+  };
+
+  const handleAddCourt = async () => {
+    if (!confirm("Buka 1 Lapangan Tambahan (+12 Slot)? \nWaiting list akan otomatis masuk.")) return;
+    try {
+      const res = await fetch(`/api/events/${event.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add_court', additionalQuota: 12 })
+      });
+      if (res.ok) {
+        toast({ title: "Success", description: "Lapangan & Kuota ditambah" });
+        loadData();
+      } else throw new Error();
+    } catch (e) {
+      toast({ title: "Error", description: "Gagal menambah lapangan", variant: "destructive" });
+    }
+  };
+
   if (loading) return (
     <div className="flex items-center justify-center min-h-[50vh]">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ca1f3d]"></div>
@@ -138,15 +213,22 @@ export default function AdminEventDetailPage() {
           </div>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-2">
+          {/* Quick Actions */}
+          <Button variant="secondary" onClick={handleExtend} className="bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 border border-blue-600/30">
+            <Clock className="w-4 h-4 mr-2" /> +1 Jam
+          </Button>
+          <Button variant="secondary" onClick={handleAddCourt} className="bg-green-600/20 text-green-400 hover:bg-green-600/30 border border-green-600/30">
+            <Users className="w-4 h-4 mr-2" /> +1 Court
+          </Button>
+
           <Link href={`/host/events/${event.id}/edit`}>
-            <Button variant="outline" className="border-white/10 text-white bg-[#1A1A1A] hover:bg-white/10 gap-2 h-12 px-6 rounded-xl">
-              <Pencil className="w-4 h-4" /> Edit Event
+            <Button variant="outline" className="border-white/10 text-white bg-[#1A1A1A] hover:bg-white/10 gap-2 h-10 px-4 rounded-xl">
+              <Pencil className="w-4 h-4" /> Edit
             </Button>
           </Link>
-          {/* Admin Action Example */}
-          <Button variant="destructive" className="bg-red-900/50 text-red-200 hover:bg-red-900 border border-red-900 rounded-xl h-12 px-6" onClick={() => setShowCancelModal(true)}>
-            Cancel Event
+          <Button variant="destructive" className="bg-red-900/50 text-red-200 hover:bg-red-900 border border-red-900 rounded-xl h-10 px-4" onClick={() => setShowCancelModal(true)}>
+            Cancel
           </Button>
         </div>
       </div>
@@ -274,6 +356,9 @@ export default function AdminEventDetailPage() {
                             {p.bookingCode && <span className="font-mono text-xs bg-white/5 px-1 rounded">{p.bookingCode}</span>}
                             {p.phone || '-'}
                           </p>
+                          {p.isSponsored && (
+                            <Badge className="bg-[#ffbe00] text-black border-0 h-5 text-[10px] font-bold mt-1 w-fit">SPONSORED BY BADMINTOUR</Badge>
+                          )}
                           {p.partnerName && (
                             <p className="text-xs text-[#00f2ea] mt-1 flex items-center gap-1 font-medium">
                               <Users className="w-3 h-3" /> Partner: {p.partnerName}
@@ -317,6 +402,11 @@ export default function AdminEventDetailPage() {
                           <DropdownMenuSeparator className="bg-white/10" />
 
                           {/* Approval Actions (Tournament Only) */}
+                          <DropdownMenuItem className="cursor-pointer font-bold" onClick={() => openEdit(p)}>
+                            <Users className="w-4 h-4 mr-2" /> Atur Pasangan & Sponsor
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator className="bg-white/10" />
+
                           {(event?.type === 'tournament' && p.status === 'pending_approval') && (
                             <>
                               <DropdownMenuItem
@@ -411,6 +501,50 @@ export default function AdminEventDetailPage() {
           onClick: () => setShowCancelModal(false)
         }}
       />
+
+      {/* EDIT PARTICIPANT MODAL */}
+      <Dialog open={!!editParticipant} onOpenChange={(o) => !o && setEditParticipant(null)}>
+        <DialogContent className="bg-[#1A1A1A] border-white/10 text-white sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Peserta Tournament</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nama Pasangan (Partner)</Label>
+              <Input
+                value={editForm.partnerName}
+                onChange={(e) => setEditForm({ ...editForm, partnerName: e.target.value })}
+                placeholder="Masukkan nama partner..."
+                className="bg-white/5 border-white/10 text-white"
+              />
+            </div>
+            <div className="flex items-center space-x-2 pt-2">
+              <Checkbox
+                id="sponsor"
+                checked={editForm.isSponsored}
+                onCheckedChange={(checked) => setEditForm({ ...editForm, isSponsored: checked as boolean })}
+                className="border-white/20 data-[state=checked]:bg-[#ffbe00] data-[state=checked]:text-black"
+              />
+              <label
+                htmlFor="sponsor"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Dibayarkan oleh Badmintour (Sponsorship)
+              </label>
+            </div>
+            {editForm.isSponsored && (
+              <div className="text-xs text-[#ffbe00] bg-[#ffbe00]/10 p-2 rounded border border-[#ffbe00]/20">
+                ⚠ Status akan otomatis menjadi <b>PAID</b> dan Harga <b>Rp 0</b>.
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditParticipant(null)} className="text-gray-400">Batal</Button>
+            <Button onClick={handleSaveEdit} className="bg-[#ffbe00] text-black hover:bg-[#ffbe00]/90 font-bold">Simpan Perubahan</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

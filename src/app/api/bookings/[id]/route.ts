@@ -17,9 +17,9 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const { status } = await req.json();
+    const { status, partnerName, price, isSponsored } = await req.json();
 
-    if (!status || !['paid', 'pending', 'cancelled', 'pending_approval', 'approved', 'rejected'].includes(status)) {
+    if (status && !['paid', 'pending', 'cancelled', 'pending_approval', 'approved', 'rejected'].includes(status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
@@ -31,19 +31,24 @@ export async function PATCH(
     const bookingData = bookingSnap.data();
 
     // Handle Quota Release (if Rejected/Cancelled) AND prior status was occupying a slot
-    // Assuming 'cancelled' and 'rejected' do NOT occupy slots.
-    if (['rejected', 'cancelled'].includes(status) && !['rejected', 'cancelled'].includes(bookingData?.status)) {
+    if (status && ['rejected', 'cancelled'].includes(status) && !['rejected', 'cancelled'].includes(bookingData?.status)) {
       const eventRef = db.collection("events").doc(bookingData?.eventId);
       await eventRef.update({
         bookedSlot: FieldValue.increment(-1)
       });
     }
 
-    await bookingRef.update({
-      status: status,
+    // Build update object
+    const updateData: any = {
       updatedAt: new Date().toISOString(),
       updatedBy: session.user.id
-    });
+    };
+    if (status) updateData.status = status;
+    if (partnerName !== undefined) updateData.partnerName = partnerName;
+    if (price !== undefined) updateData.price = price;
+    if (isSponsored !== undefined) updateData.isSponsored = isSponsored;
+
+    await bookingRef.update(updateData);
 
     await logActivity({
       userId: session.user.id,

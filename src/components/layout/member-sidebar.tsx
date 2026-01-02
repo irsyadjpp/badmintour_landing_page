@@ -1,6 +1,7 @@
 'use client';
 
 import {
+    Target,
     LayoutGrid,
     Swords,
     Trophy,
@@ -25,7 +26,9 @@ export default function MemberSidebar() {
     const navItems = [
         { href: "/member/dashboard", icon: LayoutGrid, label: "Dashboard" },
         { href: "/member/mabar", icon: Swords, label: "Mabar" },
-        { href: "/member/coaching", icon: GraduationCap, label: "Coaching" },
+        { href: "/member/sparring", icon: Target, label: "Sparring" },
+        { href: "/member/drilling", icon: Dumbbell, label: "Latihan" },
+        { href: "/member/coaching", icon: GraduationCap, label: "Cari Coach" },
         { href: "/member/tournament", icon: Trophy, label: "Info Turnamen" },
         { href: "/member/tickets", icon: Ticket, label: "Tiket Saya" },
         { href: "/member/history", icon: History, label: "Riwayat Match" },

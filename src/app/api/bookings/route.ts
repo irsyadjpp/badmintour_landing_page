@@ -134,6 +134,18 @@ export async function POST(req: Request) {
             const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
             const bookingCode = `BT-${cleanTitle}-${randomSuffix}`;
 
+            // Determine Status & Price
+            const isSparring = eventData?.type === 'sparring';
+            const bookingPrice = isSparring ? 0 : (eventData?.price || 0);
+
+            let initialStatus = 'pending_payment';
+
+            if (eventData?.type === 'tournament') {
+                initialStatus = 'pending_approval'; // Tournament always needs approval first
+            } else if (bookingPrice === 0) {
+                initialStatus = 'paid'; // Auto-confirm if Free (Mabar, Drilling, Sparring)
+            }
+
             // Create Booking Doc
             const newBookingRef = db.collection("bookings").doc();
             t.set(newBookingRef, {
@@ -144,8 +156,8 @@ export async function POST(req: Request) {
                 eventDate: eventData?.date,
                 eventTime: eventData?.time,
                 eventLocation: eventData?.location,
-                price: eventData?.price,
-                status: eventData?.type === 'tournament' ? 'pending_approval' : 'pending_payment', // Dynamic Status
+                price: bookingPrice,
+                status: initialStatus,
                 partnerName: partnerName || "", // Optional Partner
                 ...participantData,
                 createdAt: new Date().toISOString()
@@ -173,17 +185,20 @@ export async function POST(req: Request) {
         // 5. AUTO-JOURNAL (Financial Record)
         // Import dynamically or at top. Assuming import { createBookingJournal } from '@/lib/finance-service';
         try {
+            const isSparring = eventData?.type === 'sparring';
+            const finalPrice = isSparring ? 0 : (eventData?.price || 0);
+
             // Re-construct booking data for the journal helper
             const journalData = {
                 id: bookingRef.id,
                 bookingCode: bookingRef.code,
-                price: eventData?.price || 0,
+                price: finalPrice,
                 userName: session ? (session.user.name || 'Unknown') : (guestName || 'Guest')
             };
 
             // Only record journal if price > 0
-            if ((eventData.price || 0) > 0) {
-                await createBookingJournal(journalData, eventData.type || 'mabar');
+            if (finalPrice > 0) {
+                await createBookingJournal(journalData, eventData?.type || 'mabar');
             }
         } catch (financeError) {
             console.error("AUTO-JOURNAL ERROR:", financeError);

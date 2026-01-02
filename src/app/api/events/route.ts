@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/firebase-admin";
 import { logActivity } from "@/lib/audit-logger";
+import { generatePriceTiers } from "@/lib/pricing";
 
 // GET: Ambil Semua Event (Untuk Landing Page & Dashboard) dengan Data Real-time Participants
 export async function GET(req: Request) {
@@ -99,7 +100,10 @@ export async function POST(req: Request) {
             externalLink, organizer, allowWaitingList, // <-- Tambah ini
             allowedUserTypes, partnerMechanism, // <-- Tournament Fields
             skillLevel, curriculum, // <-- Drilling Fields
-            playerCriteria, prizes // <-- New Tournament Fields
+            playerCriteria, prizes, // <-- New Tournament Fields
+            isRecurring, // Ambil flag ini
+            cost_court, cost_shuttle, cost_tool, cost_coach, // Financials
+            sparringOpponent, matchFormat // <-- Sparring Fields
         } = body;
 
         // Validasi dasar
@@ -137,22 +141,71 @@ export async function POST(req: Request) {
 
             hostId: session.user.id,
             createdAt: new Date().toISOString(),
-            status: 'open'
+            status: 'open',
+            // Financials for Drilling
+            ...(type === 'drilling' ? (() => {
+                const costs = {
+                    courtCost: Number(body.cost_court) || 0,
+                    shuttlecockCost: Number(body.cost_shuttle) || 0,
+                    toolCost: Number(body.cost_tool) || 0,
+                    coachFee: Number(body.cost_coach) || 0,
+                    capacity: Number(quota) || 12
+                };
+                return {
+                    financials: costs,
+                    price_tier: generatePriceTiers(costs)
+                };
+            })() : {})
         };
 
-        const docRef = await db.collection("events").add(newEvent);
+        // 5. SIMPAN KE DATABASE (Single vs Recurring)
+        if (body.isRecurring) {
+            const batch = db.batch();
+            const startDate = new Date(date);
+            const groupId = `REC-${Date.now()}`; // Group ID for tracking
 
-        await logActivity({
-            userId: session.user.id,
-            userName: session.user.name || "Unknown",
-            role: session.user.role || "Unknown",
-            action: 'create',
-            entity: 'Event',
-            entityId: docRef.id,
-            details: `Membuat event baru: ${title} (${type}) di ${location}`
-        });
+            for (let i = 0; i < 4; i++) {
+                const nextDate = new Date(startDate);
+                nextDate.setDate(startDate.getDate() + (i * 7));
+                const dateStr = nextDate.toISOString().split('T')[0];
 
-        return NextResponse.json({ success: true, id: docRef.id });
+                const ref = db.collection("events").doc();
+                batch.set(ref, {
+                    ...newEvent,
+                    date: dateStr,
+                    recurringGroupId: groupId
+                });
+            }
+
+            await batch.commit();
+
+            await logActivity({
+                userId: session.user.id,
+                userName: session.user.name || "Unknown",
+                role: session.user.role || "Unknown",
+                action: 'create',
+                entity: 'Event',
+                entityId: groupId,
+                details: `Membuat 4 Jadwal Rutin (Recurring) mulai ${date} (${type})`
+            });
+
+            return NextResponse.json({ success: true, message: "4 Jadwal Rutin Created" });
+        } else {
+            // SINGLE EVENT
+            const docRef = await db.collection("events").add(newEvent);
+
+            await logActivity({
+                userId: session.user.id,
+                userName: session.user.name || "Unknown",
+                role: session.user.role || "Unknown",
+                action: 'create',
+                entity: 'Event',
+                entityId: docRef.id,
+                details: `Membuat event baru: ${title} (${type}) di ${location}`
+            });
+
+            return NextResponse.json({ success: true, id: docRef.id });
+        }
 
     } catch (error) {
         return NextResponse.json({ error: "Gagal membuat event" }, { status: 500 });

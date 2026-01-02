@@ -77,6 +77,124 @@ export async function PUT(
     }
 }
 
+export async function PATCH(
+    req: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user.role !== 'admin' && session.user.role !== 'superadmin' && session.user.role !== 'host')) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    try {
+        const { id } = await params;
+        const body = await req.json();
+        const { action, additionalQuota, additionalMinutes } = body;
+        const eventRef = db.collection("events").doc(id);
+
+        if (action === 'add_court') {
+            const addQ = Number(additionalQuota) || 12; // Default 1 court = 12 slots
+
+            await db.runTransaction(async (t) => {
+                const eventDoc = await t.get(eventRef);
+                if (!eventDoc.exists) throw "Event not found";
+                const eventData = eventDoc.data();
+
+                const newQuota = (eventData?.quota || 0) + addQ;
+
+                // Update Event Quota
+                t.update(eventRef, {
+                    quota: newQuota,
+                    updatedAt: new Date().toISOString()
+                });
+
+                // Check Waitlist
+                if (eventData?.allowWaitingList) {
+                    const wlQuery = db.collection("bookings")
+                        .where("eventId", "==", id)
+                        .where("status", "==", "waiting_list")
+                        .orderBy("createdAt", "asc")
+                        .limit(addQ);
+
+                    const wlSnap = await t.get(wlQuery);
+
+                    wlSnap.docs.forEach((doc) => {
+                        // Promote to pending_payment (or 'paid' if price is 0?)
+                        // Safe bet: pending_payment. System will auto-cancel if not paid.
+                        // UNLESS event is free.
+                        const newStatus = eventData.price === 0 ? 'paid' : 'pending_payment';
+                        t.update(doc.ref, {
+                            status: newStatus,
+                            updatedBy: session.user.id
+                        });
+                    });
+                }
+            });
+
+            await logActivity({
+                userId: session.user.id,
+                userName: session.user.name || "Admin",
+                role: session.user.role || "Unknown",
+                action: 'update',
+                entity: 'Event',
+                entityId: id,
+                details: `Menambah Kuota (+${addQ}) & Auto-promote Waitlist`
+            });
+
+            return NextResponse.json({ success: true, message: `Kuota ditambah ${addQ} slot.` });
+        }
+
+        if (action === 'extend_time') {
+            const addMins = Number(additionalMinutes) || 60; // Default 1 hour
+
+            await db.runTransaction(async (t) => {
+                const eventDoc = await t.get(eventRef);
+                const eventData = eventDoc.data();
+                if (!eventData?.time) throw "Invalid Event Time";
+
+                // Parse Time "HH:mm - HH:mm"
+                const parts = eventData.time.split(" - ");
+                if (parts.length !== 2) throw "Invalid format";
+
+                const [startStr, endStr] = parts;
+                const [h, m] = endStr.split(":").map(Number);
+
+                // Add Minutes
+                const endDate = new Date();
+                endDate.setHours(h, m, 0, 0);
+                endDate.setMinutes(endDate.getMinutes() + addMins);
+
+                const newEndStr = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
+                const newTimeStr = `${startStr} - ${newEndStr}`;
+
+                t.update(eventRef, {
+                    time: newTimeStr,
+                    isExtended: true,
+                    updatedAt: new Date().toISOString()
+                });
+            });
+
+            await logActivity({
+                userId: session.user.id,
+                userName: session.user.name || "Admin",
+                role: session.user.role || "Unknown",
+                action: 'update',
+                entity: 'Event',
+                entityId: id,
+                details: `Extend waktu (+${addMins} menit)`
+            });
+
+            return NextResponse.json({ success: true, message: "Waktu berhasil diperpanjang" });
+        }
+
+        return NextResponse.json({ error: "Invalid Action" }, { status: 400 });
+
+    } catch (error) {
+        console.error("PATCH Event Error:", error);
+        return NextResponse.json({ error: "Gagal memproses request" }, { status: 500 });
+    }
+}
+
 export async function DELETE(
     req: Request,
     { params }: { params: Promise<{ id: string }> }
@@ -89,6 +207,9 @@ export async function DELETE(
 
     try {
         const { id } = await params;
+        const body = await req.json().catch(() => ({}));
+
+        // SOFT DELETE or HARD DELETE? default hard delete based on existing code.
         await db.collection("events").doc(id).delete();
 
         await logActivity({
