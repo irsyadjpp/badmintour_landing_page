@@ -19,7 +19,7 @@ export async function PATCH(
 
     const { status, partnerName, price, isSponsored } = await req.json();
 
-    if (status && !['paid', 'pending', 'cancelled', 'pending_approval', 'approved', 'rejected'].includes(status)) {
+    if (!status || !['paid', 'pending', 'cancelled', 'pending_approval', 'approved', 'rejected', 'confirmed'].includes(status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 

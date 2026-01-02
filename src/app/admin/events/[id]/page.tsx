@@ -79,7 +79,7 @@ export default function AdminEventDetailPage() {
     loadData();
   }, [params, toast]);
 
-  const handleUpdateStatus = async (bookingId: string, newStatus: 'paid' | 'pending' | 'approved' | 'rejected') => {
+  const handleUpdateStatus = async (bookingId: string, newStatus: 'paid' | 'pending' | 'approved' | 'rejected' | 'confirmed') => {
     try {
       const res = await fetch(`/api/bookings/${bookingId}`, {
         method: 'PATCH',
@@ -425,8 +425,11 @@ export default function AdminEventDetailPage() {
                             </>
                           )}
 
-                          <DropdownMenuItem className="cursor-pointer hover:bg-white/5 focus:bg-white/5" onClick={() => navigator.clipboard.writeText(p.phone)}>
-                            Copy WhatsApp
+                          <DropdownMenuItem
+                            className="cursor-pointer text-blue-400 hover:bg-blue-500/10 focus:bg-blue-500/10 font-bold"
+                            onClick={() => handleUpdateStatus(p.bookingId, 'confirmed')}
+                          >
+                            <CheckCircle2 className="w-4 h-4 mr-2" /> Mark as Confirmed
                           </DropdownMenuItem>
                           {p.role === 'member' && (
                             <Link href={`/admin/members/${p.id}`}>
