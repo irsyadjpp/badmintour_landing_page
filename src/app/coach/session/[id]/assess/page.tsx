@@ -189,6 +189,9 @@ export default function SessionAssessmentPage() {
                         <Badge variant="secondary" className="text-[10px] h-6 bg-[#0a0a0a] text-gray-500 font-mono tracking-widest border border-white/5">
                           {player.bookingCode}
                         </Badge>
+                        <Badge variant="outline" className={`text-[10px] h-6 px-2 font-bold uppercase tracking-widest border ${player.status === 'paid' ? 'text-green-500 border-green-500/50 bg-green-500/10' : 'text-blue-500 border-blue-500/50 bg-blue-500/10'}`}>
+                          {player.status}
+                        </Badge>
                         {player.hasAssessment ? (
                           <span className="text-[10px] font-bold text-green-500 bg-green-500/10 px-3 py-0.5 rounded-full border border-green-500/20 uppercase tracking-wider">Completed</span>
                         ) : (

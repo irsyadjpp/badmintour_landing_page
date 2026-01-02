@@ -44,7 +44,7 @@ export async function GET(
       const booking = doc.data();
       const userId = booking.userId;
 
-      let userName = booking.userName || 'Unknown';
+      let userName = booking.userName || booking.guestName || 'Guest';
       let userImage = booking.userImage || '';
       let nickname = '';
       let level = 'Beginner';
@@ -69,7 +69,8 @@ export async function GET(
         userImage,
         nickname,
         level,
-        hasAssessment: assessedPlayerIds.has(userId)
+        hasAssessment: assessedPlayerIds.has(userId),
+        status: booking.status // Added status
       };
     });
 
