@@ -9,18 +9,20 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
+import { UserPinCard } from '@/components/profile/user-pin-card';
 
 export default function HostProfilePage() {
     const { data: session, update } = useSession();
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
-    
+
     const [formData, setFormData] = useState({
         name: '',
         nickname: '',
         phoneNumber: '',
         domicile: ''
     });
+    const [pin, setPin] = useState<string>('');
 
     // Fetch Data Saat Load
     useEffect(() => {
@@ -34,6 +36,7 @@ export default function HostProfilePage() {
                     phoneNumber: data.data.phoneNumber || '',
                     domicile: data.data.domicile || ''
                 });
+                setPin(data.data.pin || '');
             }
         };
         if (session) fetchProfile();
@@ -72,6 +75,8 @@ export default function HostProfilePage() {
                 <p className="text-gray-400">Lengkapi data untuk verifikasi penyelenggara event.</p>
             </div>
 
+            <UserPinCard pin={pin} />
+
             <Card className="bg-[#151515] border-white/10 p-8 rounded-[2rem]">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="flex items-center gap-6 mb-8">
@@ -91,20 +96,20 @@ export default function HostProfilePage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <Label>Nama Lengkap</Label>
-                            <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="bg-[#1A1A1A] border-white/10 text-white" />
+                            <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="bg-[#1A1A1A] border-white/10 text-white" />
                         </div>
                         <div className="space-y-2">
                             <Label>Panggilan (Nickname)</Label>
-                            <Input value={formData.nickname} onChange={(e) => setFormData({...formData, nickname: e.target.value})} className="bg-[#1A1A1A] border-white/10 text-white" />
+                            <Input value={formData.nickname} onChange={(e) => setFormData({ ...formData, nickname: e.target.value })} className="bg-[#1A1A1A] border-white/10 text-white" />
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-[#ffbe00] font-bold flex items-center gap-2">Nomor WhatsApp (Pairing Key) <Phone className="w-4 h-4"/></Label>
-                        <Input 
-                            value={formData.phoneNumber} 
-                            onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})} 
-                            className="bg-[#1A1A1A] border-[#ffbe00]/50 text-white h-12 font-mono" 
+                        <Label className="text-[#ffbe00] font-bold flex items-center gap-2">Nomor WhatsApp (Pairing Key) <Phone className="w-4 h-4" /></Label>
+                        <Input
+                            value={formData.phoneNumber}
+                            onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                            className="bg-[#1A1A1A] border-[#ffbe00]/50 text-white h-12 font-mono"
                             placeholder="08xxxxxxxxxx"
                         />
                         <p className="text-[10px] text-gray-500">*Nomor ini akan menjadi kunci akses login alternatif & notifikasi host.</p>
@@ -114,12 +119,12 @@ export default function HostProfilePage() {
                         <Label>Domisili / Basecamp</Label>
                         <div className="relative">
                             <MapPin className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
-                            <Input value={formData.domicile} onChange={(e) => setFormData({...formData, domicile: e.target.value})} className="bg-[#1A1A1A] border-white/10 text-white pl-10" placeholder="Kota Bandung" />
+                            <Input value={formData.domicile} onChange={(e) => setFormData({ ...formData, domicile: e.target.value })} className="bg-[#1A1A1A] border-white/10 text-white pl-10" placeholder="Kota Bandung" />
                         </div>
                     </div>
 
                     <Button type="submit" disabled={isLoading} className="w-full bg-[#ffbe00] text-black font-bold h-12 hover:bg-yellow-400">
-                        {isLoading ? <Loader2 className="animate-spin"/> : "SIMPAN & TAUTKAN AKUN"}
+                        {isLoading ? <Loader2 className="animate-spin" /> : "SIMPAN & TAUTKAN AKUN"}
                     </Button>
                 </form>
             </Card>

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import MemberSidebar from '@/components/layout/member-sidebar';
 import { Toaster } from '@/components/ui/toaster';
+import { PinAnnouncementModal } from '@/components/auth/pin-announcement-modal';
 
 export const metadata: Metadata = {
   title: 'Member Dashboard',
@@ -31,6 +32,7 @@ export default function MemberLayout({
         </div>
       </main>
       <Toaster />
+      <PinAnnouncementModal />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import HostSidebar from '@/components/layout/host-sidebar';
+import { PinAnnouncementModal } from '@/components/auth/pin-announcement-modal';
 
 export const metadata: Metadata = {
   title: 'Host Dashboard',
@@ -25,6 +26,7 @@ export default function HostLayout({
           {children}
         </div>
       </main>
+      <PinAnnouncementModal />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { Material3Textarea } from '@/components/ui/material-3-textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
+import { UserPinCard } from '@/components/profile/user-pin-card';
 
 export default function CoachProfilePage() {
     const { data: session, update } = useSession();
@@ -22,6 +23,7 @@ export default function CoachProfilePage() {
         rate: '',
         bio: ''
     });
+    const [pin, setPin] = useState<string>('');
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -35,6 +37,7 @@ export default function CoachProfilePage() {
                     rate: data.data.coachProfile?.rate || '',
                     bio: data.data.coachProfile?.bio || '',
                 });
+                setPin(data.data.pin || '');
             }
         };
         if (session) fetchProfile();
@@ -114,6 +117,8 @@ export default function CoachProfilePage() {
                         )}
                     </div>
                 </Card>
+
+                <UserPinCard pin={pin} />
 
                 {/* RIGHT COLUMN: FORM */}
                 <Card className="md:col-span-2 bg-[#151515] border-white/10 p-8 rounded-[2rem] relative shadow-2xl">

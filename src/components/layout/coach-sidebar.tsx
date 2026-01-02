@@ -111,6 +111,19 @@ export default function CoachSidebar() {
                             </Link>
                         );
                     })}
+
+                    {/* Logout Button Mobile */}
+                    <button
+                        onClick={() => signOut({ callbackUrl: '/' })}
+                        className="flex flex-col items-center gap-1 group"
+                    >
+                        <div className="p-2 rounded-xl text-red-500 bg-red-500/10 border border-red-500/20 transition-all duration-300 group-active:scale-95">
+                            <LogOut className="w-5 h-5" />
+                        </div>
+                        <span className="text-[9px] font-bold text-red-500">
+                            Logout
+                        </span>
+                    </button>
                 </nav>
             </div>
         </>

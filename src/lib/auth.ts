@@ -152,6 +152,7 @@ export const authOptions: NextAuthOptions = {
               roles: ["member"],
               status: "active",
               pin: newPin,
+              hasSeenPin: false, // Flag untuk modal PIN
               createdAt: new Date().toISOString(),
             });
             await logActivity({

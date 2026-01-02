@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
+import { UserPinCard } from '@/components/profile/user-pin-card';
 
 export default function ProfilePage() {
     const { data: session, update } = useSession();
@@ -23,6 +24,7 @@ export default function ProfilePage() {
         phoneNumber: '',
         domicile: ''
     });
+    const [pin, setPin] = useState<string>('');
 
     // 1. Fetch Data directly from DB (latest source of truth)
     useEffect(() => {
@@ -38,6 +40,7 @@ export default function ProfilePage() {
                         phoneNumber: json.data.phoneNumber || '',
                         domicile: json.data.domicile || ''
                     });
+                    setPin(json.data.pin || '');
                 } else {
                     // Fallback to session if new user
                     setFormData({
@@ -157,6 +160,9 @@ export default function ProfilePage() {
                         </div>
                     </div>
                 </Card>
+
+                {/* PIN CARD */}
+                <UserPinCard pin={pin} />
 
                 {/* RIGHT COLUMN: FORM */}
                 <Card className="md:col-span-2 bg-[#151515] border-white/10 p-8 rounded-[2rem] relative shadow-2xl">

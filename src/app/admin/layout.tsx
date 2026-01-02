@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import '../globals.css';
 import { Toaster } from '@/components/ui/toaster';
+import { PinAnnouncementModal } from '@/components/auth/pin-announcement-modal';
 import AdminSidebar from '@/components/layout/admin-sidebar';
 
 export const metadata: Metadata = {
@@ -35,6 +36,7 @@ export default function AdminLayout({
       </main>
 
       <Toaster />
+      <PinAnnouncementModal />
     </div>
   );
 }

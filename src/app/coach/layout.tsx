@@ -1,6 +1,7 @@
 
 import type { Metadata } from 'next';
 import CoachSidebar from '@/components/layout/coach-sidebar';
+import { PinAnnouncementModal } from '@/components/auth/pin-announcement-modal';
 
 export const metadata: Metadata = {
   title: 'Coach Dashboard',
@@ -26,6 +27,7 @@ export default function CoachLayout({
           {children}
         </div>
       </main>
+      <PinAnnouncementModal />
     </div>
   );
 }
