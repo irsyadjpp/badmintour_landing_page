@@ -37,9 +37,8 @@ export default function NotFound() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
             <Button
-              variant="outline"
               onClick={() => window.history.back()}
-              className="h-14 px-8 rounded-[1.5rem] border-white/10 text-white hover:bg-white/5 hover:text-[#ffbe00] font-bold text-lg transition-all"
+              className="h-14 px-8 rounded-[1.5rem] bg-[#ffbe00] text-black hover:bg-[#ffbe00]/90 font-bold text-lg shadow-[0_4px_20px_-5px_rgba(255,190,0,0.5)] transition-all hover:scale-105"
             >
               <ChevronLeft className="mr-2 w-5 h-5" /> Kembalikan Service
             </Button>
