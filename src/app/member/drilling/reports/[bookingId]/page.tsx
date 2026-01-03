@@ -149,9 +149,10 @@ export default function MemberReportPage() {
            */}
           <Button
             onClick={() => setIsSharing(true)}
-            className="bg-[#ca1f3d] text-white hover:bg-[#a01830] font-bold rounded-xl shadow-[0_0_20px_rgba(202,31,61,0.4)] hover:scale-105 transition-transform"
+            disabled
+            className="bg-[#ca1f3d] text-white hover:bg-[#a01830] font-bold rounded-xl shadow-[0_0_20px_rgba(202,31,61,0.4)] hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
-            <Share2 className="w-4 h-4 mr-2" /> PAMERKAN PENCAPAIAN
+            <Share2 className="w-4 h-4 mr-2" /> PAMERKAN PENCAPAIAN (Segera)
           </Button>
         </div>
       </div>
