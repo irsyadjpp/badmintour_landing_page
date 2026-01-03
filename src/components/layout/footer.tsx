@@ -26,7 +26,7 @@ export default function Footer() {
                 <Instagram className="w-5 h-5" />
               </a>
               <a
-                href="https://chat.whatsapp.com/KpM0wI5Akx05thwMSrlr01"
+                href="https://chat.whatsapp.com/FMw5bAV8RvGBrBijyHjU3b"
                 target="_blank"
                 className="border-2 border-white/20 text-white px-8 py-4 rounded-full font-bold text-lg hover:border-primary hover:text-primary transition"
               >

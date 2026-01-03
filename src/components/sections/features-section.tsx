@@ -57,7 +57,7 @@ export default function FeaturesSection() {
                 Cari keringat bareng circle baru. Fun game santai, kalah menang yang penting happy. Slot terbatas tiap harinya!
               </p>
               <div className="mt-8 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                <a href="https://chat.whatsapp.com/KpM0wI5Akx05thwMSrlr01" target="_blank">
+                <a href="https://chat.whatsapp.com/FMw5bAV8RvGBrBijyHjU3b" target="_blank">
                   <Button className="rounded-full bg-white text-black hover:bg-white/90 font-bold">Gabung Group WA</Button>
                 </a>
               </div>
