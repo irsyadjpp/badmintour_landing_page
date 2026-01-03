@@ -112,7 +112,7 @@ export default function TicketsPage() {
                       {item.status === 'pending_payment' ? 'UNPAID' : item.status.replace('_', ' ')}
                     </Badge>
                     <div className="flex flex-col items-end">
-                      <span className="text-xs text-gray-500 font-mono">#{item.ticketCode}</span>
+                      <span className="text-xs text-gray-500 font-mono">#{item.ticketCode || item.id}</span>
                       <span className="text-sm font-black text-white">
                         Rp {item.totalPrice.toLocaleString('id-ID')}
                       </span>
@@ -144,7 +144,7 @@ export default function TicketsPage() {
 
                   <div className="mt-6">
                     <Button
-                      onClick={() => setSelectedQr({ code: item.ticketCode, title: item.event.title || 'Tiket Event' })}
+                      onClick={() => setSelectedQr({ code: item.ticketCode || item.id, title: item.event.title || 'Tiket Event' })}
                       className="w-full bg-white/5 text-white hover:bg-[#ffbe00] hover:text-black border border-white/5 font-bold rounded-xl h-10 text-xs shadow-lg transition-all"
                     >
                       <QrCode className="w-4 h-4 mr-2" /> LIHAT QR CODE
