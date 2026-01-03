@@ -3,9 +3,10 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Loader2, MapPin, Calendar, Clock, Dumbbell, User, Info, Search, Filter, ChevronRight, ArrowLeft, LogOut, CheckCircle, ShieldCheck } from 'lucide-react';
+import { Loader2, MapPin, Calendar, Clock, Dumbbell, User, Info, Search, Filter, ChevronRight, ArrowLeft, LogOut, CheckCircle, ShieldCheck, History as HistoryIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -24,9 +25,10 @@ function DrillingEventContent() {
 
   // UI State
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>('upcoming');
   const [bookingLoading, setBookingLoading] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
-  const [filterLevel, setFilterLevel] = useState('all');
+
   const [guestForm, setGuestForm] = useState({ name: '', phone: '' });
 
   const [statusModal, setStatusModal] = useState<{
@@ -51,24 +53,69 @@ function DrillingEventContent() {
     }
   });
 
-  // React Query: Fetch Bookings
-  const { data: joinedEvents = {} } = useQuery({
-    queryKey: ['bookings', 'list', session?.user?.id],
+  // React Query: Fetch Bookings (Refactored to keep full data)
+
+  const { data: bookingData = { map: {}, list: [] } } = useQuery({
+    queryKey: ['bookings', 'list', 'v2', session?.user?.id], // Added 'v2' to invalidate old cache
     queryFn: async () => {
       const res = await fetch('/api/member/bookings?mode=list');
       const data = await res.json();
       const map: Record<string, string> = {};
+      const list: any[] = [];
+
       if (data.success && Array.isArray(data.data)) {
         data.data.forEach((b: any) => {
-          // Handle both new "event object" structure and flat structure
           const eId = b.event?.id || b.eventId;
           map[eId] = b.id || b.bookingId;
+          list.push(b);
         });
       }
-      return map;
+      return { map, list };
     },
     enabled: !!session?.user?.id
   });
+
+  const joinedEvents = bookingData.map || {};
+
+  // Helper: Check if event is strictly past (End Time < Now)
+  const isEventPast = (dateStr: string, timeStr: string) => {
+    if (!dateStr) return false;
+    try {
+      const now = new Date();
+      const eventDate = new Date(dateStr);
+
+      // Default to end of day if no time string
+      if (!timeStr) {
+        eventDate.setHours(23, 59, 59);
+        return eventDate < now;
+      }
+
+      // Parse Time "15.00 - 17.00" or "15:00 - 17:00"
+      // Ambil bagian setelah "-" (End Time)
+      const parts = timeStr.split('-');
+      const endTimeStr = parts.length > 1 ? parts[1].trim() : parts[0].trim();
+
+      // Normalize "." to ":" (19.00 -> 19:00)
+      const normalizedTime = endTimeStr.replace('.', ':');
+      const [hours, minutes] = normalizedTime.split(':').map(Number);
+
+      if (!isNaN(hours) && !isNaN(minutes)) {
+        eventDate.setHours(hours, minutes, 0);
+      } else {
+        // Fallback logic if parsing fails
+        eventDate.setHours(23, 59, 0);
+      }
+
+      return eventDate < now;
+    } catch (e) {
+      console.error("Date Parse Error", e);
+      return false;
+    }
+  };
+
+  const historyBookings = (bookingData.list || []).filter((b: any) => isEventPast(b.event?.date, b.event?.time) && b.status !== 'cancelled');
+
+  // UI State
 
   // Derived Selection State (Sync with URL)
   useEffect(() => {
@@ -96,7 +143,6 @@ function DrillingEventContent() {
     if (!selectedEvent) return;
 
     if (!session && (!guestForm.name || !guestForm.phone)) {
-      // toast({ title: "Data Kurang", description: "Tamu wajib isi Nama & WhatsApp.", variant: "destructive" });
       setStatusModal({
         isOpen: true,
         type: 'error',
@@ -122,7 +168,6 @@ function DrillingEventContent() {
 
       if (result.success) {
         if (!result.isGuest) {
-          // toast({ title: "Berhasil Join!", description: "Anda telah terdaftar." });
           setStatusModal({
             isOpen: true,
             type: 'success',
@@ -135,7 +180,6 @@ function DrillingEventContent() {
           ]);
           router.push('/member/dashboard');
         } else {
-          // toast({ title: "Booking Berhasil!", description: "Simpan bukti booking Anda.", className: "bg-green-600 text-white" });
           setStatusModal({
             isOpen: true,
             type: 'success',
@@ -148,7 +192,6 @@ function DrillingEventContent() {
         throw new Error(result.error || "Gagal booking");
       }
     } catch (error: any) {
-      // toast({ title: "Gagal Join", description: error.message, variant: "destructive" });
       setStatusModal({
         isOpen: true,
         type: 'error',
@@ -176,7 +219,6 @@ function DrillingEventContent() {
       });
 
       if (res.ok) {
-        // toast({ title: "Berhasil Keluar", description: "Slot Anda telah dikembalikan." });
         setStatusModal({
           isOpen: true,
           type: 'success',
@@ -192,7 +234,6 @@ function DrillingEventContent() {
         throw new Error("Gagal membatalkan");
       }
     } catch (error: any) {
-      // toast({ title: "Gagal", description: error.message, variant: "destructive" });
       setStatusModal({
         isOpen: true,
         type: 'error',
@@ -205,7 +246,7 @@ function DrillingEventContent() {
   };
 
   // Derived Data
-  const filteredEvents = events.filter((e: any) => filterLevel === 'all' || e.skillLevel === filterLevel);
+  const filteredEvents = events.filter((e: any) => !isEventPast(e.date, e.time));
 
   if (eventsLoading) {
     return (
@@ -240,131 +281,183 @@ function DrillingEventContent() {
             </div>
           </div>
 
-          {/* Filter Tabs (Gold/Red) */}
-          <div className="flex gap-2 bg-[#1A1A1A] p-1.5 rounded-xl border border-white/5">
-            {['all', 'beginner', 'intermediate', 'advanced'].map((level) => (
-              <button
-                key={level}
-                onClick={() => setFilterLevel(level)}
-                className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all ${filterLevel === level
-                  ? 'bg-[#ffbe00] text-black shadow-[0_0_15px_rgba(255,190,0,0.4)]'
-                  : 'text-gray-500 hover:text-white hover:bg-white/5'
-                  }`}
-              >
-                {level}
-              </button>
-            ))}
+          {/* NEW: TABS (Upcoming vs History) */}
+          <div className="flex bg-[#1A1A1A] p-1 rounded-xl border border-white/5">
+            <button
+              onClick={() => setActiveTab('upcoming')}
+              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'upcoming' ? 'bg-[#ffbe00] text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}
+            >
+              UPCOMING
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'history' ? 'bg-white text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}
+            >
+              HISTORY
+            </button>
           </div>
         </div>
 
-        {/* LIST GRID */}
-        {filteredEvents.length > 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-6"
-          >
-            {filteredEvents.map((event: any) => {
-              const isJoined = !!joinedEvents[event.id];
+        {activeTab === 'upcoming' ? (
+          <>
 
-              return (
-                <Card
-                  key={event.id}
-                  onClick={() => !isJoined && handleSelectEvent(event.id)}
-                  className={`bg-[#151515] border-white/5 overflow-hidden group transition-all duration-300 relative ${isJoined ? 'border-green-500/30' : 'hover:border-[#ffbe00]/50 hover:-translate-y-2 cursor-pointer'}`}
-                >
-                  {isJoined && (
-                    <div className="absolute top-0 right-0 bg-green-500 text-black text-[10px] font-bold px-3 py-1 rounded-bl-xl z-20 flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3" /> JOINED
-                    </div>
-                  )}
 
-                  {/* Glow Effect Gold */}
-                  <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-[#ffbe00] to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            {/* LIST GRID */}
+            {filteredEvents.length > 0 ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-6"
+              >
+                {filteredEvents.map((event: any) => {
+                  const isJoined = !!joinedEvents[event.id];
 
-                  <div className="p-6 space-y-4">
-                    <div className="flex justify-between items-start">
-                      <Badge variant="outline" className={`capitalize ${event.skillLevel === 'beginner' ? 'text-green-400 border-green-400/20' :
-                        event.skillLevel === 'intermediate' ? 'text-yellow-400 border-yellow-400/20' :
-                          'text-red-400 border-red-400/20'} bg-white/5`}
-                      >
-                        {event.skillLevel || 'General'}
-                      </Badge>
-                      <span className="text-[#ffbe00] font-mono text-xs font-bold">
-                        Rp {event.price.toLocaleString('id-ID')}
-                      </span>
-                    </div>
-
-                    <div>
-                      <h3 className="text-xl font-black text-white leading-tight group-hover:text-[#ffbe00] transition-colors line-clamp-2">
-                        {event.title}
-                      </h3>
-                      <p className="text-gray-500 text-xs mt-1 flex items-center gap-2">
-                        <User className="w-3 h-3" /> Coach {event.coachNickname || event.coachName || 'TBA'}
-                      </p>
-                    </div>
-
-                    <div className="space-y-3 pt-2 border-t border-white/5">
-                      {/* Avatar Stack */}
-                      {event.participants && event.participants.length > 0 && (
-                        <div className="flex items-center gap-2">
-                          <div className="flex -space-x-2 overflow-hidden">
-                            {event.participants.slice(0, 4).map((p: any, i: number) => (
-                              <Avatar key={i} className="inline-block h-6 w-6 rounded-full ring-2 ring-[#151515]">
-                                <AvatarImage src={p.image} />
-                                <AvatarFallback className="text-[8px] bg-gray-800 text-gray-400">{p.name?.charAt(0)}</AvatarFallback>
-                              </Avatar>
-                            ))}
-                          </div>
-                          <span className="text-[10px] text-gray-500 font-medium">
-                            +{event.bookedSlot > 4 ? event.bookedSlot - 4 : 0} Joined
-                          </span>
+                  return (
+                    <Card
+                      key={event.id}
+                      onClick={() => !isJoined && handleSelectEvent(event.id)}
+                      className={`bg-[#151515] border-white/5 overflow-hidden group transition-all duration-300 relative ${isJoined ? 'border-green-500/30' : 'hover:border-[#ffbe00]/50 hover:-translate-y-2 cursor-pointer'}`}
+                    >
+                      {isJoined && (
+                        <div className="absolute top-0 right-0 bg-green-500 text-black text-[10px] font-bold px-3 py-1 rounded-bl-xl z-20 flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3" /> JOINED
                         </div>
                       )}
 
-                      <div className="flex items-center gap-2 text-sm text-gray-300">
-                        <Calendar className="w-4 h-4 text-[#ca1f3d]" />
-                        <span>{new Date(event.date).toLocaleDateString()}</span>
+                      {/* Glow Effect Gold */}
+                      <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-[#ffbe00] to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                      <div className="p-6 space-y-4">
+                        <div className="flex justify-between items-start">
+                          <Badge variant="outline" className={`capitalize ${event.skillLevel === 'beginner' ? 'text-green-400 border-green-400/20' :
+                            event.skillLevel === 'intermediate' ? 'text-yellow-400 border-yellow-400/20' :
+                              'text-red-400 border-red-400/20'} bg-white/5`}
+                          >
+                            {event.skillLevel || 'General'}
+                          </Badge>
+                          <span className="text-[#ffbe00] font-mono text-xs font-bold">
+                            Rp {event.price.toLocaleString('id-ID')}
+                          </span>
+                        </div>
+
+                        <div>
+                          <h3 className="text-xl font-black text-white leading-tight group-hover:text-[#ffbe00] transition-colors line-clamp-2">
+                            {event.title}
+                          </h3>
+                          <p className="text-gray-500 text-xs mt-1 flex items-center gap-2">
+                            <User className="w-3 h-3" /> Coach {event.coachNickname || event.coachName || 'TBA'}
+                          </p>
+                        </div>
+
+                        <div className="space-y-3 pt-2 border-t border-white/5">
+                          {/* Avatar Stack */}
+                          {event.participants && event.participants.length > 0 && (
+                            <div className="flex items-center gap-2">
+                              <div className="flex -space-x-2 overflow-hidden">
+                                {event.participants.slice(0, 4).map((p: any, i: number) => (
+                                  <Avatar key={i} className="inline-block h-6 w-6 rounded-full ring-2 ring-[#151515]">
+                                    <AvatarImage src={p.image} />
+                                    <AvatarFallback className="text-[8px] bg-gray-800 text-gray-400">{p.name?.charAt(0)}</AvatarFallback>
+                                  </Avatar>
+                                ))}
+                              </div>
+                              <span className="text-[10px] text-gray-500 font-medium">
+                                +{event.bookedSlot > 4 ? event.bookedSlot - 4 : 0} Joined
+                              </span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-2 text-sm text-gray-300">
+                            <Calendar className="w-4 h-4 text-[#ca1f3d]" />
+                            <span>{new Date(event.date).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-300">
+                            <Clock className="w-4 h-4 text-[#ca1f3d]" />
+                            <span>{event.time}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-300">
-                        <Clock className="w-4 h-4 text-[#ca1f3d]" />
-                        <span>{event.time}</span>
+
+                      <div className="bg-black/40 p-4 flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Sisa {event.quota - (event.bookedSlot || 0)} Slot</span>
+
+                        {isJoined ? (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            disabled={cancelLoading}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleLeave(event.id);
+                            }}
+                            className="h-8 text-xs font-bold bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white"
+                          >
+                            {cancelLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <><LogOut className="w-3 h-3 mr-1" /> LEAVE CLASS</>}
+                          </Button>
+                        ) : (
+                          <Button size="sm" onClick={() => handleSelectEvent(event.id)} className="bg-white/5 text-white hover:bg-[#ffbe00] hover:text-black rounded-lg h-8 text-xs font-bold">
+                            JOIN CLASS <ChevronRight className="w-3 h-3 ml-1" />
+                          </Button>
+                        )}
+                      </div>
+                    </Card>
+                  )
+                })}
+              </motion.div>
+            ) : (
+              <div className="text-center py-20 border border-dashed border-white/10 rounded-3xl mx-6">
+                <Dumbbell className="w-16 h-16 text-gray-700 mx-auto mb-4" />
+                <h3 className="text-white font-bold text-lg">Belum ada kelas tersedia.</h3>
+                <p className="text-gray-500 text-sm">Coba ubah filter atau cek lagi nanti.</p>
+              </div>
+            )}
+          </>
+        ) : (
+          // --- HISTORY TAB CONTENT ---
+          <div className="px-6 space-y-6">
+            {historyBookings.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {historyBookings.map((booking: any) => (
+                  <Card key={booking.id} className="bg-[#151515] border-white/5 p-6 rounded-[2rem] flex items-center justify-between group hover:border-[#ffbe00]/30 transition-colors">
+                    <div className="flex items-center gap-5">
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border border-white/10 ${booking.hasAssessment ? 'bg-[#ffbe00]/10 text-[#ffbe00]' : 'bg-gray-800/30 text-gray-500'}`}>
+                        <ShieldCheck className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <h3 className="text-white font-bold text-lg line-clamp-1">{booking.event?.title || "Sesi Latihan"}</h3>
+                        <p className="text-sm text-gray-500 mb-2">{new Date(booking.event?.date).toLocaleDateString()} • {booking.event?.coach}</p>
+                        <Badge variant="secondary" className={
+                          booking.hasAssessment
+                            ? "bg-green-500/10 text-green-500 border-green-500/20"
+                            : "bg-gray-800 text-gray-500"
+                        }>
+                          {booking.hasAssessment ? "COMPLETED & ASSESSED" : "COMPLETED"}
+                        </Badge>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="bg-black/40 p-4 flex items-center justify-between">
-                    <span className="text-xs text-gray-500">Sisa {event.quota - (event.bookedSlot || 0)} Slot</span>
-
-                    {isJoined ? (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        disabled={cancelLoading}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleLeave(event.id);
-                        }}
-                        className="h-8 text-xs font-bold bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white"
-                      >
-                        {cancelLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <><LogOut className="w-3 h-3 mr-1" /> LEAVE CLASS</>}
-                      </Button>
+                    {booking.hasAssessment ? (
+                      <Link href={`/member/drilling/reports/${booking.id}`}>
+                        <Button className="h-12 w-12 rounded-full bg-[#ffbe00] text-black hover:bg-[#ffbe00]/90 flex items-center justify-center p-0">
+                          <ChevronRight className="w-6 h-6" />
+                        </Button>
+                      </Link>
                     ) : (
-                      <Button size="sm" onClick={() => handleSelectEvent(event.id)} className="bg-white/5 text-white hover:bg-[#ffbe00] hover:text-black rounded-lg h-8 text-xs font-bold">
-                        JOIN CLASS <ChevronRight className="w-3 h-3 ml-1" />
-                      </Button>
+                      <div className="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center">
+                        <span className="text-[10px] text-gray-600 font-bold">N/A</span>
+                      </div>
                     )}
-                  </div>
-                </Card>
-              )
-            })}
-          </motion.div>
-        ) : (
-          <div className="text-center py-20 border border-dashed border-white/10 rounded-3xl">
-            <Dumbbell className="w-16 h-16 text-gray-700 mx-auto mb-4" />
-            <h3 className="text-white font-bold text-lg">Belum ada kelas tersedia.</h3>
-            <p className="text-gray-500 text-sm">Coba ubah filter atau cek lagi nanti.</p>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20 border border-dashed border-white/10 rounded-3xl">
+                <HistoryIcon className="w-16 h-16 text-gray-700 mx-auto mb-4" />
+                <h3 className="text-white font-bold text-lg">Belum ada riwayat latihan.</h3>
+                <p className="text-gray-500 text-sm">Selesaikan sesi latihan pertamamu!</p>
+              </div>
+            )}
           </div>
         )}
       </div>

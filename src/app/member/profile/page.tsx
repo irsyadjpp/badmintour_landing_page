@@ -309,8 +309,13 @@ export default function ProfilePage() {
                                 <Material3Input
                                     label="WhatsApp (Aktif)"
                                     type="tel"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                     value={formData.phoneNumber}
-                                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                                    onChange={(e) => {
+                                        const val = e.target.value.replace(/\D/g, '');
+                                        setFormData({ ...formData, phoneNumber: val });
+                                    }}
                                     className="bg-[#0a0a0a] font-mono"
                                     disabled={isPhoneLocked}
                                 />

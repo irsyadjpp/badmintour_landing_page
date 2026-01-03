@@ -193,15 +193,63 @@ export default function JerseyDropPage() {
         };
     };
 
+    // State for Stock
+    const [stockStatus, setStockStatus] = useState({ total: 0, limit: 20, isSoldOut: false });
+
+    useEffect(() => {
+        const fetchStock = async () => {
+            try {
+                const res = await fetch('/api/jersey/status');
+                const data = await res.json();
+                if (data.total !== undefined) {
+                    setStockStatus(data);
+                }
+            } catch (e) {
+                console.error("Failed to fetch stock", e);
+            }
+        };
+        fetchStock();
+    }, []);
+
+    // ... (rest of logic) ...
+
     return (
         <>
+            {/* SOLD OUT OVERLAY */}
+            {stockStatus.isSoldOut && !isClaimed && (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-[#151515] border border-white/10 p-8 max-w-md w-full text-center space-y-6 relative overflow-hidden rounded-[2rem]">
+                        <div className="absolute top-0 left-0 w-full h-2 bg-[#ca1f3d]"></div>
+                        {/* Shirt Icon */}
+                        <div className="w-20 h-20 mx-auto text-gray-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" /></svg>
+                        </div>
+                        <div>
+                            <h2 className="text-4xl font-black text-[#ca1f3d] uppercase tracking-tighter mb-2">SOLD OUT</h2>
+                            <p className="text-gray-400">Kuota 20 Pcs Pre-Order Jersey Season 1 telah terpenuhi. Terima kasih atas antusiasme Anda!</p>
+                        </div>
+                        <Link href="/">
+                            <Button className="w-full h-14 bg-white text-black hover:bg-gray-200 font-bold rounded-xl">
+                                KEMBALI KE HOME
+                            </Button>
+                        </Link>
+                    </div>
+                </div>
+            )}
+
             {/* ... (HEADER & PREVIEW IMAGE TETAP SAMA) ... */}
             <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex justify-between items-center pointer-events-none">
                 <Link href="/" className="pointer-events-auto w-12 h-12 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/20 transition border border-white/10 text-white">
                     <ChevronLeft className="w-6 h-6" />
                 </Link>
-                <div className="pointer-events-auto bg-[#ffbe00] text-black px-4 py-1.5 rounded-full font-black text-xs uppercase tracking-widest shadow-[0_0_20px_rgba(255,190,0,0.4)] animate-pulse border-2 border-black">
-                    Public Access
+                <div className="flex flex-col items-end gap-2">
+                    <div className="pointer-events-auto bg-[#ffbe00] text-black px-4 py-1.5 rounded-full font-black text-xs uppercase tracking-widest shadow-[0_0_20px_rgba(255,190,0,0.4)] animate-pulse border-2 border-black">
+                        Public Access
+                    </div>
+                    {/* Stock Badge */}
+                    <div className={cn("pointer-events-auto px-3 py-1 rounded-full font-bold text-[10px] uppercase tracking-wide border bg-black/80 backdrop-blur-md", stockStatus.isSoldOut ? "border-red-500 text-red-500" : "border-[#ffbe00] text-[#ffbe00]")}>
+                        {stockStatus.isSoldOut ? "QUOTA FULL" : `TERSISA ${stockStatus.limit - stockStatus.total} SLOT`}
+                    </div>
                 </div>
             </header>
 

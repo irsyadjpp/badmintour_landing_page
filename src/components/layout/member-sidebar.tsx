@@ -98,7 +98,7 @@ export default function MemberSidebar() {
             {/* MOBILE NAV (Bottom Bar Updated with Labels) */}
             <div className="md:hidden fixed bottom-4 left-4 right-4 z-50">
                 <nav className="flex justify-between items-center bg-[#151515]/95 backdrop-blur-xl border border-white/10 rounded-[2rem] px-6 py-3 shadow-2xl">
-                    {[navItems[0], navItems[1], navItems[2], navItems[6]].map((item) => {
+                    {[navItems[0], navItems[3], navItems[1], navItems[2], navItems[6]].map((item) => {
                         const isActive = pathname.startsWith(item.href);
                         return (
                             <Link

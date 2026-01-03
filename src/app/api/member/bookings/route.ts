@@ -135,6 +135,17 @@ export async function GET(req: Request) {
                 return tB.localeCompare(tA);
             });
 
+            // 3b. Fetch Assessments for this user (Optimization: Batch fetch)
+            const assessmentsSnapshot = await db.collection("assessments")
+                .where("playerId", "==", session.user.id)
+                .get();
+
+            const assessmentMap = new Set(); // Store sessionIds that have assessment
+            assessmentsSnapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.sessionId) assessmentMap.add(data.sessionId);
+            });
+
             const bookingsWithDetails = await Promise.all(allDocs.map(async (doc) => {
                 const booking = doc.data();
                 const eventSnap = await db.collection("events").doc(booking.eventId).get();
@@ -146,6 +157,7 @@ export async function GET(req: Request) {
                     status: booking.status,
                     totalPrice: booking.totalPrice || event?.price || 0,
                     createdAt: booking.bookedAt?.toDate?.() || null,
+                    hasAssessment: assessmentMap.has(booking.eventId), // Check if assessed
                     event: {
                         id: booking.eventId,
                         title: event?.title || "Unknown Event",

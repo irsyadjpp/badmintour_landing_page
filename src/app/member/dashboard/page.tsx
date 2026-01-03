@@ -346,7 +346,31 @@ export default function MemberDashboard() {
                                     <Button
                                         variant="destructive"
                                         size="sm"
-                                        className="w-full md:w-auto bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 font-bold"
+                                        disabled={(() => {
+                                            // Helper inside render to check if event is past
+                                            try {
+                                                const now = new Date();
+                                                const eventDate = new Date(booking.event.date);
+
+                                                let hours = 23;
+                                                let minutes = 59;
+
+                                                if (booking.event.time) {
+                                                    // Parse "15.00 - 17.00" -> take "15.00" as start limit for cancellation?
+                                                    // User request: "jika jadwal event telah lewat" -> usually means Start Time passed.
+                                                    // Let's safe bet: Start Time passed = Cannot Cancel.
+                                                    const parts = booking.event.time.split('-');
+                                                    const startTimeStr = parts[0].trim().replace('.', ':');
+                                                    const [h, m] = startTimeStr.split(':').map(Number);
+                                                    if (!isNaN(h)) hours = h;
+                                                    if (!isNaN(m)) minutes = m;
+                                                }
+
+                                                eventDate.setHours(hours, minutes, 0);
+                                                return now > eventDate;
+                                            } catch (e) { return false; }
+                                        })()}
+                                        className="w-full md:w-auto bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                                         onClick={() => setCancelId(booking.id)}
                                     >
                                         BATALKAN
