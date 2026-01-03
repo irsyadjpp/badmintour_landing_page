@@ -16,12 +16,24 @@ export async function GET(
       .where("status", "in", ["paid", "CONFIRMED", "pending_payment", "pending", "pending_approval", "approved", "rejected"]) // Include all statuses
       .get();
 
+    // 2. Scan Assessments to check hasAssessment flag
+    const assessmentsSnapshot = await db.collection('assessments')
+      .where('sessionId', '==', eventId)
+      .get();
+
+    const assessedPlayerIds = new Set<string>();
+    assessmentsSnapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.playerId) assessedPlayerIds.add(data.playerId);
+    });
+
     const participants = await Promise.all(bookingsSnap.docs.map(async (doc) => {
       const data = doc.data();
       let role = data.userRole || 'guest';
       let userId = data.userId;
       let avatar = data.userImage || "";
       let name = data.userName || data.guestName || "Member";
+      let level = 'Beginner'; // Default
 
       // Manual Lookup if Guest (Fix for existing unlinked bookings)
       if (!userId && data.guestPhone) {
@@ -53,6 +65,19 @@ export async function GET(
         }
       }
 
+      // Fetch Latest User Data if userId exists (Hydration)
+      if (userId) {
+        try {
+          const userDoc = await db.collection('users').doc(userId).get();
+          if (userDoc.exists) {
+            const u = userDoc.data();
+            name = u?.name || name; // Keep latest name
+            avatar = u?.image || avatar; // Keep latest avatar
+            level = u?.level || level; // Get Level
+          }
+        } catch (e) { }
+      }
+
       return {
         id: userId,
         bookingId: doc.id,
@@ -63,7 +88,10 @@ export async function GET(
         phone: data.guestPhone || data.userPhone || "-",
         bookingCode: data.bookingCode,
         role: role,
-        partnerName: data.partnerName || "" // Added Partner Name
+        partnerName: data.partnerName || "", // Added Partner Name
+        hasAssessment: userId ? assessedPlayerIds.has(userId) : false,
+        checkInAt: data.checkInAt ? data.checkInAt.toDate() : null,
+        level: level
       };
     }));
 

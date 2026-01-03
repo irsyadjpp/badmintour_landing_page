@@ -125,7 +125,9 @@ export default function MemberReportPage() {
     scores: data.data.scores,
     notes: data.data.notes,
     aiFeedback: data.data.aiFeedback,
-    skillAnalysis: data.data.skillAnalysis
+    skillAnalysis: data.data.skillAnalysis,
+    strengths: data.data.strengths,
+    weaknesses: data.data.weaknesses
   };
 
   return (

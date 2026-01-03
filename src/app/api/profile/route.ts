@@ -156,6 +156,38 @@ export async function PUT(req: Request) {
             console.log(`[MERGE] Deleting old guest document: ${conflictingGuestId}`);
         }
 
+        // E. Sync Assessments (NEW - for drilling/coaching sessions)
+        // Find assessments linked to this user's bookings
+        const userBookings = await db.collection("bookings")
+            .where("userId", "==", session.user.id)
+            .get();
+
+        for (const bookingDoc of userBookings.docs) {
+            const booking = bookingDoc.data();
+            const eventId = booking.eventId;
+
+            if (!eventId) continue;
+
+            // Find assessments for this session
+            const assessmentsSnap = await db.collection("assessments")
+                .where("sessionId", "==", eventId)
+                .get();
+
+            for (const assessmentDoc of assessmentsSnap.docs) {
+                const assessment = assessmentDoc.data();
+
+                // If playerId doesn't match current userId, migrate it
+                if (assessment.playerId !== session.user.id) {
+                    batch.update(assessmentDoc.ref, {
+                        playerId: session.user.id,
+                        migratedAt: new Date(),
+                        oldPlayerId: assessment.playerId
+                    });
+                    totalSynced++;
+                }
+            }
+        }
+
         if (totalSynced > 0) {
             await batch.commit();
             console.log(`[PAIRING] ${totalSynced} items (Bookings/Jersey/WL) synced to user ${session.user.name}`);

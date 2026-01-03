@@ -165,7 +165,10 @@ export async function POST(req: Request) {
                     financials: costs,
                     price_tier: generatePriceTiers(costs)
                 };
-            })() : {})
+            })() : {}),
+            // Assistant Coaches (Drilling)
+            assistantCoachIds: body.assistantCoachIds || [],
+            assistantCoachNames: body.assistantCoachNames || []
         };
 
         // 5. SIMPAN KE DATABASE (Single vs Recurring)

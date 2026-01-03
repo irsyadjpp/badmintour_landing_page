@@ -1,4 +1,4 @@
-'use client';
+import { cn, formatRupiah, cleanCurrency } from '@/lib/utils';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -8,9 +8,13 @@ import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { Switch } from '@/components/ui/switch'; // Added Switch
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Material3DatePickerDialogFinal } from '@/components/ui/material-3-date-picker-dialog';
 import { Material3TimePicker } from '@/components/ui/material-3-time-picker';
 import { Material3Input } from '@/components/ui/material-3-input';
+import { StatusModal } from '@/components/ui/status-modal';
 import { Material3Textarea } from '@/components/ui/material-3-textarea';
 import {
   Material3Select,
@@ -24,9 +28,10 @@ interface EventFormProps {
   mode: 'create' | 'edit';
   initialData?: any;
   eventId?: string; // Required for edit
+  successRedirectUrl?: string; // Optional custom redirect URL
 }
 
-export function EventForm({ mode, initialData, eventId }: EventFormProps) {
+export function EventForm({ mode, initialData, eventId, successRedirectUrl }: EventFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -37,6 +42,21 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
   const [selectedEndDate, setSelectedEndDate] = useState<Date | undefined>(undefined);
   const [startTime, setStartTime] = useState<string>('');
   const [endTime, setEndTime] = useState<string>('');
+
+  // Status Modal State
+  const [statusModal, setStatusModal] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'error';
+    title: string;
+    description: string;
+    actionLabel?: string;
+    onAction?: () => void;
+  }>({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    description: ''
+  });
 
   // Structured Criteria List
   const [criteriaList, setCriteriaList] = useState<{ p1: string; p2: string; club: string }[]>([
@@ -65,15 +85,17 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
     playerCriteria: '', // Tournament Player Criteria
     prizes: '', // Tournament Prizes
     sparringOpponent: '', // Sparring: Opponent Team Name (Optional)
-    matchFormat: '' // Sparring: e.g. "5 Partai (3MD, 2XD)"
+    matchFormat: '', // Sparring: e.g. "5 Partai (3MD, 2XD)"
+    assistantCoachIds: [] as string[],
+    assistantCoachNames: [] as string[]
   });
 
   // Drilling Costs State
   const [drillCosts, setDrillCosts] = useState({
-    court: '175000',
-    shuttle: '83000',
-    tool: '20000',
-    coach: '300000'
+    court: formatRupiah(175000),
+    shuttle: formatRupiah(83000),
+    tool: formatRupiah(20000),
+    coach: formatRupiah(300000)
   });
 
   // LOAD INITIAL DATA (FOR EDIT)
@@ -90,7 +112,7 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
         skillLevel: initialData.skillLevel || 'all',
         curriculum: initialData.curriculum || '',
         location: initialData.location || '',
-        price: initialData.price ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(Number(initialData.price)) : '',
+        price: (initialData.price !== undefined && initialData.price !== null) ? formatRupiah(initialData.price) : '',
         quota: initialData.quota?.toString() || '12',
         description: initialData.description || '',
         allowWaitingList: initialData.allowWaitingList || false, // Load WL Setting
@@ -98,8 +120,29 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
         playerCriteria: initialData.playerCriteria || '',
         prizes: initialData.prizes || '',
         sparringOpponent: initialData.sparringOpponent || '', // Load Sparring
-        matchFormat: initialData.matchFormat || '' // Load Sparring
+        matchFormat: initialData.matchFormat || '', // Load Sparring
+        assistantCoachIds: initialData.assistantCoachIds || [], // Load Assistant IDs
+        assistantCoachNames: initialData.assistantCoachNames || [] // Load Assistant Names
       });
+
+      // Update Drill Costs for Edit
+      // Update Drill Costs for Edit
+      if (initialData.financials) {
+        setDrillCosts({
+          court: formatRupiah(initialData.financials.courtCost || 0),
+          shuttle: formatRupiah(initialData.financials.shuttlecockCost || 0),
+          tool: formatRupiah(initialData.financials.toolCost || 0),
+          coach: formatRupiah(initialData.financials.coachFee || 0)
+        });
+      } else if (initialData.cost_court || initialData.cost_shuttle) {
+        // Fallback for flat structure
+        setDrillCosts({
+          court: formatRupiah(initialData.cost_court || 0),
+          shuttle: formatRupiah(initialData.cost_shuttle || 0),
+          tool: formatRupiah(initialData.cost_tool || 0),
+          coach: formatRupiah(initialData.cost_coach || 0)
+        });
+      }
 
       if (initialData.date) {
         if (initialData.date.includes(' - ')) {
@@ -166,7 +209,13 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
 
     // Validation
     if (!selectedDate || !startTime || !endTime) {
-      toast({ title: "Data Kurang", description: "Mohon lengkapi tanggal dan waktu kegiatan.", variant: "destructive" });
+      setStatusModal({
+        isOpen: true,
+        type: 'error',
+        title: 'DATA BELUM LENGKAP',
+        description: 'Mohon lengkapi tanggal dan waktu kegiatan sebelum menyimpan.',
+        actionLabel: 'OK, MENGERTI'
+      });
       setLoading(false);
       return;
     }
@@ -197,10 +246,10 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
       allowedUserTypes: formData.allowedUserTypes === 'both' ? ['member', 'guest'] : ['member'],
       isRecurring, // Include Recurring Flag
       // Drilling Costs
-      cost_court: drillCosts.court,
-      cost_shuttle: drillCosts.shuttle,
-      cost_tool: drillCosts.tool,
-      cost_coach: drillCosts.coach
+      cost_court: cleanCurrency(drillCosts.court),
+      cost_shuttle: cleanCurrency(drillCosts.shuttle),
+      cost_tool: cleanCurrency(drillCosts.tool),
+      cost_coach: cleanCurrency(drillCosts.coach)
     };
 
     try {
@@ -214,18 +263,32 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
       });
 
       if (res.ok) {
-        toast({
-          title: "Sukses",
-          description: mode === 'create' ? "Jadwal berhasil dibuat!" : "Jadwal berhasil diperbarui!",
-          className: "bg-green-600 text-white"
+        setStatusModal({
+          isOpen: true,
+          type: 'success',
+          title: mode === 'create' ? 'EVENT DIBUAT!' : 'EVENT DIPERBARUI!',
+          description: mode === 'create' ? 'Jadwal kegiatan berhasil ditambahkan ke sistem.' : 'Perubahan data kegiatan berhasil disimpan.',
+          actionLabel: 'LANJUTKAN',
+          onAction: () => {
+            if (successRedirectUrl) {
+              router.push(successRedirectUrl);
+            } else {
+              router.push('/host/events');
+            }
+            router.refresh();
+          }
         });
-        router.push('/host/events');
-        router.refresh();
       } else {
         throw new Error("Gagal menyimpan data");
       }
     } catch (error) {
-      toast({ title: "Error", description: "Terjadi kesalahan sistem.", variant: "destructive" });
+      setStatusModal({
+        isOpen: true,
+        type: 'error',
+        title: 'GAGAL MENYIMPAN',
+        description: 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.',
+        actionLabel: 'COBA LAGI'
+      });
     } finally {
       setLoading(false);
     }
@@ -339,6 +402,54 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
                         <p className="text-[10px] text-gray-400 mt-1 ml-1">*Memilih modul akan mengisi otomatis detail kurikulum.</p>
                       </div>
                     )}
+
+                    {/* ASISTEN COACH SELECTION (Enable Multiple) */}
+                    <div className="pt-2 animate-in slide-in-from-left-3">
+                      <Label className="text-xs text-gray-400 mb-2 block">Asisten Coach (Opsional)</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full justify-between bg-[#1A1A1A] border-white/10 text-left font-normal text-white hover:bg-[#222]">
+                            {formData.assistantCoachNames.length > 0
+                              ? `${formData.assistantCoachNames.length} Asisten: ${formData.assistantCoachNames.join(', ')}`
+                              : "Pilih Asisten Coach (Bisa > 1)"}
+                            <Plus className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-0 bg-[#1A1A1A] border-white/10 text-white" align="start">
+                          <div className="p-2 space-y-2 max-h-[200px] overflow-y-auto">
+                            {coaches
+                              .filter(c => c.name !== formData.coachName) // Exclude Main Coach
+                              .map(coach => (
+                                <div key={coach.id} className="flex items-center space-x-2 p-2 hover:bg-white/5 rounded-lg cursor-pointer"
+                                  onClick={() => {
+                                    const isSelected = formData.assistantCoachIds.includes(coach.id);
+                                    let newIds, newNames;
+
+                                    if (isSelected) {
+                                      newIds = formData.assistantCoachIds.filter(id => id !== coach.id);
+                                      newNames = formData.assistantCoachNames.filter(name => name !== coach.name);
+                                    } else {
+                                      newIds = [...formData.assistantCoachIds, coach.id];
+                                      newNames = [...formData.assistantCoachNames, coach.name];
+                                    }
+
+                                    setFormData({ ...formData, assistantCoachIds: newIds, assistantCoachNames: newNames });
+                                  }}>
+                                  <Checkbox
+                                    checked={formData.assistantCoachIds.includes(coach.id)}
+                                    onCheckedChange={() => { }} // Handled by parent div click
+                                    className="border-white/20 data-[state=checked]:bg-[#00f2ea] data-[state=checked]:text-black"
+                                  />
+                                  <span className="text-sm">{coach.name}</span>
+                                </div>
+                              ))}
+                            {coaches.filter(c => c.name !== formData.coachName).length === 0 && (
+                              <p className="text-xs text-gray-500 text-center py-2">Tidak ada coach lain tersedia.</p>
+                            )}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   </div>
 
                   {/* Skill Level & Curriculum for Drilling */}
@@ -384,10 +495,30 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                      <Material3Input label="Sewa Lapangan" type="number" value={drillCosts.court} onChange={(e) => setDrillCosts({ ...drillCosts, court: e.target.value })} />
-                      <Material3Input label="Shuttlecock" type="number" value={drillCosts.shuttle} onChange={(e) => setDrillCosts({ ...drillCosts, shuttle: e.target.value })} />
-                      <Material3Input label="Sewa Alat" type="number" value={drillCosts.tool} onChange={(e) => setDrillCosts({ ...drillCosts, tool: e.target.value })} />
-                      <Material3Input label="Honor Coach" type="number" value={drillCosts.coach} onChange={(e) => setDrillCosts({ ...drillCosts, coach: e.target.value })} />
+                      <Material3Input
+                        label="Sewa Lapangan"
+                        type="text"
+                        value={drillCosts.court}
+                        onChange={(e) => setDrillCosts({ ...drillCosts, court: formatRupiah(e.target.value) })}
+                      />
+                      <Material3Input
+                        label="Shuttlecock"
+                        type="text"
+                        value={drillCosts.shuttle}
+                        onChange={(e) => setDrillCosts({ ...drillCosts, shuttle: formatRupiah(e.target.value) })}
+                      />
+                      <Material3Input
+                        label="Sewa Alat"
+                        type="text"
+                        value={drillCosts.tool}
+                        onChange={(e) => setDrillCosts({ ...drillCosts, tool: formatRupiah(e.target.value) })}
+                      />
+                      <Material3Input
+                        label="Honor Coach"
+                        type="text"
+                        value={drillCosts.coach}
+                        onChange={(e) => setDrillCosts({ ...drillCosts, coach: formatRupiah(e.target.value) })}
+                      />
                     </div>
 
                     {/* Price Simulation Table */}
@@ -395,7 +526,7 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
                       <p className="text-[10px] text-gray-500 font-bold uppercase mb-2">Simulasi Harga Jual (Quota: {formData.quota})</p>
                       <div className="space-y-1">
                         {(() => {
-                          const totalCost = Number(drillCosts.court) + Number(drillCosts.shuttle) + Number(drillCosts.tool) + Number(drillCosts.coach);
+                          const totalCost = Number(cleanCurrency(drillCosts.court)) + Number(cleanCurrency(drillCosts.shuttle)) + Number(cleanCurrency(drillCosts.tool)) + Number(cleanCurrency(drillCosts.coach));
                           const quotaNum = Number(formData.quota) || 12;
                           const hpp = totalCost / quotaNum;
                           const calc = (margin: number) => Math.ceil((hpp + (hpp * margin)) / 5000) * 5000;
@@ -418,7 +549,7 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
                       </div>
                       <div className="flex justify-between text-[10px] text-gray-600 mt-2 pt-2 border-t border-white/10">
                         <span>HPP per Orang:</span>
-                        <span>Rp {Math.ceil((Number(drillCosts.court) + Number(drillCosts.shuttle) + Number(drillCosts.tool) + Number(drillCosts.coach)) / (Number(formData.quota) || 12)).toLocaleString('id-ID')}</span>
+                        <span>Rp {Math.ceil((Number(cleanCurrency(drillCosts.court)) + Number(cleanCurrency(drillCosts.shuttle)) + Number(cleanCurrency(drillCosts.tool)) + Number(cleanCurrency(drillCosts.coach))) / (Number(formData.quota) || 12)).toLocaleString('id-ID')}</span>
                       </div>
                     </div>
                   </div>
@@ -675,13 +806,7 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
                     if (!raw) {
                       setFormData({ ...formData, price: '' });
                     } else {
-                      const formatted = new Intl.NumberFormat('id-ID', {
-                        style: 'currency',
-                        currency: 'IDR',
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0
-                      }).format(Number(raw));
-                      setFormData({ ...formData, price: formatted });
+                      setFormData({ ...formData, price: formatRupiah(raw) });
                     }
                   }}
                   required
@@ -757,6 +882,15 @@ export function EventForm({ mode, initialData, eventId }: EventFormProps) {
           </div>
         </div>
       </Card >
+      <StatusModal
+        isOpen={statusModal.isOpen}
+        onClose={() => setStatusModal({ ...statusModal, isOpen: false })}
+        type={statusModal.type}
+        title={statusModal.title}
+        description={statusModal.description}
+        actionLabel={statusModal.actionLabel}
+        onAction={statusModal.onAction}
+      />
     </form >
   );
 }

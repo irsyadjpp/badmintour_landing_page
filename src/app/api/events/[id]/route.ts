@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth"; // Fixed import path
 import { db } from "@/lib/firebase-admin";
 import { logActivity } from "@/lib/audit-logger";
+import { generatePriceTiers } from "@/lib/pricing";
 
 export async function GET(
     req: Request,
@@ -36,7 +37,9 @@ export async function PUT(
         const {
             title, date, time, location, price, quota,
             description, type, coachName,
-            externalLink, organizer, allowWaitingList
+            externalLink, organizer, allowWaitingList,
+            assistantCoachIds, assistantCoachNames,
+            cost_court, cost_shuttle, cost_tool, cost_coach
         } = body;
 
         // Update logic
@@ -55,7 +58,30 @@ export async function PUT(
         if (coachName !== undefined) updateData.coachName = coachName;
         if (externalLink !== undefined) updateData.externalLink = externalLink;
         if (organizer !== undefined) updateData.organizer = organizer;
+        if (organizer !== undefined) updateData.organizer = organizer;
         if (allowWaitingList !== undefined) updateData.allowWaitingList = allowWaitingList;
+        if (assistantCoachIds !== undefined) updateData.assistantCoachIds = assistantCoachIds;
+        if (assistantCoachNames !== undefined) updateData.assistantCoachNames = assistantCoachNames;
+
+        // Financials Update (For Drilling)
+        if (type === 'drilling' || (cost_court || cost_shuttle || cost_tool || cost_coach)) {
+            const newQuota = quota ? Number(quota) : 12; // Fallback to 12 if not provided (should be provided)
+            const costs = {
+                courtCost: Number(cost_court) || 0,
+                shuttlecockCost: Number(cost_shuttle) || 0,
+                toolCost: Number(cost_tool) || 0,
+                coachFee: Number(cost_coach) || 0,
+                capacity: newQuota
+            };
+            updateData.financials = costs;
+            updateData.price_tier = generatePriceTiers(costs);
+
+            // Override price fields to match "Member" price from tier calculation for consistency? 
+            // Or trust the input 'price'? 
+            // Usually 'price' input is manual, but for drilling it might be derived. 
+            // For now, let's keep 'price' as passed (which is usually manually saved), 
+            // but ensure financials are stored for P&L.
+        }
 
         await db.collection("events").doc(id).update(updateData);
 

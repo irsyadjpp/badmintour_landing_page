@@ -28,6 +28,9 @@ import {
 } from "@/components/ui/alert-dialog";
 
 
+import { ReviewDialog } from '@/components/member/review-dialog';
+import { Star } from 'lucide-react';
+
 export default function MemberDashboard() {
     const { data: session, status } = useSession();
     const [isLoading, setIsLoading] = useState(true);
@@ -44,6 +47,15 @@ export default function MemberDashboard() {
 
     const [cancelId, setCancelId] = useState<string | null>(null); // ID booking yg mau di-cancel
     const [canceling, setCanceling] = useState(false);
+
+    // Review Modal State
+    const [reviewModal, setReviewModal] = useState<{
+        isOpen: boolean;
+        booking: any;
+    }>({
+        isOpen: false,
+        booking: null
+    });
 
     // LOGIC CANCEL
     const handleCancelBooking = async () => {
@@ -376,6 +388,38 @@ export default function MemberDashboard() {
                                         BATALKAN
                                     </Button>
                                 )}
+
+                                {/* REVIEW BUTTON (For Past Events) */}
+                                {(() => {
+                                    // Check if event is past
+                                    try {
+                                        const now = new Date();
+                                        const eventDate = new Date(booking.event.date);
+                                        // Simple check: if date is before today (or same day but late)
+                                        // For simplicity: If status is CONFIRMED and date is past
+                                        // Or better, rely on Client Side check similar to Drilling page
+                                        if (booking.status !== 'cancelled' && booking.status !== 'rejected') {
+                                            if (now > eventDate && !booking.hasReviewed) {
+                                                return (
+                                                    <Button
+                                                        size="sm"
+                                                        className="w-full md:w-auto bg-[#ffbe00] text-black font-bold hover:bg-[#e5ab00]"
+                                                        onClick={() => setReviewModal({ isOpen: true, booking })}
+                                                    >
+                                                        <Star className="w-4 h-4 mr-1 fill-black" /> BERI ULASAN
+                                                    </Button>
+                                                )
+                                            }
+                                            if (booking.hasReviewed) {
+                                                return (
+                                                    <Badge className="bg-[#ffbe00]/10 text-[#ffbe00] border-[#ffbe00]/20 gap-1 h-9 px-3">
+                                                        <Star className="w-3 h-3 fill-[#ffbe00]" /> REVIEWED
+                                                    </Badge>
+                                                )
+                                            }
+                                        }
+                                    } catch (e) { return null; }
+                                })()}
                             </div>
                         </div>
                     ))
@@ -478,6 +522,15 @@ export default function MemberDashboard() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Review Dialog */}
+            {reviewModal.booking && (
+                <ReviewDialog
+                    isOpen={reviewModal.isOpen}
+                    onClose={() => setReviewModal(prev => ({ ...prev, isOpen: false }))}
+                    booking={reviewModal.booking}
+                />
+            )}
         </div >
     );
 }

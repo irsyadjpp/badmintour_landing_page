@@ -226,7 +226,7 @@ export default function AdminEventDetailPage() {
             </>
           )}
 
-          <Link href={`/host/events/${event.id}/edit`}>
+          <Link href={`/admin/events/${event.id}/edit`}>
             <Button variant="outline" className="border-white/10 text-white bg-[#1A1A1A] hover:bg-white/10 gap-2 h-10 px-4 rounded-xl">
               <Pencil className="w-4 h-4" /> Edit
             </Button>
@@ -310,6 +310,12 @@ export default function AdminEventDetailPage() {
                     <p className="text-xs text-gray-500 font-bold">Coach</p>
                     <p className="text-white font-bold">{event.coachName} <span className="text-gray-500 font-normal">({event.coachNickname})</span></p>
                   </div>
+                  {event.assistantCoachNames && event.assistantCoachNames.length > 0 && (
+                    <div>
+                      <p className="text-xs text-gray-500 font-bold">Assistant Coaches</p>
+                      <p className="text-white font-medium text-sm">{event.assistantCoachNames.join(', ')}</p>
+                    </div>
+                  )}
                   <div>
                     <p className="text-xs text-gray-500 font-bold">Curriculum</p>
                     <p className="text-sm text-gray-300 italic">"{event.curriculum || '-'}"</p>

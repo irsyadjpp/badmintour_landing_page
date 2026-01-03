@@ -113,19 +113,43 @@ export async function GET(req: Request) {
                 .get();
 
             // 3. Query Bookings by PhoneNumber (Legacy/Guest Match)
-            let bookingsByPhone: FirebaseFirestore.QuerySnapshot | null = null;
+            // Handle multiple phone formats (08xx, 628xx, +628xx) to fix sync issues
+            let bookingsByPhoneDocs: FirebaseFirestore.DocumentSnapshot[] = [];
+
             if (userPhone) {
-                bookingsByPhone = await db.collection("bookings")
-                    .where("phoneNumber", "==", userPhone)
-                    .where("status", "in", ["paid", "confirmed", "pending", "pending_payment", "CONFIRMED", "pending_approval", "waiting_approval"])
-                    .get();
+                const cleanPhone = userPhone.replace(/\D/g, ''); // Remove non-digits
+                const formats = new Set<string>();
+
+                formats.add(userPhone); // Add exact profile phone
+                formats.add(cleanPhone); // Add digits only
+
+                if (cleanPhone.startsWith('0')) {
+                    formats.add('62' + cleanPhone.substring(1));
+                }
+                if (cleanPhone.startsWith('62')) {
+                    formats.add('0' + cleanPhone.substring(2));
+                }
+                // Determine uniqueness
+                const uniqueFormats = Array.from(formats);
+
+                const phoneQueries = uniqueFormats.map(phone =>
+                    db.collection("bookings")
+                        .where("phoneNumber", "==", phone)
+                        .where("status", "in", ["paid", "confirmed", "pending", "pending_payment", "CONFIRMED", "pending_approval", "waiting_approval"])
+                        .get()
+                );
+
+                const results = await Promise.all(phoneQueries);
+                results.forEach(snap => {
+                    snap.docs.forEach(doc => bookingsByPhoneDocs.push(doc));
+                });
             }
 
             // 4. Merge & Deduplicate
             const uniqueDocs = new Map();
             bookingsByUserId.docs.forEach(doc => uniqueDocs.set(doc.id, doc));
-            if (bookingsByPhone) {
-                bookingsByPhone.docs.forEach(doc => uniqueDocs.set(doc.id, doc));
+            if (bookingsByPhoneDocs.length > 0) {
+                bookingsByPhoneDocs.forEach(doc => uniqueDocs.set(doc.id, doc));
             }
 
             const allDocs = Array.from(uniqueDocs.values()).sort((a, b) => {
@@ -135,10 +159,11 @@ export async function GET(req: Request) {
                 return tB.localeCompare(tA);
             });
 
-            // 3b. Fetch Assessments for this user (Optimization: Batch fetch)
-            const assessmentsSnapshot = await db.collection("assessments")
-                .where("playerId", "==", session.user.id)
-                .get();
+            // 3b. Fetch Assessments & Reviews (Batch Optimization)
+            const [assessmentsSnapshot, reviewsSnapshot] = await Promise.all([
+                db.collection("assessments").where("playerId", "==", session.user.id).get(),
+                db.collection("reviews").where("reviewerId", "==", session.user.id).get()
+            ]);
 
             const assessmentMap = new Set(); // Store sessionIds that have assessment
             assessmentsSnapshot.forEach(doc => {
@@ -146,10 +171,16 @@ export async function GET(req: Request) {
                 if (data.sessionId) assessmentMap.add(data.sessionId);
             });
 
+            const reviewMap = new Set(); // Store bookingIds that are reviewed
+            reviewsSnapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.bookingId) reviewMap.add(data.bookingId);
+            });
+
             const bookingsWithDetails = await Promise.all(allDocs.map(async (doc) => {
                 const booking = doc.data();
                 const eventSnap = await db.collection("events").doc(booking.eventId).get();
-                const event = eventSnap.exists ? eventSnap.data() : {};
+                const event = eventSnap.exists ? eventSnap.data() : null;
 
                 return {
                     id: doc.id, // Booking ID
@@ -158,10 +189,11 @@ export async function GET(req: Request) {
                     totalPrice: booking.totalPrice || event?.price || 0,
                     createdAt: booking.bookedAt?.toDate?.() || null,
                     hasAssessment: assessmentMap.has(booking.eventId), // Check if assessed
+                    hasReviewed: reviewMap.has(doc.id), // Check if reviewed
                     event: {
                         id: booking.eventId,
-                        title: event?.title || "Unknown Event",
-                        date: event?.date || null,
+                        title: event?.title || booking.eventTitle || "Unknown Event",
+                        date: event?.date || booking.eventDate || null,
                         time: event?.time || "",
                         location: event?.location || "",
                         coach: event?.coachNickname || event?.coachName || "",
@@ -169,7 +201,7 @@ export async function GET(req: Request) {
                         curriculum: event?.curriculum || "",
                         moduleId: event?.moduleId || null,
                         moduleTitle: event?.moduleTitle || null,
-                        type: event?.type || 'mabar',
+                        type: event?.type || (event?.title?.toLowerCase().includes('drilling') ? 'drilling' : 'mabar'),
                     }
                 };
             }));

@@ -4,17 +4,17 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Loader2, MapPin, Calendar, Clock, Dumbbell, User, Info, Search, Filter, ChevronRight, ArrowLeft, LogOut, CheckCircle, ShieldCheck, History as HistoryIcon } from 'lucide-react';
+import { StatusModal } from '@/components/ui/status-modal';
+import { ReviewDialog } from '@/components/member/review-dialog';
+import { Loader2, MapPin, Calendar, Clock, Dumbbell, User, Info, Search, Filter, ChevronRight, ArrowLeft, LogOut, CheckCircle, ShieldCheck, History as HistoryIcon, Star, ArrowUpRight } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Material3Input } from '@/components/ui/material-3-input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { StatusModal } from '@/components/ui/status-modal';
 
 function DrillingEventContent() {
   const searchParams = useSearchParams();
@@ -41,6 +41,14 @@ function DrillingEventContent() {
     type: 'success',
     title: '',
     description: ''
+  });
+
+  const [reviewModal, setReviewModal] = useState<{
+    isOpen: boolean;
+    booking: any;
+  }>({
+    isOpen: false,
+    booking: null
   });
 
   // React Query: Fetch Events
@@ -82,7 +90,13 @@ function DrillingEventContent() {
     if (!dateStr) return false;
     try {
       const now = new Date();
+      // Force date string to be parsed as Local Time YYYY/MM/DD to avoid UTC confusion if needed
+      // But standard new Date("YYYY-MM-DD") is UTC.
+      // Let's create a date object specifically.
       const eventDate = new Date(dateStr);
+
+      // If invalid date
+      if (isNaN(eventDate.getTime())) return false;
 
       // Default to end of day if no time string
       if (!timeStr) {
@@ -91,18 +105,16 @@ function DrillingEventContent() {
       }
 
       // Parse Time "15.00 - 17.00" or "15:00 - 17:00"
-      // Ambil bagian setelah "-" (End Time)
       const parts = timeStr.split('-');
       const endTimeStr = parts.length > 1 ? parts[1].trim() : parts[0].trim();
 
-      // Normalize "." to ":" (19.00 -> 19:00)
+      // Normalize "." to ":"
       const normalizedTime = endTimeStr.replace('.', ':');
       const [hours, minutes] = normalizedTime.split(':').map(Number);
 
       if (!isNaN(hours) && !isNaN(minutes)) {
         eventDate.setHours(hours, minutes, 0);
       } else {
-        // Fallback logic if parsing fails
         eventDate.setHours(23, 59, 0);
       }
 
@@ -113,7 +125,18 @@ function DrillingEventContent() {
     }
   };
 
-  const historyBookings = (bookingData.list || []).filter((b: any) => isEventPast(b.event?.date, b.event?.time) && b.status !== 'cancelled');
+  const historyBookings = (bookingData.list || []).filter((b: any) => {
+    // 1. Must be past event
+    const isPast = isEventPast(b.event?.date, b.event?.time);
+    // 2. Must not be cancelled
+    const isActive = b.status !== 'cancelled';
+    // 3. Must be Drilling Type (Explicit Check OR Title Match)
+    // We infer searching for "Drilling" in title just in case type is missing/malformed
+    const typeIsDrilling = b.event?.type === 'drilling';
+    const titleIsDrilling = b.event?.title?.toLowerCase().includes('drilling');
+
+    return isPast && isActive && (typeIsDrilling || titleIsDrilling);
+  });
 
   // UI State
 
@@ -128,8 +151,7 @@ function DrillingEventContent() {
       }
     }
   }, [eventId, events]);
-
-  // Handle pindah view
+  // ...
   const handleSelectEvent = (id: string) => {
     router.push(`/member/drilling?id=${id}`);
   };
@@ -419,7 +441,10 @@ function DrillingEventContent() {
             {historyBookings.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {historyBookings.map((booking: any) => (
-                  <Card key={booking.id} className="bg-[#151515] border-white/5 p-6 rounded-[2rem] flex items-center justify-between group hover:border-[#ffbe00]/30 transition-colors">
+                  <Card
+                    key={booking.id}
+                    className="bg-[#151515] border-white/5 p-6 rounded-[2rem] flex items-center justify-between group hover:border-[#ffbe00]/30 transition-colors"
+                  >
                     <div className="flex items-center gap-5">
                       <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border border-white/10 ${booking.hasAssessment ? 'bg-[#ffbe00]/10 text-[#ffbe00]' : 'bg-gray-800/30 text-gray-500'}`}>
                         <ShieldCheck className="w-8 h-8" />
@@ -427,27 +452,36 @@ function DrillingEventContent() {
                       <div>
                         <h3 className="text-white font-bold text-lg line-clamp-1">{booking.event?.title || "Sesi Latihan"}</h3>
                         <p className="text-sm text-gray-500 mb-2">{new Date(booking.event?.date).toLocaleDateString()} • {booking.event?.coach}</p>
-                        <Badge variant="secondary" className={
-                          booking.hasAssessment
-                            ? "bg-green-500/10 text-green-500 border-green-500/20"
-                            : "bg-gray-800 text-gray-500"
-                        }>
-                          {booking.hasAssessment ? "COMPLETED & ASSESSED" : "COMPLETED"}
-                        </Badge>
+                        <div className="flex gap-2">
+                          <Badge variant="secondary" className={
+                            booking.hasAssessment
+                              ? "bg-green-500/10 text-green-500 border-green-500/20"
+                              : "bg-gray-800 text-gray-500"
+                          }>
+                            {booking.hasAssessment ? "COMPLETED & ASSESSED" : "COMPLETED"}
+                          </Badge>
+                          {booking.hasReviewed && (
+                            <Badge className="bg-[#ffbe00]/10 text-[#ffbe00] border-[#ffbe00]/20 gap-1">
+                              <Star className="w-3 h-3 fill-[#ffbe00]" /> REVIEWED
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    {booking.hasAssessment ? (
-                      <Link href={`/member/drilling/reports/${booking.id}`}>
-                        <Button className="h-12 w-12 rounded-full bg-[#ffbe00] text-black hover:bg-[#ffbe00]/90 flex items-center justify-center p-0">
-                          <ChevronRight className="w-6 h-6" />
-                        </Button>
-                      </Link>
-                    ) : (
-                      <div className="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center">
-                        <span className="text-[10px] text-gray-600 font-bold">N/A</span>
-                      </div>
-                    )}
+                    <div className="flex flex-col gap-2 items-end">
+                      {booking.hasAssessment ? (
+                        <Link href={`/member/drilling/reports/${booking.id}`}>
+                          <div className="h-12 w-12 rounded-full bg-[#ffbe00] text-black hover:scale-110 transition-transform flex items-center justify-center shadow-[0_0_15px_rgba(255,190,0,0.3)] cursor-pointer">
+                            <ArrowUpRight className="w-6 h-6" />
+                          </div>
+                        </Link>
+                      ) : (
+                        <div className="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center">
+                          <span className="text-[10px] text-gray-600 font-bold">N/A</span>
+                        </div>
+                      )}
+                    </div>
                   </Card>
                 ))}
               </div>
@@ -457,6 +491,15 @@ function DrillingEventContent() {
                 <h3 className="text-white font-bold text-lg">Belum ada riwayat latihan.</h3>
                 <p className="text-gray-500 text-sm">Selesaikan sesi latihan pertamamu!</p>
               </div>
+            )}
+
+            {/* Review Dialog */}
+            {reviewModal.booking && (
+              <ReviewDialog
+                isOpen={reviewModal.isOpen}
+                onClose={() => setReviewModal(prev => ({ ...prev, isOpen: false }))}
+                booking={reviewModal.booking}
+              />
             )}
           </div>
         )}
@@ -509,8 +552,24 @@ function DrillingEventContent() {
                   </div>
                   <div>
                     <p className="text-[10px] text-[#ffbe00] font-bold uppercase tracking-widest">Coach / Pelatih</p>
-                    <p className="font-black text-white text-lg">{selectedEvent.coachNickname || selectedEvent.coachName}</p>
                   </div>
+                </div>
+              )}
+
+              {/* Assistant Coach Info */}
+              {selectedEvent.assistantCoachNames && selectedEvent.assistantCoachNames.length > 0 && (
+                <div className="flex flex-wrap gap-4 pt-2">
+                  {selectedEvent.assistantCoachNames.map((name: string, idx: number) => (
+                    <div key={idx} className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
+                      <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400">
+                        <User className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Asisten Coach</p>
+                        <p className="font-bold text-gray-300 text-sm">{name}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
 

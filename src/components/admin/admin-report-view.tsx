@@ -43,6 +43,8 @@ export interface AssessmentReport {
   notes: string;
   aiFeedback?: string;
   skillAnalysis?: Record<string, string>;
+  strengths?: string;
+  weaknesses?: string;
 }
 
 export default function AdminReportView({ report }: { report: AssessmentReport }) {
@@ -201,6 +203,26 @@ export default function AdminReportView({ report }: { report: AssessmentReport }
               )}
             </div>
           </div>
+        </Card>
+      </div>
+      {/* 4. STRENGTHS & WEAKNESSES GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="bg-[#151515] border-white/5 p-6 rounded-[2rem] flex flex-col h-full border-l-4 border-l-green-500">
+          <h3 className="text-lg font-bold text-green-500 mb-4 uppercase flex items-center gap-2">
+            <Zap className="w-5 h-5 fill-green-500" /> KEKUATAN (STRENGTHS)
+          </h3>
+          <p className="text-gray-300 italic leading-relaxed">
+            "{report.strengths || 'Konsistensi yang baik.'}"
+          </p>
+        </Card>
+
+        <Card className="bg-[#151515] border-white/5 p-6 rounded-[2rem] flex flex-col h-full border-l-4 border-l-[#ca1f3d]">
+          <h3 className="text-lg font-bold text-[#ca1f3d] mb-4 uppercase flex items-center gap-2">
+            <Shield className="w-5 h-5 fill-[#ca1f3d]" /> KELEMAHAN (TO IMPROVE)
+          </h3>
+          <p className="text-gray-300 italic leading-relaxed">
+            "{report.weaknesses || 'Perbanyak latihan fisik.'}"
+          </p>
         </Card>
       </div>
     </div>

@@ -76,7 +76,11 @@ export default function AdminReportPage() {
     level: data.data.level,
     totalScore: data.data.totalScore,
     scores: data.data.scores,
-    notes: data.data.notes
+    notes: data.data.notes,
+    aiFeedback: data.data.aiFeedback,
+    skillAnalysis: data.data.skillAnalysis,
+    strengths: data.data.strengths,
+    weaknesses: data.data.weaknesses
   };
 
   return (

@@ -57,8 +57,8 @@ export default function PrivacyPage() {
 
                         <div className="pt-8 px-4">
                             <Link href="/">
-                                <Button className="w-full bg-transparent border-2 border-[#ffbe00] text-[#ffbe00] hover:bg-[#ffbe00] hover:text-black rounded-xl gap-2 font-black h-12 transition-all uppercase tracking-wide">
-                                    <ChevronLeft className="w-5 h-5" /> Back to Home
+                                <Button className="w-full bg-white/5 backdrop-blur-md border border-white/10 text-white hover:bg-[#ffbe00] hover:text-black rounded-full h-12 px-6 gap-2 font-bold transition-all group uppercase tracking-widest">
+                                    <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> BACK TO HOME
                                 </Button>
                             </Link>
                         </div>
