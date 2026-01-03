@@ -53,7 +53,9 @@ export default function MemberJerseyPage() {
         if (session?.user) {
             setFullName(session.user.name?.toUpperCase() || '');
             // Jika user sudah pairing WA, otomatis terisi
+            // @ts-ignore
             if (session.user.phoneNumber) {
+                // @ts-ignore
                 setWhatsAppNumber(session.user.phoneNumber);
             }
         }
@@ -198,6 +200,9 @@ export default function MemberJerseyPage() {
 
     // State for Stock
     const [stockStatus, setStockStatus] = useState({ total: 0, limit: 20, isSoldOut: false });
+
+    // Sizes Constant
+    const sizes = ['S', 'M', 'L', 'XL', 'XXL', '3XL'];
 
     useEffect(() => {
         const fetchStock = async () => {
