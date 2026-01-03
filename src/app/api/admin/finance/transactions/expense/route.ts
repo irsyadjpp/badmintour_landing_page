@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { recordJournalEntry } from '@/lib/finance-service';
-import { COA } from '@/lib/finance-types';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,6 +43,21 @@ export async function POST(req: NextRequest) {
       metadata: { proofImage, notes: `Payee: ${payee}` },
       status: status || 'posted'
     });
+
+    // [New] Audit Log
+    const session = await getServerSession(authOptions);
+    if (session) {
+      const { logActivity } = await import('@/lib/audit-logger');
+      await logActivity({
+        userId: session.user.id,
+        userName: session.user.name,
+        role: session.user.role,
+        action: 'create',
+        entity: 'Transaction',
+        entityId: `EXP-${Date.now()}`, // Should ideally capture actual ID from service
+        details: `Recorded Expense: ${payee} - ${totalAmount}`
+      });
+    }
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error: any) {

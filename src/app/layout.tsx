@@ -5,6 +5,9 @@ import { Toaster } from '@/components/ui/toaster';
 import NextAuthProvider from '@/components/providers/next-auth-provider';
 import QueryProvider from '@/components/providers/query-provider';
 
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
 const outfit = Outfit({
   subsets: ['latin'],
   display: 'swap',
@@ -40,6 +43,8 @@ export default function RootLayout({
           <QueryProvider>
             {children}
             <Toaster />
+            <Analytics />
+            <SpeedInsights />
           </QueryProvider>
         </NextAuthProvider>
       </body>

@@ -41,6 +41,17 @@ export async function POST(req: Request) {
             }, { status: 400 });
         }
 
+        // [NEW] LIMIT 20 PCS CHECK
+        // Hitung total dokumen di collection 'jersey_orders'
+        const totalOrdersSnap = await db.collection("jersey_orders").count().get();
+        const totalOrders = totalOrdersSnap.data().count;
+
+        if (totalOrders >= 20) {
+            return NextResponse.json({
+                error: "SOLD OUT! Kuota Pre-Order Jersey (20 Pcs) sudah terpenuhi."
+            }, { status: 400 });
+        }
+
         // Generate Order ID (Format: JSY-YYYYMMDD-XXXX)
         // Ini penting agar sesuai dengan QR Code generator di frontend
         const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");

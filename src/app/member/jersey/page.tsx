@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import QRCode from "react-qr-code";
 import Link from 'next/link';
 import { FeedbackModal } from '@/components/ui/feedback-modal';
+import { track } from '@vercel/analytics/react';
 
 export default function MemberJerseyPage() {
     const { data: session } = useSession();
@@ -195,17 +196,60 @@ export default function MemberJerseyPage() {
         };
     };
 
-    const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+    // State for Stock
+    const [stockStatus, setStockStatus] = useState({ total: 0, limit: 20, isSoldOut: false });
+
+    useEffect(() => {
+        const fetchStock = async () => {
+            try {
+                const res = await fetch('/api/jersey/status');
+                const data = await res.json();
+                if (data.total !== undefined) {
+                    setStockStatus(data);
+                }
+            } catch (e) {
+                console.error("Failed to fetch stock", e);
+            }
+        };
+        fetchStock();
+    }, []);
+
+    // ... (rest of logic) ...
 
     return (
-        <div className="space-y-6 pb-20">
+        <div className="space-y-6 pb-20 relative">
+
+            {/* SOLD OUT OVERLAY */}
+            {stockStatus.isSoldOut && !isClaimed && (
+                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <Card className="bg-[#151515] border-white/10 p-8 max-w-md w-full text-center space-y-6 relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-2 bg-[#ca1f3d]"></div>
+                        <Shirt className="w-20 h-20 text-gray-700 mx-auto" />
+                        <div>
+                            <h2 className="text-4xl font-black text-[#ca1f3d] uppercase tracking-tighter mb-2">SOLD OUT</h2>
+                            <p className="text-gray-400">Kuota 20 Pcs Pre-Order Jersey Season 1 telah terpenuhi. Terima kasih atas antusiasme Anda!</p>
+                        </div>
+                        <Link href="/member/dashboard">
+                            <Button className="w-full h-14 bg-white text-black hover:bg-gray-200 font-bold rounded-xl">
+                                KEMBALI KE DASHBOARD
+                            </Button>
+                        </Link>
+                    </Card>
+                </div>
+            )}
+
             {/* Header Member Style */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-black tracking-tighter text-white flex items-center gap-3">
                         <Shirt className="w-8 h-8 text-[#ca1f3d]" /> PRE-ORDER JERSEY
                     </h1>
-                    <p className="text-gray-400">Dapatkan Jersey Official Season 1 eksklusif untuk member.</p>
+                    <div className="flex items-center gap-3 mt-1">
+                        <Badge variant="outline" className={`border text-xs ${stockStatus.isSoldOut ? 'border-red-500 text-red-500' : 'border-[#ffbe00] text-[#ffbe00]'} font-bold`}>
+                            {stockStatus.isSoldOut ? "QUOTA FULL" : `TERSISA ${stockStatus.limit - stockStatus.total} SLOT`}
+                        </Badge>
+                        <p className="text-gray-400 text-sm">Official Season 1</p>
+                    </div>
                 </div>
                 <Link href="/member/dashboard">
                     <Button variant="outline" className="border-white/10 text-white hover:bg-white hover:text-black">

@@ -1,17 +1,17 @@
 
 'use client';
 
-import { useState } from 'react';
-import { 
-    ShieldAlert, 
-    Search, 
-    Filter, 
-    History, 
-    Smartphone, 
-    Globe, 
-    LogOut, 
-    AlertTriangle, 
-    CheckCircle2, 
+import { useState, useEffect } from 'react';
+import {
+    ShieldAlert,
+    Search,
+    Filter,
+    History,
+    Smartphone,
+    Globe,
+    LogOut,
+    AlertTriangle,
+    CheckCircle2,
     XCircle,
     Lock,
     Ban
@@ -54,65 +54,69 @@ interface ActiveSession {
     isMobile: boolean;
 }
 
-// --- Mock Data ---
-const initialLogs: AuditLog[] = [
-    { 
-        id: 'LOG-8821', 
-        actor: { name: 'Kevin Sanjaya', role: 'admin', avatar: 'https://ui-avatars.com/api/?name=Kevin&background=random' }, 
-        action: 'DELETE_SCHEDULE', 
-        target: 'Mabar Senin Malam', 
-        timestamp: 'Just now', 
-        ip: '192.168.1.10', 
-        severity: 'critical', 
-        status: 'success' 
-    },
-    { 
-        id: 'LOG-8820', 
-        actor: { name: 'Siti Aminah', role: 'member', avatar: 'https://ui-avatars.com/api/?name=Siti&background=random' }, 
-        action: 'LOGIN_ATTEMPT', 
-        target: 'System', 
-        timestamp: '2 mins ago', 
-        ip: '10.0.0.5', 
-        severity: 'warning', 
-        status: 'failed' 
-    },
-    { 
-        id: 'LOG-8819', 
-        actor: { name: 'Host Andi', role: 'host', avatar: 'https://ui-avatars.com/api/?name=Andi&background=0D0D0D&color=fff' }, 
-        action: 'UPDATE_STOCK', 
-        target: 'Shuttlecock Samurai', 
-        timestamp: '15 mins ago', 
-        ip: '192.168.1.25', 
-        severity: 'info', 
-        status: 'success' 
-    },
-    { 
-        id: 'LOG-8818', 
-        actor: { name: 'Budi Santoso', role: 'member', avatar: 'https://ui-avatars.com/api/?name=Budi&background=random' }, 
-        action: 'BOOKING_CREATE', 
-        target: 'Court 1 - 19:00', 
-        timestamp: '1 hour ago', 
-        ip: '114.125.x.x', 
-        severity: 'info', 
-        status: 'success' 
-    },
-];
-
 const initialSessions: ActiveSession[] = [
-    { id: 'S-01', user: 'Irsyad JPP (You)', device: 'Chrome on Mac', location: 'Bandung, ID', ip: '192.168.1.1', lastActive: 'Active now', isMobile: false },
-    { id: 'S-02', user: 'Kevin Sanjaya', device: 'Safari on iPhone', location: 'Jakarta, ID', ip: '112.x.x.x', lastActive: '5m ago', isMobile: true },
-    { id: 'S-03', user: 'Host Andi', device: 'App on Android', location: 'Surabaya, ID', ip: '36.x.x.x', lastActive: '20m ago', isMobile: true },
+    { id: 'sess-01', user: 'SuperAdmin', device: 'MacBook Pro M1', location: 'Jakarta, ID', ip: '103.20.11.45', lastActive: 'Just now', isMobile: false },
+    { id: 'sess-02', user: 'Budi Santoso (Coach)', device: 'iPhone 13 Pro', location: 'Bandung, ID', ip: '112.50.33.12', lastActive: '5m ago', isMobile: true },
+    { id: 'sess-03', user: 'Admin Finance', device: 'Windows 11 PC', location: 'Surabaya, ID', ip: '36.88.10.99', lastActive: '1h ago', isMobile: false },
 ];
 
+// --- Mock Data ---
 export default function SecurityLogsPage() {
     const { toast } = useToast();
-    const [logs, setLogs] = useState<AuditLog[]>(initialLogs);
+    const [logs, setLogs] = useState<AuditLog[]>([]);
     const [sessions, setSessions] = useState<ActiveSession[]>(initialSessions);
+
+    // --- Data Control States ---
+    const [isLoading, setIsLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [searchQuery, setSearchQuery] = useState('');
     const [filterSeverity, setFilterSeverity] = useState('all');
+    const [sortConfig, setSortConfig] = useState<{ key: keyof AuditLog | 'actor.name', direction: 'asc' | 'desc' }>({ key: 'timestamp', direction: 'desc' });
+
+    const itemsPerPage = 5;
+
+    // Fetch Logs
+    useEffect(() => {
+        const fetchLogs = async () => {
+            try {
+                // Fetch a larger pool for client-side manipulation (e.g., 100)
+                const res = await fetch('/api/admin/security/logs?limit=100');
+                const result = await res.json();
+
+                if (result.success) {
+                    const mappedLogs: AuditLog[] = result.data.map((item: any) => ({
+                        id: item.id,
+                        actor: {
+                            name: item.userName || 'System',
+                            role: item.role || 'system',
+                            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(item.userName || 'System')}&background=random`
+                        },
+                        action: item.action?.toUpperCase() || 'UNKNOWN',
+                        target: `${item.entity} ${item.entityId !== 'N/A' ? `(${item.entityId.substring(0, 8)}...)` : ''}`,
+                        timestamp: new Date(item.createdAt).toLocaleString('id-ID'), // Simple formatting
+                        rawTimestamp: item.createdAt, // Keep raw for sorting
+                        ip: item.ip || 'Unknown',
+                        severity: item.action === 'delete' ? 'critical' : item.action === 'update' ? 'warning' : 'info',
+                        status: 'success'
+                    }));
+                    setLogs(mappedLogs);
+                }
+            } catch (error) {
+                console.error("Failed to load security logs", error);
+                toast({ title: "Error", description: "Gagal memuat log keamanan.", variant: "destructive" });
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchLogs();
+        const interval = setInterval(fetchLogs, 30000); // Polling every 30s
+        return () => clearInterval(interval);
+    }, []);
 
     // --- Helpers ---
     const getSeverityColor = (sev: LogSeverity) => {
-        switch(sev) {
+        switch (sev) {
             case 'critical': return 'text-red-500 bg-red-500/10 border-red-500/20';
             case 'warning': return 'text-orange-500 bg-orange-500/10 border-orange-500/20';
             default: return 'text-blue-500 bg-blue-500/10 border-blue-500/20';
@@ -120,7 +124,7 @@ export default function SecurityLogsPage() {
     };
 
     const handleRevokeSession = (id: string, user: string) => {
-        if(confirm(`Tendang user ${user} dari sesi ini?`)) {
+        if (confirm(`Tendang user ${user} dari sesi ini?`)) {
             setSessions(prev => prev.filter(s => s.id !== id));
             toast({ title: "Session Killed", description: `Akses ${user} telah dicabut paksa.`, variant: "destructive" });
         }
@@ -129,6 +133,51 @@ export default function SecurityLogsPage() {
     const handleBanIP = (ip: string) => {
         toast({ title: "IP Blacklisted", description: `Alamat ${ip} telah dimasukkan ke firewall.`, className: "bg-red-600 text-white border-none" });
     }
+
+    // --- Process Data (Filter -> Sort -> Paginate) ---
+    const filteredLogs = logs.filter(log => {
+        const matchesSearch =
+            log.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            log.actor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            log.ip.includes(searchQuery) ||
+            log.target.toLowerCase().includes(searchQuery.toLowerCase());
+
+        const matchesSeverity = filterSeverity === 'all' || log.severity === filterSeverity;
+
+        return matchesSearch && matchesSeverity;
+    });
+
+    const sortedLogs = [...filteredLogs].sort((a, b) => {
+        const aValue = a[sortConfig.key as keyof AuditLog] || '';
+        const bValue = b[sortConfig.key as keyof AuditLog] || '';
+
+        // Special case for timestamp mostly
+        if (sortConfig.key === 'timestamp') {
+            // @ts-ignore - using raw property if available or parse date
+            const tA = new Date(a.rawTimestamp || a.timestamp).getTime();
+            // @ts-ignore
+            const tB = new Date(b.rawTimestamp || b.timestamp).getTime();
+            return sortConfig.direction === 'asc' ? tA - tB : tB - tA;
+        }
+
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    const totalPages = Math.ceil(sortedLogs.length / itemsPerPage);
+    const paginatedLogs = sortedLogs.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    const handleSort = (key: keyof AuditLog | 'actor.name') => {
+        let direction: 'asc' | 'desc' = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
 
     return (
         <main className="pb-20">
@@ -140,7 +189,7 @@ export default function SecurityLogsPage() {
                     </h1>
                     <p className="text-gray-400 mt-2 font-medium">Audit jejak digital user dan pantau keamanan sistem secara real-time.</p>
                 </div>
-                
+
                 <div className="flex gap-3">
                     <div className="flex items-center gap-2 bg-[#1A1A1A] border border-white/10 px-4 py-2 rounded-xl">
                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
@@ -150,88 +199,132 @@ export default function SecurityLogsPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
+
                 {/* LEFT COLUMN: AUDIT LOGS */}
                 <div className="lg:col-span-8 space-y-6">
-                    
-                    {/* Filter Bar */}
-                    <div className="bg-[#1A1A1A] p-2 rounded-[1.5rem] border border-white/5 flex flex-col md:flex-row gap-2">
+
+                    {/* Controls Bar */}
+                    <div className="bg-[#1A1A1A] p-3 rounded-[1.5rem] border border-white/5 flex flex-col md:flex-row gap-3">
                         <div className="relative flex-1">
-                            <Search className="absolute left-4 top-3 w-4 h-4 text-gray-500" />
-                            <Input 
-                                placeholder="Cari Log ID, Actor, atau IP..." 
-                                className="bg-transparent border-none pl-10 h-10 text-white font-bold placeholder:text-gray-600 focus-visible:ring-0"
+                            <Search className="absolute left-4 top-3.5 w-4 h-4 text-gray-500" />
+                            <Input
+                                placeholder="Cari Log ID, Actor, atau IP..."
+                                className="bg-[#121212] border-none pl-11 h-11 text-white font-bold placeholder:text-gray-600 focus-visible:ring-0 rounded-xl"
+                                value={searchQuery}
+                                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                             />
                         </div>
-                        <Select value={filterSeverity} onValueChange={setFilterSeverity}>
-                            <SelectTrigger className="w-[140px] bg-[#121212] border-white/10 text-white font-bold rounded-xl h-10">
+                        <Select value={filterSeverity} onValueChange={(val) => { setFilterSeverity(val); setCurrentPage(1); }}>
+                            <SelectTrigger className="w-full md:w-[150px] bg-[#121212] border-none text-white font-bold rounded-xl h-11">
                                 <SelectValue placeholder="Severity" />
                             </SelectTrigger>
                             <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
-                                <SelectItem value="all">Semua Level</SelectItem>
-                                <SelectItem value="critical" className="text-red-500">Critical</SelectItem>
-                                <SelectItem value="warning" className="text-orange-500">Warning</SelectItem>
+                                <SelectItem value="all">Logs: All</SelectItem>
+                                <SelectItem value="critical" className="text-red-500">Critical Only</SelectItem>
+                                <SelectItem value="warning" className="text-orange-500">Warnings</SelectItem>
+                                <SelectItem value="info" className="text-blue-500">Info</SelectItem>
                             </SelectContent>
                         </Select>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 text-gray-400 hover:text-white"><Filter className="w-4 h-4"/></Button>
+                        <Select value={sortConfig.key} onValueChange={(val) => handleSort(val as any)}>
+                            <SelectTrigger className="w-full md:w-[150px] bg-[#121212] border-none text-white font-bold rounded-xl h-11">
+                                <SelectValue placeholder="Sort By" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
+                                <SelectItem value="timestamp">By Time</SelectItem>
+                                <SelectItem value="severity">By Severity</SelectItem>
+                                <SelectItem value="action">By Action</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     {/* Logs List */}
-                    <div className="space-y-3">
-                        {logs.map((log) => (
-                            <div key={log.id} className="group bg-[#151515] hover:bg-[#1A1A1A] p-4 rounded-[1.5rem] border border-white/5 hover:border-[#ffbe00]/30 transition-all flex flex-col md:flex-row items-start md:items-center gap-4 relative overflow-hidden">
-                                
-                                {/* Severity Indicator Line */}
-                                <div className={`absolute left-0 top-0 bottom-0 w-1 ${log.severity === 'critical' ? 'bg-red-500' : log.severity === 'warning' ? 'bg-orange-500' : 'bg-blue-500'}`}></div>
-
-                                {/* Actor Info */}
-                                <div className="flex items-center gap-3 w-full md:w-[200px]">
-                                    <Avatar className="w-10 h-10 border border-white/10">
-                                        <AvatarImage src={log.actor.avatar} />
-                                        <AvatarFallback>U</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <p className="text-sm font-bold text-white leading-none">{log.actor.name}</p>
-                                        <p className="text-[10px] text-gray-500 uppercase mt-1">{log.actor.role}</p>
-                                    </div>
-                                </div>
-
-                                {/* Action Detail */}
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Badge variant="outline" className={`rounded-md text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border-0 ${getSeverityColor(log.severity)}`}>
-                                            {log.action}
-                                        </Badge>
-                                        <span className="text-[10px] text-gray-500 font-mono">{log.id}</span>
-                                    </div>
-                                    <p className="text-xs text-gray-300">
-                                        <span className={log.action.includes('DELETE') ? 'text-red-400 font-bold' : 'text-gray-400'}>{log.action.split('_')[0]}</span> {log.target}
-                                    </p>
-                                </div>
-
-                                {/* IP & Time */}
-                                <div className="text-right w-full md:w-auto flex flex-row md:flex-col justify-between items-center md:items-end">
-                                    <div className="flex items-center gap-2 group/ip cursor-pointer" onClick={() => handleBanIP(log.ip)}>
-                                        <Globe className="w-3 h-3 text-gray-600 group-hover/ip:text-red-500" />
-                                        <span className="text-[10px] font-mono text-gray-500 group-hover/ip:text-red-500 group-hover/ip:underline transition-colors">{log.ip}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <span className="text-[10px] font-bold text-gray-400">{log.timestamp}</span>
-                                        {log.status === 'success' ? <CheckCircle2 className="w-3 h-3 text-green-500"/> : <XCircle className="w-3 h-3 text-red-500"/>}
-                                    </div>
-                                </div>
+                    <div className="space-y-3 min-h-[500px]">
+                        {paginatedLogs.length === 0 ? (
+                            <div className="text-center py-20 text-gray-500 border border-dashed border-white/10 rounded-2xl">
+                                Tidak ada log yang cocok dengan filter.
                             </div>
-                        ))}
+                        ) : (
+                            paginatedLogs.map((log) => (
+                                <div key={log.id} className="group bg-[#151515] hover:bg-[#1A1A1A] p-4 rounded-[1.5rem] border border-white/5 hover:border-[#ffbe00]/30 transition-all flex flex-col md:flex-row items-start md:items-center gap-4 relative overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-500">
+
+                                    {/* Severity Indicator Line */}
+                                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${log.severity === 'critical' ? 'bg-red-500' :
+                                        log.severity === 'warning' ? 'bg-orange-500' : 'bg-blue-500'
+                                        }`}></div>
+
+                                    {/* Actor Info */}
+                                    <div className="flex items-center gap-3 w-full md:w-[200px]">
+                                        <Avatar className="w-10 h-10 border border-white/10">
+                                            <AvatarImage src={log.actor.avatar} />
+                                            <AvatarFallback>U</AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="text-sm font-bold text-white leading-none">{log.actor.name}</p>
+                                            <p className="text-[10px] text-gray-500 uppercase mt-1">{log.actor.role}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Detail */}
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Badge variant="outline" className={`rounded-md text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border-0 ${getSeverityColor(log.severity)}`}>
+                                                {log.action}
+                                            </Badge>
+                                            <span className="text-[10px] text-gray-500 font-mono">{log.id}</span>
+                                        </div>
+                                        <p className="text-xs text-gray-300">
+                                            <span className={log.action.includes('DELETE') ? 'text-red-400 font-bold' : 'text-gray-400'}>{log.action.split('_')[0]}</span> {log.target}
+                                        </p>
+                                    </div>
+
+                                    {/* IP & Time */}
+                                    <div className="text-right w-full md:w-auto flex flex-row md:flex-col justify-between items-center md:items-end">
+                                        <div className="flex items-center gap-2 group/ip cursor-pointer" onClick={() => handleBanIP(log.ip)}>
+                                            <Globe className="w-3 h-3 text-gray-600 group-hover/ip:text-red-500" />
+                                            <span className="text-[10px] font-mono text-gray-500 group-hover/ip:text-red-500 group-hover/ip:underline transition-colors">{log.ip}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className="text-[10px] font-bold text-gray-400">{log.timestamp}</span>
+                                            {log.status === 'success' ? <CheckCircle2 className="w-3 h-3 text-green-500" /> : <XCircle className="w-3 h-3 text-red-500" />}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
 
-                    <Button variant="outline" className="w-full h-12 rounded-xl border-white/10 bg-transparent text-gray-400 hover:text-white hover:bg-white/5 font-bold text-xs">
-                        <History className="w-4 h-4 mr-2"/> Load Older Logs
-                    </Button>
+                    {/* Pagination Controls */}
+                    {sortedLogs.length > 0 && (
+                        <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                            <Button
+                                variant="outline"
+                                className="h-10 rounded-xl border-white/10 bg-transparent text-gray-400 hover:text-white hover:bg-white/5"
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                            >
+                                Previous
+                            </Button>
+
+                            <span className="text-xs font-bold text-gray-500">
+                                Page <span className="text-white">{currentPage}</span> of <span className="text-white">{totalPages}</span>
+                                <span className="ml-2 opacity-50">({sortedLogs.length} items)</span>
+                            </span>
+
+                            <Button
+                                variant="outline"
+                                className="h-10 rounded-xl border-white/10 bg-transparent text-gray-400 hover:text-white hover:bg-white/5"
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
                 {/* RIGHT COLUMN: ACTIVE SESSIONS */}
                 <div className="lg:col-span-4 space-y-6">
-                    
+
                     {/* Security Alert Card */}
                     <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-[2rem] relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-6 opacity-20 animate-pulse">
@@ -261,11 +354,11 @@ export default function SecurityLogsPage() {
                                         <div>
                                             <p className="text-xs font-bold text-white mb-0.5">{session.user}</p>
                                             <div className="flex items-center gap-1 text-[10px] text-gray-500">
-                                                {session.isMobile ? <Smartphone className="w-3 h-3"/> : <Globe className="w-3 h-3"/>}
+                                                {session.isMobile ? <Smartphone className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
                                                 {session.device}
                                             </div>
                                         </div>
-                                        <button 
+                                        <button
                                             onClick={() => handleRevokeSession(session.id, session.user)}
                                             className="opacity-0 group-hover:opacity-100 p-1.5 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all"
                                             title="Revoke Access"
@@ -288,4 +381,3 @@ export default function SecurityLogsPage() {
     );
 }
 
-    

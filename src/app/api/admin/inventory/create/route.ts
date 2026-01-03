@@ -1,6 +1,8 @@
 
 import { NextResponse } from 'next/server';
 import { addNewInventoryItem } from '@/lib/inventory-service';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
@@ -18,6 +20,21 @@ export async function POST(req: Request) {
       parseInt(initialStock) || 0,
       parseInt(initialAvgCost) || 0
     );
+
+    // [New] Audit Log
+    const session = await getServerSession(authOptions);
+    if (session) {
+      const { logActivity } = await import('@/lib/audit-logger');
+      await logActivity({
+        userId: session.user.id,
+        userName: session.user.name,
+        role: session.user.role,
+        action: 'create',
+        entity: 'Inventory',
+        entityId: newItem.id,
+        details: `Created new Item: ${name} (${initialStock} ${unit})`
+      });
+    }
 
     return NextResponse.json({ success: true, data: newItem });
   } catch (error: any) {

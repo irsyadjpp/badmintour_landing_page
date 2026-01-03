@@ -29,37 +29,66 @@ interface SystemLog {
 }
 
 // --- Mock Data ---
-const performanceData = [
-    { time: '10:00', cpu: 20, ram: 45 },
-    { time: '10:05', cpu: 25, ram: 48 },
-    { time: '10:10', cpu: 45, ram: 52 },
-    { time: '10:15', cpu: 30, ram: 50 },
-    { time: '10:20', cpu: 55, ram: 60 },
-    { time: '10:25', cpu: 80, ram: 65 }, // Spike
-    { time: '10:30', cpu: 40, ram: 55 },
-    { time: '10:35', cpu: 35, ram: 52 },
-    { time: '10:40', cpu: 25, ram: 48 },
-];
-
-const initialLogs: SystemLog[] = [
-    { id: 'ERR-01', timestamp: '10:25:12', level: 'ERROR', message: 'Connection timeout: Payment Gateway (Midtrans)', service: 'Payment' },
-    { id: 'WRN-02', timestamp: '10:22:05', level: 'WARN', message: 'High memory usage detected (85%)', service: 'System' },
-    { id: 'INF-03', timestamp: '10:20:00', level: 'INFO', message: 'Scheduled backup completed successfully', service: 'Backup' },
-    { id: 'ERR-04', timestamp: '10:15:30', level: 'ERROR', message: 'SMTP Auth failed for user: admin@badmintour.com', service: 'Auth' },
-    { id: 'INF-05', timestamp: '10:00:00', level: 'INFO', message: 'System boot sequence initiated', service: 'Kernel' },
-];
-
 export default function SystemHealthPage() {
-    const [logs, setLogs] = useState<SystemLog[]>(initialLogs);
+    const [logs, setLogs] = useState<SystemLog[]>([]);
+    const [performanceData, setPerformanceData] = useState<any[]>([]);
     const [isLive, setIsLive] = useState(true);
-    const [cpuLoad, setCpuLoad] = useState(32);
+    const [vitalStats, setVitalStats] = useState({
+        cpuLoad: 0,
+        memoryUsed: 0,
+        memoryTotal: 0,
+        uptime: 0
+    });
 
-    // Simulasi Live Data Update
     useEffect(() => {
         if (!isLive) return;
-        const interval = setInterval(() => {
-            setCpuLoad(Math.floor(Math.random() * (60 - 20 + 1) + 20));
-        }, 2000);
+
+        const fetchData = async () => {
+            try {
+                const res = await fetch('/api/system/health');
+                const result = await res.json();
+
+                if (result.success) {
+                    const { uptime, memory, cpuLoad, logs } = result.data;
+
+                    // Update Pulse Stats
+                    setVitalStats({
+                        cpuLoad: Math.round(cpuLoad * 100) / 100 || 0, // Load Avg can be small float
+                        memoryUsed: memory.heapUsed,
+                        memoryTotal: memory.heapTotal,
+                        uptime: uptime
+                    });
+
+                    // Update Logs
+                    const mappedLogs = logs.map((l: any) => ({
+                        id: l.id,
+                        timestamp: new Date(l.timestamp).toLocaleTimeString(),
+                        level: l.level,
+                        message: l.message,
+                        service: l.service
+                    }));
+                    setLogs(mappedLogs);
+
+                    // Update Chart Data (Keep last 10 points)
+                    setPerformanceData(prev => {
+                        const now = new Date().toLocaleTimeString('en-US', { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+                        const newPoint = {
+                            time: now,
+                            cpu: Math.min(100, Math.round((cpuLoad || 0) * 10)), // Simulated scale for charts
+                            ram: Math.round((memory.heapUsed / memory.heapTotal) * 100)
+                        };
+                        const newData = [...prev, newPoint];
+                        if (newData.length > 20) newData.shift(); // Keep logs clean
+                        return newData;
+                    });
+                }
+            } catch (error) {
+                console.error("Health Check Failed", error);
+            }
+        };
+
+        fetchData(); // Initial call
+        const interval = setInterval(fetchData, 3000); // Poll every 3s
         return () => clearInterval(interval);
     }, [isLive]);
 
@@ -99,10 +128,10 @@ export default function SystemHealthPage() {
                         <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Uptime</span>
                     </div>
                     <div className="flex items-end gap-2">
-                        <h3 className="text-4xl font-jersey text-white">99.9<span className="text-xl text-gray-600">%</span></h3>
+                        <h3 className="text-4xl font-jersey text-white">{Math.floor(vitalStats.uptime / 60)}<span className="text-xl text-gray-600">min</span></h3>
                     </div>
                     <p className="text-[10px] text-gray-500 mt-2 font-bold flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-green-500" /> Stable (30d)
+                        <CheckCircle2 className="w-3 h-3 text-green-500" /> Stable (Node Process)
                     </p>
                 </div>
 
@@ -113,15 +142,15 @@ export default function SystemHealthPage() {
 
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-[#ca1f3d]/10 text-[#ca1f3d] rounded-lg"><Cpu className="w-5 h-5" /></div>
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">CPU Core</span>
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">CPU Load</span>
                     </div>
                     <div className="flex items-end gap-2">
-                        <h3 className="text-4xl font-jersey text-white">{cpuLoad}<span className="text-xl text-gray-600">%</span></h3>
+                        <h3 className="text-4xl font-jersey text-white">{vitalStats.cpuLoad}<span className="text-xl text-gray-600">avg</span></h3>
                     </div>
                     <div className="w-full bg-[#222] rounded-full h-1.5 mt-3 overflow-hidden">
                         <div
-                            className={`h-full rounded-full transition-all duration-500 ${cpuLoad > 80 ? 'bg-red-500' : 'bg-[#ca1f3d]'}`}
-                            style={{ width: `${cpuLoad}%` }}
+                            className={`h-full rounded-full transition-all duration-500 ${vitalStats.cpuLoad > 2 ? 'bg-red-500' : 'bg-[#ca1f3d]'}`}
+                            style={{ width: `${Math.min(100, vitalStats.cpuLoad * 20)}%` }} // Visualize load
                         ></div>
                     </div>
                 </div>
@@ -130,13 +159,13 @@ export default function SystemHealthPage() {
                 <div className="bg-[#151515] p-6 rounded-[2rem] border border-white/5 relative overflow-hidden group">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-[#ffbe00]/10 text-[#ffbe00] rounded-lg"><HardDrive className="w-5 h-5" /></div>
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Memory</span>
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Node Heap</span>
                     </div>
                     <div className="flex items-end gap-2">
-                        <h3 className="text-4xl font-jersey text-white">4.2<span className="text-xl text-gray-600">GB</span></h3>
+                        <h3 className="text-4xl font-jersey text-white">{vitalStats.memoryUsed}<span className="text-xl text-gray-600">MB</span></h3>
                     </div>
                     <p className="text-[10px] text-gray-500 mt-2 font-bold">
-                        of 8.0 GB Total (Cached: 1.2 GB)
+                        of {vitalStats.memoryTotal} MB Allocated
                     </p>
                 </div>
 
@@ -228,13 +257,13 @@ export default function SystemHealthPage() {
                                 {logs.map((log) => (
                                     <div key={log.id} className="text-[10px] leading-relaxed border-l-2 pl-3 py-1 relative group">
                                         <div className={`absolute left-[-2px] top-0 bottom-0 w-[2px] ${log.level === 'ERROR' ? 'bg-red-500' :
-                                                log.level === 'WARN' ? 'bg-yellow-500' : 'bg-gray-500'
+                                            log.level === 'WARN' ? 'bg-yellow-500' : 'bg-gray-500'
                                             }`}></div>
 
                                         <div className="flex justify-between items-start opacity-70 mb-0.5">
                                             <span className="text-gray-500">[{log.timestamp}]</span>
                                             <span className={`font-bold ${log.level === 'ERROR' ? 'text-red-500' :
-                                                    log.level === 'WARN' ? 'text-yellow-500' : 'text-gray-400'
+                                                log.level === 'WARN' ? 'text-yellow-500' : 'text-gray-400'
                                                 }`}>{log.level}</span>
                                         </div>
                                         <p className="text-gray-300 group-hover:text-white transition-colors">

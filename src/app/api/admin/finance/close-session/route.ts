@@ -1,6 +1,8 @@
 
 import { NextResponse } from 'next/server';
 import { closeSessionFinance } from '@/lib/inventory-service';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
@@ -18,6 +20,21 @@ export async function POST(req: Request) {
       coachFee || 0,
       shuttlecockItemId
     );
+
+    // [New] Audit Log
+    const session = await getServerSession(authOptions);
+    if (session) {
+      const { logActivity } = await import('@/lib/audit-logger');
+      await logActivity({
+        userId: session.user.id,
+        userName: session.user.name,
+        role: session.user.role,
+        action: 'create',
+        entity: 'SessionFinance',
+        entityId: eventId,
+        details: `Closed Session Finance. Shuttle Used: ${shuttlecockUsedQty}`
+      });
+    }
 
     return NextResponse.json({ success: true, data: result });
   } catch (error: any) {
