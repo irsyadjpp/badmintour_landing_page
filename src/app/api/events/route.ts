@@ -10,9 +10,19 @@ import { generatePriceTiers } from "@/lib/pricing";
 // GET: Ambil Semua Event (Untuk Landing Page & Dashboard) dengan Data Real-time Participants
 export async function GET(req: Request) {
     try {
-        const snapshot = await db.collection("events")
-            .orderBy("date", "asc")
-            .get();
+        const { searchParams } = new URL(req.url);
+        const upcoming = searchParams.get('upcoming') === 'true';
+
+        let query = db.collection("events").orderBy("date", "asc");
+
+        if (upcoming) {
+            // Get today's date in YYYY-MM-DD format (Indonesia Timezone assumption or UTC)
+            // Using ID string to ensure consistency with how dates are stored (YYYY-MM-DD)
+            const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }); // Returns YYYY-MM-DD
+            query = query.startAt(today);
+        }
+
+        const snapshot = await query.get();
 
         const events = await Promise.all(snapshot.docs.map(async (doc) => {
             const eventData = doc.data();

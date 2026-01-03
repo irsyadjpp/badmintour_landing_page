@@ -19,7 +19,7 @@ export default function EventsSection() {
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const res = await fetch('/api/events'); // Fetch dari API Database
+                const res = await fetch('/api/events?upcoming=true'); // Fetch Upcoming Events Only
                 const data = await res.json();
                 if (data.success) {
                     setEvents(data.data);

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, BrainCircuit, Sparkles } from "lucide-react";
 
 // Data Rubrik sesuai Dokumen TPF BCC 2026
 const INDICATORS = [
@@ -176,9 +176,20 @@ export function LiveAssessmentForm({ playerId, sessionId, playerName, onSubmitSu
         </CardContent>
       </Card>
 
-      <Button type="submit" className="w-full h-14 text-lg font-black rounded-xl shadow-lg bg-[#ca1f3d] hover:bg-[#a61932] text-white" disabled={isSubmitting}>
-        {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : "Simpan Penilaian"}
-      </Button>
+      <div className="space-y-3">
+        <Button type="submit" className="w-full h-14 text-lg font-black rounded-xl shadow-lg bg-gradient-to-r from-[#ca1f3d] to-[#ffbe00] hover:brightness-110 text-white border border-white/10" disabled={isSubmitting}>
+          {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : (
+            <div className="flex items-center gap-2">
+              <span>SIMPAN & ANALISIS</span>
+              <BrainCircuit className="w-5 h-5" />
+            </div>
+          )}
+        </Button>
+        <p className="text-xs text-center text-gray-400 flex items-center justify-center gap-1">
+          <Sparkles className="w-3 h-3 text-[#ffbe00]" />
+          <span>Genkit AI akan otomatis membuat laporan evaluasi.</span>
+        </p>
+      </div>
     </form>
   );
 }

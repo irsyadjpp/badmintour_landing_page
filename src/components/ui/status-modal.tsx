@@ -1,6 +1,6 @@
 'use client';
 
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,10 +17,10 @@ interface StatusModalProps {
 
 export function StatusModal({ isOpen, onClose, type, title, description, actionLabel = "TUTUP", onAction }: StatusModalProps) {
   const isError = type === 'error';
-  const colorClass = isError ? "text-[#FF0000]" : "text-[#00F2EA]";
-  const bgClass = isError ? "bg-[#FF0000]" : "bg-[#00F2EA]";
-  const borderClass = isError ? "border-[#FF0000]" : "border-[#00F2EA]";
-  const shadowClass = isError ? "shadow-[0_0_50px_-12px_rgba(255,0,0,0.5)]" : "shadow-[0_0_50px_-12px_rgba(0,242,234,0.5)]";
+  const colorClass = isError ? "text-[#FF0000]" : "text-[#00ff41]"; // Cyber Green
+  const bgClass = isError ? "bg-[#FF0000]" : "bg-[#00ff41]";
+  const borderClass = isError ? "border-[#FF0000]" : "border-[#00ff41]";
+  const shadowClass = isError ? "shadow-[0_0_50px_-12px_rgba(255,0,0,0.5)]" : "shadow-[0_0_50px_-12px_rgba(0,255,65,0.5)]";
 
   const handleAction = () => {
     if (onAction) onAction();
@@ -43,7 +43,7 @@ export function StatusModal({ isOpen, onClose, type, title, description, actionL
           <div className={cn(
             "w-24 h-24 rounded-full flex items-center justify-center border-2 mb-6 relative z-10",
             borderClass,
-            isError ? "bg-[#FF0000]/10" : "bg-[#00F2EA]/10"
+            isError ? "bg-[#FF0000]/10" : "bg-[#00ff41]/10"
           )}>
             {isError ? (
               <AlertTriangle className={cn("w-12 h-12", colorClass)} />
@@ -53,9 +53,9 @@ export function StatusModal({ isOpen, onClose, type, title, description, actionL
           </div>
 
           {/* TITLE */}
-          <h2 className="text-3xl font-black italic tracking-tighter text-white uppercase mb-2 relative z-10">
+          <DialogTitle className="text-3xl font-black italic tracking-tighter text-white uppercase mb-2 relative z-10 text-center">
             {title}
-          </h2>
+          </DialogTitle>
 
           {/* DIVIDER */}
           <div className={cn("w-12 h-1.5 rounded-full mb-6 relative z-10", bgClass)}></div>
@@ -71,7 +71,7 @@ export function StatusModal({ isOpen, onClose, type, title, description, actionL
             className={cn(
               "w-full h-14 rounded-2xl font-black text-lg tracking-wide hover:scale-[1.02] transition-transform relative z-10 text-black",
               bgClass,
-              isError ? "hover:bg-[#ff3333]" : "hover:bg-[#33f4ed]"
+              isError ? "hover:bg-[#ff3333]" : "hover:bg-[#33ff66]"
             )}
           >
             {actionLabel}

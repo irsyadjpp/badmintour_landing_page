@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle2, ChevronLeft, Save, Target, TrendingUp, AlertTriangle } from "lucide-react";
+import { StatusModal } from "@/components/ui/status-modal";
+import { Loader2, CheckCircle2, ChevronLeft, Save, Target, TrendingUp, AlertTriangle, BrainCircuit } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
@@ -80,6 +81,52 @@ export default function LiveAssessmentPage() {
     }
   });
 
+  // Fetch Existing Assessment (Edit Mode)
+  const { data: existingAssessment } = useQuery({
+    queryKey: ['existing-assessment', sessionId, studentId],
+    queryFn: async () => {
+      const res = await fetch(`/api/coach/assessment?sessionId=${sessionId}&playerId=${studentId}`);
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json.data;
+    },
+    enabled: !!sessionId && !!studentId
+  });
+
+  // Populate form if existing data found
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  // Effect to populate form
+  useEffect(() => {
+    if (existingAssessment) {
+      setIsEditMode(true);
+      // Populate Scores
+      if (existingAssessment.scores) {
+        Object.keys(existingAssessment.scores).forEach(key => {
+          setValue(key, existingAssessment.scores[key]);
+        });
+      }
+      // Populate Notes
+      setValue("notes", existingAssessment.notes);
+      setValue("strengths", existingAssessment.strengths);
+      setValue("weaknesses", existingAssessment.weaknesses);
+    }
+  }, [existingAssessment, setValue]);
+
+  // Status Modal State
+  const [statusModal, setStatusModal] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'error';
+    title: string;
+    description: string;
+    onAction?: () => void;
+  }>({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    description: ''
+  });
+
   // Calculate result
   const calculateResult = () => {
     let total = 0;
@@ -103,7 +150,12 @@ export default function LiveAssessmentPage() {
     try {
       const missing = INDICATORS.find(ind => !scores[ind.id]);
       if (missing) {
-        toast({ title: "Incomplete", description: `Nilai untuk ${missing.label} belum diisi.`, variant: "destructive" });
+        setStatusModal({
+          isOpen: true,
+          type: 'error',
+          title: 'DOUBLE FAULT!',
+          description: `Nilai untuk ${missing.label} belum diisi. Mohon lengkapi semua skor.`
+        });
         return;
       }
 
@@ -111,6 +163,7 @@ export default function LiveAssessmentPage() {
         method: "POST",
         body: JSON.stringify({
           playerId: studentId,
+          playerName: student?.userName || student?.name || "Student",
           sessionId,
           scores: data,
           totalScore: result.total,
@@ -123,10 +176,21 @@ export default function LiveAssessmentPage() {
 
       if (!response.ok) throw new Error("Gagal menyimpan");
 
-      toast({ title: "Assessment Saved!", description: `Raport untuk ${student?.userName || 'Student'} telah terkirim.`, className: "bg-green-600 text-white" });
-      router.push(`/coach/session/${sessionId}/assess`); // Back to list
+      setStatusModal({
+        isOpen: true,
+        type: 'success',
+        title: 'ACE! SERVICE MASUK!',
+        description: `Raport untuk ${student?.userName || 'Student'} berhasil disimpan & Dianalisis AI.`,
+        onAction: () => router.push(`/coach/session/${sessionId}/assess`)
+      });
+
     } catch (error) {
-      toast({ title: "Error", description: "Gagal menyimpan data", variant: "destructive" });
+      setStatusModal({
+        isOpen: true,
+        type: 'error',
+        title: 'DOUBLE FAULT!',
+        description: 'Gagal menyimpan data ke server. Silakan coba lagi.'
+      });
     }
   };
 
@@ -146,8 +210,13 @@ export default function LiveAssessmentPage() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-3xl md:text-5xl font-black text-white uppercase italic tracking-tighter shadow-black drop-shadow-lg">
+              <h1 className="text-3xl md:text-5xl font-black text-white uppercase italic tracking-tighter shadow-black drop-shadow-lg flex items-center gap-4">
                 {student?.userName || 'Loading...'}
+                {isEditMode && (
+                  <span className="text-xs md:text-sm font-bold bg-[#ffbe00] text-black px-2 py-1 rounded-md tracking-normal not-italic shadow-[0_0_15px_rgba(255,190,0,0.5)] animate-pulse">
+                    EDIT MODE
+                  </span>
+                )}
               </h1>
               <div className="flex items-center gap-2 mt-1">
                 {student?.nickname && (
@@ -233,7 +302,7 @@ export default function LiveAssessmentPage() {
                 </Label>
                 <Textarea
                   {...register("strengths")}
-                  className="bg-[#0a0a0a] border-white/10 rounded-xl min-h-[80px] focus:border-[#ffbe00]"
+                  className="bg-[#0a0a0a] border-white/10 rounded-xl min-h-[80px] focus:border-[#ffbe00] text-white"
                   placeholder="Contoh: Power smash kencang, footwork lincah..."
                 />
               </div>
@@ -244,7 +313,7 @@ export default function LiveAssessmentPage() {
                 </Label>
                 <Textarea
                   {...register("weaknesses")}
-                  className="bg-[#0a0a0a] border-white/10 rounded-xl min-h-[80px] focus:border-[#ca1f3d]"
+                  className="bg-[#0a0a0a] border-white/10 rounded-xl min-h-[80px] focus:border-[#ca1f3d] text-white"
                   placeholder="Contoh: Backhand lemah, mudah emosi..."
                 />
               </div>
@@ -255,7 +324,7 @@ export default function LiveAssessmentPage() {
                 </Label>
                 <Textarea
                   {...register("notes")}
-                  className="bg-[#0a0a0a] border-white/10 rounded-xl min-h-[80px]"
+                  className="bg-[#0a0a0a] border-white/10 rounded-xl min-h-[80px] text-white"
                   placeholder="Catatan umum atau pesan semangat..."
                 />
               </div>
@@ -265,12 +334,26 @@ export default function LiveAssessmentPage() {
                 className="w-full h-14 bg-[#ca1f3d] hover:bg-[#a61932] text-white font-black rounded-xl text-lg shadow-[0_0_20px_rgba(202,31,61,0.4)] hover:shadow-[0_0_30px_rgba(202,31,61,0.6)] hover:scale-[1.02] transition-all"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? <Loader2 className="animate-spin" /> : <><Save className="w-5 h-5 mr-2" /> SUBMIT REPORT</>}
+                {isSubmitting ? <Loader2 className="animate-spin" /> : (
+                  <div className="flex items-center gap-2">
+                    <span>SIMPAN & ANALISIS</span>
+                    <BrainCircuit className="w-5 h-5" />
+                  </div>
+                )}
               </Button>
             </div>
           </Card>
         </div>
       </form>
+      <StatusModal
+        isOpen={statusModal.isOpen}
+        onClose={() => setStatusModal(prev => ({ ...prev, isOpen: false }))}
+        type={statusModal.type}
+        title={statusModal.title}
+        description={statusModal.description}
+        actionLabel={statusModal.type === 'success' ? "KEMBALI KE LIST" : "COBA LAGI"}
+        onAction={statusModal.onAction}
+      />
     </div>
   );
 }

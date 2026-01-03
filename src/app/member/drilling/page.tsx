@@ -5,7 +5,6 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
 import { Loader2, MapPin, Calendar, Clock, Dumbbell, User, Info, Search, Filter, ChevronRight, ArrowLeft, LogOut, CheckCircle, ShieldCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,12 +13,12 @@ import { Material3Input } from '@/components/ui/material-3-input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import { StatusModal } from '@/components/ui/status-modal';
 
 function DrillingEventContent() {
   const searchParams = useSearchParams();
   const eventId = searchParams.get('id');
   const { data: session } = useSession();
-  const { toast } = useToast();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -29,6 +28,18 @@ function DrillingEventContent() {
   const [cancelLoading, setCancelLoading] = useState(false);
   const [filterLevel, setFilterLevel] = useState('all');
   const [guestForm, setGuestForm] = useState({ name: '', phone: '' });
+
+  const [statusModal, setStatusModal] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'error';
+    title: string;
+    description: string;
+  }>({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    description: ''
+  });
 
   // React Query: Fetch Events
   const { data: events = [], isLoading: eventsLoading } = useQuery({
@@ -85,7 +96,13 @@ function DrillingEventContent() {
     if (!selectedEvent) return;
 
     if (!session && (!guestForm.name || !guestForm.phone)) {
-      toast({ title: "Data Kurang", description: "Tamu wajib isi Nama & WhatsApp.", variant: "destructive" });
+      // toast({ title: "Data Kurang", description: "Tamu wajib isi Nama & WhatsApp.", variant: "destructive" });
+      setStatusModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Data Kurang',
+        description: 'Tamu wajib isi Nama & WhatsApp.'
+      });
       return;
     }
 
@@ -105,21 +122,39 @@ function DrillingEventContent() {
 
       if (result.success) {
         if (!result.isGuest) {
-          toast({ title: "Berhasil Join!", description: "Anda telah terdaftar." });
+          // toast({ title: "Berhasil Join!", description: "Anda telah terdaftar." });
+          setStatusModal({
+            isOpen: true,
+            type: 'success',
+            title: 'Berhasil Join Sesi!',
+            description: 'Anda telah terdaftar sebagai peserta.'
+          });
           await Promise.all([
             queryClient.invalidateQueries({ queryKey: ['events', 'drilling'] }),
             queryClient.invalidateQueries({ queryKey: ['bookings'] })
           ]);
           router.push('/member/dashboard');
         } else {
-          toast({ title: "Booking Berhasil!", description: "Simpan bukti booking Anda.", className: "bg-green-600 text-white" });
+          // toast({ title: "Booking Berhasil!", description: "Simpan bukti booking Anda.", className: "bg-green-600 text-white" });
+          setStatusModal({
+            isOpen: true,
+            type: 'success',
+            title: 'Booking Berhasil!',
+            description: 'Silakan cek WhatsApp untuk detail pembayaran.'
+          });
           router.push('/');
         }
       } else {
         throw new Error(result.error || "Gagal booking");
       }
     } catch (error: any) {
-      toast({ title: "Gagal Join", description: error.message, variant: "destructive" });
+      // toast({ title: "Gagal Join", description: error.message, variant: "destructive" });
+      setStatusModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Gagal Join Sesi',
+        description: error.message || 'Terjadi kesalahan sistem.'
+      });
     } finally {
       setBookingLoading(false);
     }
@@ -141,9 +176,13 @@ function DrillingEventContent() {
       });
 
       if (res.ok) {
-        toast({ title: "Berhasil Keluar", description: "Slot Anda telah dikembalikan." });
-
-        toast({ title: "Berhasil Keluar", description: "Slot Anda telah dikembalikan." });
+        // toast({ title: "Berhasil Keluar", description: "Slot Anda telah dikembalikan." });
+        setStatusModal({
+          isOpen: true,
+          type: 'success',
+          title: 'Berhasil Membatalkan',
+          description: 'Slot Anda telah dikembalikan. Refund akan diproses manual admin.'
+        });
 
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ['events', 'drilling'] }),
@@ -153,7 +192,13 @@ function DrillingEventContent() {
         throw new Error("Gagal membatalkan");
       }
     } catch (error: any) {
-      toast({ title: "Gagal", description: error.message, variant: "destructive" });
+      // toast({ title: "Gagal", description: error.message, variant: "destructive" });
+      setStatusModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Gagal Membatalkan',
+        description: error.message || 'Terjadi kesalahan sistem.'
+      });
     } finally {
       setCancelLoading(false);
     }
@@ -490,6 +535,13 @@ function DrillingEventContent() {
           </Card>
         </div>
       </div >
+      <StatusModal
+        isOpen={statusModal.isOpen}
+        onClose={() => setStatusModal(prev => ({ ...prev, isOpen: false }))}
+        type={statusModal.type}
+        title={statusModal.title}
+        description={statusModal.description}
+      />
     </div >
   );
 }

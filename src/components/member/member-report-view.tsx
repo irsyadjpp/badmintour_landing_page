@@ -38,6 +38,7 @@ export interface AssessmentReport {
     [key: string]: number;
   };
   notes: string;
+  aiFeedback?: string;
 }
 
 export default function MemberReportView({ report }: { report: AssessmentReport }) {
@@ -148,17 +149,36 @@ export default function MemberReportView({ report }: { report: AssessmentReport 
         ))}
       </div>
 
-      {/* 3. COACH FEEDBACK */}
-      <Card className="bg-gradient-to-br from-[#151515] to-[#1A1A1A] border-white/5 p-8 rounded-[2rem] relative overflow-hidden">
-        <Quote className="absolute top-6 left-6 w-12 h-12 text-white/5 -scale-x-100" />
+      {/* 3. COACH FEEDBACK & AI ANALYSIS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="bg-gradient-to-br from-[#151515] to-[#1A1A1A] border-white/5 p-8 rounded-[2rem] relative overflow-hidden">
+          <Quote className="absolute top-6 left-6 w-12 h-12 text-white/5 -scale-x-100" />
+          <div className="relative z-10 pl-8 border-l-2 border-[#ca1f3d]">
+            <h3 className="text-lg font-bold text-[#ffbe00] mb-2 uppercase tracking-widest text-xs">Coach Note</h3>
+            <p className="text-lg text-white font-medium italic leading-relaxed">
+              "{report.notes || 'Good effort! Keep practicing.'}"
+            </p>
+          </div>
+        </Card>
 
-        <div className="relative z-10 pl-12 border-l-2 border-[#ca1f3d]">
-          <h3 className="text-lg font-bold text-[#ffbe00] mb-2 uppercase tracking-widest text-xs">Coach Feedback</h3>
-          <p className="text-xl md:text-2xl text-white font-medium italic leading-relaxed">
-            "{report.notes || 'Good effort! Keep practicing.'}"
-          </p>
-        </div>
-      </Card>
+        {/* AI FEEDBACK CARD */}
+        <Card className="bg-[#151515] border-white/5 p-8 rounded-[2rem] relative overflow-hidden group hover:border-blue-500/30 transition-colors">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl pointer-events-none group-hover:bg-blue-500/20 transition-all"></div>
+
+          <div className="relative z-10">
+            <h3 className="text-lg font-bold text-blue-400 mb-4 uppercase tracking-widest text-xs flex items-center gap-2">
+              <BrainCircuit className="w-4 h-4" /> AI Performance Analysis
+            </h3>
+            <div className="prose prose-sm prose-invert max-w-none text-gray-300 leading-relaxed whitespace-pre-wrap">
+              {report.aiFeedback ? (
+                report.aiFeedback
+              ) : (
+                <p className="italic text-gray-500">Analisis AI belum tersedia untuk sesi ini.</p>
+              )}
+            </div>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

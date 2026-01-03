@@ -41,6 +41,8 @@ export interface AssessmentReport {
     [key: string]: number;
   };
   notes: string;
+  aiFeedback?: string;
+  skillAnalysis?: Record<string, string>;
 }
 
 export default function AdminReportView({ report }: { report: AssessmentReport }) {
@@ -138,38 +140,69 @@ export default function AdminReportView({ report }: { report: AssessmentReport }
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "BIOMECHANICS", val: report.scores.biomechanics, icon: <User className="w-4 h-4" />, desc: "Grip & Wrist" },
-          { label: "FOOTWORK", val: report.scores.footwork, icon: <Activity className="w-4 h-4" />, desc: "Speed & Agility" },
-          { label: "ACCURACY", val: report.scores.strokeQuality, icon: <Target className="w-4 h-4" />, desc: "Stroke Quality" },
-          { label: "GAME IQ", val: report.scores.gameIQ, icon: <BrainCircuit className="w-4 h-4" />, desc: "Tactics" },
+          { id: 'biomechanics', label: "BIOMECHANICS", val: report.scores.biomechanics, icon: <User className="w-4 h-4" />, desc: "Grip & Wrist" },
+          { id: 'footwork', label: "FOOTWORK", val: report.scores.footwork, icon: <Activity className="w-4 h-4" />, desc: "Speed & Agility" },
+          { id: 'strokeQuality', label: "STROKES", val: report.scores.strokeQuality, icon: <Target className="w-4 h-4" />, desc: "Backhand & Overhead" },
+          { id: 'offense', label: "ATTACK", val: report.scores.offense, icon: <Zap className="w-4 h-4" />, desc: "Smash Power" },
+          { id: 'defense', label: "DEFENSE", val: report.scores.defense, icon: <Shield className="w-4 h-4" />, desc: "Reflexes" },
+          { id: 'gameIQ', label: "TACTICS", val: report.scores.gameIQ, icon: <BrainCircuit className="w-4 h-4" />, desc: "Game Reading" },
+          { id: 'physique', label: "PHYSIQUE", val: report.scores.physique, icon: <Activity className="w-4 h-4" />, desc: "Endurance & Mental" },
         ].map((stat, i) => (
-          <Card key={i} className="bg-[#1A1A1A] border-white/5 p-5 rounded-2xl hover:border-[#ffbe00]/30 transition-colors group">
-            <div className="flex justify-between items-start mb-3">
-              <div className="p-2 bg-[#222] rounded-lg text-gray-400 group-hover:text-white transition-colors">{stat.icon}</div>
-              <span className={`text-2xl font-black ${getScoreColor(stat.val)}`}>{stat.val}</span>
+          <Card key={i} className="bg-[#1A1A1A] border-white/5 p-5 rounded-2xl hover:border-[#ffbe00]/30 transition-colors group flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-start mb-3">
+                <div className="p-2 bg-[#222] rounded-lg text-gray-400 group-hover:text-white transition-colors">{stat.icon}</div>
+                <span className={`text-2xl font-black ${getScoreColor(stat.val)}`}>{stat.val}</span>
+              </div>
+              <h4 className="font-bold text-white text-sm tracking-wider">{stat.label}</h4>
+              <p className="text-xs text-gray-500 mb-3">{stat.desc}</p>
+              <Progress value={(stat.val / 5) * 100} className="h-1.5 bg-black mb-4" indicatorClassName={stat.val >= 4 ? "bg-[#ffbe00]" : "bg-[#ca1f3d]"} />
             </div>
-            <h4 className="font-bold text-white text-sm tracking-wider">{stat.label}</h4>
-            <p className="text-xs text-gray-500 mb-3">{stat.desc}</p>
-            <Progress value={(stat.val / 5) * 100} className="h-1.5 bg-black" indicatorClassName={stat.val >= 4 ? "bg-[#ffbe00]" : "bg-[#ca1f3d]"} />
+
+            {/* AI Micro-Analysis */}
+            <div className="mt-2 text-[10px] leading-relaxed text-gray-400 border-t border-white/5 pt-2">
+              <span className="text-[#00F2EA] font-bold">ANALISIS: </span>
+              {report.skillAnalysis?.[stat.id] || "No analysis available."}
+            </div>
           </Card>
         ))}
       </div>
 
       {/* 3. COACH FEEDBACK */}
-      <Card className="bg-gradient-to-br from-[#151515] to-[#1A1A1A] border-white/5 p-8 rounded-[2rem] relative overflow-hidden">
-        <Quote className="absolute top-6 left-6 w-12 h-12 text-white/5 -scale-x-100" />
-
-        <div className="relative z-10 pl-12 border-l-2 border-[#ca1f3d]">
-          <h3 className="text-lg font-bold text-[#ffbe00] mb-2 uppercase tracking-widest text-xs">Coach Feedback</h3>
-          <p className="text-xl md:text-2xl text-white font-medium italic leading-relaxed">
-            "{report.notes || 'Performance solid. Keep improving consistentcy.'}"
-          </p>
-          <div className="mt-4 flex items-center gap-3">
-            <div className="h-px bg-white/10 w-12"></div>
-            <span className="text-sm text-gray-500 font-bold uppercase">{report.coachName}</span>
+      {/* 3. COACH FEEDBACK & HEAD COACH SUMMARY */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="bg-gradient-to-br from-[#151515] to-[#1A1A1A] border-white/5 p-8 rounded-[2rem] relative overflow-hidden">
+          <Quote className="absolute top-6 left-6 w-12 h-12 text-white/5 -scale-x-100" />
+          <div className="relative z-10 pl-8 border-l-2 border-[#ca1f3d]">
+            <h3 className="text-lg font-bold text-[#ffbe00] mb-2 uppercase tracking-widest text-xs">Coach Note</h3>
+            <p className="text-lg text-white font-medium italic leading-relaxed">
+              "{report.notes || 'Good effort! Keep practicing.'}"
+            </p>
+            <div className="mt-4 flex items-center gap-3">
+              <div className="h-px bg-white/10 w-12"></div>
+              <span className="text-sm text-gray-500 font-bold uppercase">{report.coachName}</span>
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+
+        {/* HEAD COACH SUMMARY CARD */}
+        <Card className="bg-[#151515] border-white/5 p-8 rounded-[2rem] relative overflow-hidden group hover:border-blue-500/30 transition-colors">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl pointer-events-none group-hover:bg-blue-500/20 transition-all"></div>
+
+          <div className="relative z-10">
+            <h3 className="text-lg font-bold text-blue-400 mb-4 uppercase tracking-widest text-xs flex items-center gap-2">
+              <BrainCircuit className="w-4 h-4" /> HEAD COACH SUMMARY
+            </h3>
+            <div className="prose prose-sm prose-invert max-w-none text-gray-300 leading-relaxed whitespace-pre-wrap">
+              {report.aiFeedback ? (
+                report.aiFeedback
+              ) : (
+                <p className="italic text-gray-500">Analisis belum tersedia untuk sesi ini.</p>
+              )}
+            </div>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

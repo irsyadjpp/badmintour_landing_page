@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
-import { useToast } from '@/hooks/use-toast';
+import { StatusModal } from '@/components/ui/status-modal';
 
 // Fetch Session Details & Participants
 const fetchSessionDetails = async (sessionId: string) => {
@@ -30,7 +30,18 @@ export default function SessionAssessmentPage() {
   const params = useParams();
   const sessionId = params.id as string;
   const [openDialogId, setOpenDialogId] = useState<string | null>(null);
-  const { toast } = useToast();
+
+  const [statusModal, setStatusModal] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'error';
+    title: string;
+    description: string;
+  }>({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    description: ''
+  });
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['session-assessment', sessionId],
@@ -48,9 +59,21 @@ export default function SessionAssessmentPage() {
 
       if (res.ok) {
         refetch(); // Refresh data
-        toast({ title: status ? "Checked In" : "Checked Out", className: "bg-green-600 text-white" });
+        // toast({ title: status ? "Checked In" : "Checked Out", className: "bg-green-600 text-white" });
+        setStatusModal({
+          isOpen: true,
+          type: 'success',
+          title: status ? 'Check-In Berhasil' : 'Check-Out Berhasil',
+          description: status ? 'Peserta telah ditandai hadir.' : 'Status kehadiran peserta dibatalkan.'
+        });
       } else {
-        toast({ title: "Gagal update absensi", variant: "destructive" });
+        // toast({ title: "Gagal update absensi", variant: "destructive" });
+        setStatusModal({
+          isOpen: true,
+          type: 'error',
+          title: 'Gagal Update Absensi',
+          description: 'Terjadi kesalahan saat update status peserta.'
+        });
       }
     } catch (e) {
       console.error(e);
@@ -216,6 +239,13 @@ export default function SessionAssessmentPage() {
           </div>
         )}
       </div>
+      <StatusModal
+        isOpen={statusModal.isOpen}
+        onClose={() => setStatusModal(prev => ({ ...prev, isOpen: false }))}
+        type={statusModal.type}
+        title={statusModal.title}
+        description={statusModal.description}
+      />
     </main >
   );
 }

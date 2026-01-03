@@ -1,14 +1,14 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import CoachingReportCard, { AssessmentReport } from '@/components/member/coaching-report-card';
+import AdminReportView, { AssessmentReport } from '@/components/admin/admin-report-view';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, ChevronLeft, FileX, Dumbbell, Pencil } from 'lucide-react';
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
-import { Badge } from '@/components/ui/badge';
+import { Loader2, ChevronLeft, FileX, ShieldCheck, ClipboardCheck, Dumbbell, Pencil } from 'lucide-react';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
 
 // Fetch Report Data
 const fetchReport = async (bookingId: string) => {
@@ -34,7 +34,7 @@ export default function CoachReportPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <Loader2 className="w-10 h-10 text-[#a01830] animate-spin" />
+        <Loader2 className="w-10 h-10 text-[#00f2ea] animate-spin" />
       </div>
     );
   }
@@ -53,50 +53,77 @@ export default function CoachReportPage() {
     );
   }
 
+  // Safe Date Parser
+  const getSafeDate = (dateVal: any) => {
+    if (!dateVal) return new Date();
+
+    // Handle Firestore Timestamp (has .toDate)
+    if (typeof dateVal === 'object' && typeof dateVal.toDate === 'function') {
+      return dateVal.toDate();
+    }
+
+    const d = new Date(dateVal);
+    // Check if valid date
+    if (isNaN(d.getTime())) return new Date();
+
+    return d;
+  };
+
   const reportData: AssessmentReport = {
-    date: format(new Date(data.data.createdAt), 'dd MMMM yyyy', { locale: localeId }),
+    date: format(getSafeDate(data.data.createdAt), 'dd MMMM yyyy', { locale: localeId }),
     coachName: data.data.coachName || 'Coach',
     moduleTitle: data.eventTitle || 'Sesi Latihan',
     level: data.data.level,
     totalScore: data.data.totalScore,
     scores: data.data.scores,
-    notes: data.data.notes
+    notes: data.data.notes,
+    aiFeedback: data.data.aiFeedback,
+    skillAnalysis: data.data.skillAnalysis
   };
 
   const sessionId = data.data.sessionId;
   const playerId = data.data.playerId;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-4 pb-20">
-      <div className="max-w-2xl mx-auto space-y-6">
-        {/* Coach Header */}
-        <div className="flex items-center justify-between mb-2 p-4 bg-[#1A1A1A] rounded-xl border border-white/5">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => router.back()} className="text-gray-400 hover:text-white">
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
+    <div className="space-y-6 pb-20">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-2">
+            <ClipboardCheck className="w-8 h-8 text-[#ffbe00]" /> PRATINJAU PELATIH
+          </h1>
+          <p className="text-gray-400 text-sm">Review hasil assessment member sebelum dipublikasi.</p>
+        </div>
+        <Button variant="secondary" onClick={() => router.back()} className="bg-white text-black hover:bg-white/90 font-bold">
+          <ChevronLeft className="w-5 h-5 mr-2" /> Kembali
+        </Button>
+      </div>
+
+      <div className="w-full">
+        {/* Identity Bar (Coach Mode) */}
+        <div className="flex items-center justify-between mb-6 p-4 border border-white/5 rounded-2xl bg-[#1A1A1A]">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center">
+              <Dumbbell className="w-6 h-6 text-[#ffbe00]" />
+            </div>
             <div>
-              <h1 className="text-sm font-bold text-white">Pratinjau Laporan</h1>
-              <p className="text-xs text-gray-500">Mode Pelatih</p>
+              <h3 className="font-bold text-white text-lg">Coach Review Mode</h3>
+              <p className="text-xs text-gray-500 font-mono">Session ID: {sessionId ? sessionId.substring(0, 8) : '-'}</p>
             </div>
           </div>
-          <Badge className="bg-[#a01830]/10 text-[#a01830] border border-[#a01830]/20 flex items-center gap-1">
-            <Dumbbell className="w-3 h-3" /> COACH VIEW
-          </Badge>
+          <div className="flex gap-2">
+            {sessionId && playerId && (
+              <Link href={`/coach/session/${sessionId}/assess/${playerId}`}>
+                <Button size="sm" className="bg-[#ffbe00] text-black hover:bg-[#ffbe00]/90 font-bold">
+                  <Pencil className="w-4 h-4 mr-2" /> Edit
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
 
-        <CoachingReportCard report={reportData} />
+        <AdminReportView report={reportData} />
 
-        {/* Coach Actions */}
-        <div className="flex justify-center gap-4 pt-4">
-          {sessionId && playerId && (
-            <Link href={`/coach/session/${sessionId}/assess/${playerId}`}>
-              <Button className="bg-[#ffbe00] text-black hover:bg-[#ffbe00]/90 font-bold">
-                <Pencil className="w-4 h-4 mr-2" /> Edit Penilaian
-              </Button>
-            </Link>
-          )}
-        </div>
       </div>
     </div>
   );

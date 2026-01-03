@@ -44,6 +44,13 @@ export async function GET(
     const assessmentDoc = assessmentSnapshot.docs[0];
     const assessmentData = assessmentDoc.data();
 
+    // Fix Date Serialization (Firestore Timestamp -> ISO String)
+    if (assessmentData?.createdAt && typeof assessmentData.createdAt.toDate === 'function') {
+      assessmentData.createdAt = assessmentData.createdAt.toDate().toISOString();
+    } else if (assessmentData?.createdAt && assessmentData.createdAt._seconds) {
+      assessmentData.createdAt = new Date(assessmentData.createdAt._seconds * 1000).toISOString();
+    }
+
     // 3. Optional: Fetch Event Title for context
     let eventTitle = 'Coaching Session';
     const eventDoc = await adminDb.collection('events').doc(sessionId).get();

@@ -76,7 +76,8 @@ export default function MemberReportPage() {
     level: data.data.level,
     totalScore: data.data.totalScore,
     scores: data.data.scores,
-    notes: data.data.notes
+    notes: data.data.notes,
+    aiFeedback: data.data.aiFeedback
   };
 
   return (
