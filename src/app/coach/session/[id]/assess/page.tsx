@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LiveAssessmentForm } from '@/components/coach/live-assessment-form';
-import { ChevronLeft, Loader2, Dumbbell, UserCheck, Calendar, CheckCircle2, Users, Trophy } from 'lucide-react';
+import { ChevronLeft, Loader2, Dumbbell, UserCheck, Calendar, CheckCircle2, Users, Trophy, AlertCircle } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
@@ -43,18 +44,28 @@ export default function SessionAssessmentPage() {
     description: ''
   });
 
+  const [absentDialog, setAbsentDialog] = useState<{ isOpen: boolean; bookingId: string; name: string } | null>(null);
+  const [absenceReason, setAbsenceReason] = useState('');
+
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['session-assessment', sessionId],
     queryFn: () => fetchSessionDetails(sessionId),
     enabled: !!sessionId
   });
 
-  const handleCheckIn = async (bookingId: string, status: boolean) => {
+  const handleCheckIn = async (bookingId: string, status: boolean, notes?: string) => {
     try {
+      if (!status && !notes) {
+        // Find participant name for dialog
+        const participant = data?.participants.find((p: any) => p.bookingId === bookingId);
+        setAbsentDialog({ isOpen: true, bookingId, name: participant?.userName || 'Participant' });
+        return;
+      }
+
       const res = await fetch(`/api/coach/session/${sessionId}/check-in`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookingId, isCheckedIn: status })
+        body: JSON.stringify({ bookingId, isCheckedIn: status, notes })
       });
 
       if (res.ok) {
@@ -66,6 +77,8 @@ export default function SessionAssessmentPage() {
           title: status ? 'Check-In Berhasil' : 'Check-Out Berhasil',
           description: status ? 'Peserta telah ditandai hadir.' : 'Status kehadiran peserta dibatalkan.'
         });
+        setAbsentDialog(null);
+        setAbsenceReason('');
       } else {
         // toast({ title: "Gagal update absensi", variant: "destructive" });
         setStatusModal({
@@ -180,58 +193,118 @@ export default function SessionAssessmentPage() {
                 }
               `}>
 
-                {/* CHECK-IN SWITCH */}
-                <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
-                  <span className={`text-[10px] font-bold uppercase transition-colors ${player.checkInAt ? 'text-green-500' : 'text-gray-600'}`}>
-                    {player.checkInAt ? 'Hadir' : 'Absen'}
-                  </span>
+                {/* CHECK-IN BUTTONS (DUAL) */}
+                <div className="absolute top-6 right-6 z-20 flex items-center gap-2">
+                  {/* ABSENT BUTTON */}
                   <div
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleCheckIn(player.bookingId, !player.checkInAt);
+                      if (player.checkInAt) return; // If already present, do nothing (use toggle logic if needed, but request asked for explicit buttons)
+                      // Actually, if they are Present, clicking Absent should open dialog to switch status
+                      // If they are Absent, clicking Absent again does nothing? Or re-edits note?
+                      // Let's follow request: "Hadir" and "Tidak Hadir" check-in method.
+
+                      // Logic: 
+                      // If clicking "Tidak Hadir" -> Open Dialog
+                      const participant = data?.participants.find((p: any) => p.bookingId === player.bookingId);
+                      setAbsentDialog({ isOpen: true, bookingId: player.bookingId, name: participant?.userName || 'Participant' });
                     }}
-                    className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors flex items-center ${player.checkInAt ? 'bg-green-500' : 'bg-gray-800 border border-white/10'}`}
+                    className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold uppercase cursor-pointer transition-all hover:scale-105 active:scale-95 ${!player.checkInAt
+                        ? 'bg-red-500 text-white border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)]'
+                        : 'bg-transparent text-gray-500 border-gray-700 hover:text-red-400 hover:border-red-400'
+                      }`}
                   >
-                    <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${player.checkInAt ? 'translate-x-6' : 'translate-x-0'}`} />
+                    Tidak Hadir
+                  </div>
+
+                  {/* PRESENT BUTTON */}
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCheckIn(player.bookingId, true);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold uppercase cursor-pointer transition-all hover:scale-105 active:scale-95 ${player.checkInAt
+                        ? 'bg-green-500 text-black border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.4)]'
+                        : 'bg-transparent text-gray-500 border-gray-700 hover:text-green-400 hover:border-green-400'
+                      }`}
+                  >
+                    Hadir
                   </div>
                 </div>
 
-                {/* CLICK AREA FOR LINK */}
-                <Link
-                  href={player.hasAssessment
-                    ? `/coach/reports/${player.bookingId}`
-                    : `/coach/session/${sessionId}/assess/${player.userId}`
-                  }
-                  className="flex-1 text-left outline-none"
-                >
-                  <div className="flex items-center gap-5">
-                    <Avatar className={`w-16 h-16 border-2 transition-colors ${player.hasAssessment ? 'border-green-500/20' : 'border-[#ca1f3d]'}`}>
-                      <AvatarImage src={player.userImage} className="object-cover" />
-                      <AvatarFallback className="bg-[#0a0a0a] text-lg font-black text-gray-500">{player.userName?.substring(0, 2)}</AvatarFallback>
-                    </Avatar>
+                {/* ABSENCE REASON DISPLAY */}
+                {player.absenceReason && !player.checkInAt && (
+                  <div className="absolute bottom-6 right-6 z-10 max-w-[150px] text-right">
+                    <p className="text-[10px] text-red-400 font-bold uppercase flex items-center justify-end gap-1 mb-1">
+                      <AlertCircle className="w-3 h-3" /> Absent Reason
+                    </p>
+                    <p className="text-xs text-gray-400 italic leading-tight">"{player.absenceReason}"</p>
+                  </div>
+                )}
 
-                    <div>
-                      <h3 className={`font-black text-xl transition-colors uppercase italic ${player.hasAssessment ? 'text-gray-500' : 'text-white'}`}>
-                        {player.userName}
-                      </h3>
-                      <div className="flex items-center gap-3 mt-2">
-                        <Badge variant="secondary" className="text-[10px] h-6 bg-[#0a0a0a] text-gray-500 font-mono tracking-widest border border-white/5">
-                          {player.bookingCode}
-                        </Badge>
-                        <Badge variant="outline" className={`text-[10px] h-6 px-2 font-bold uppercase tracking-widest border ${player.status === 'paid' ? 'text-green-500 border-green-500/50 bg-green-500/10' : 'text-blue-500 border-blue-500/50 bg-blue-500/10'}`}>
-                          {player.status}
-                        </Badge>
-                        {player.hasAssessment ? (
-                          <span className="text-[10px] font-bold text-green-500 bg-green-500/10 px-3 py-0.5 rounded-full border border-green-500/20 uppercase tracking-wider">Completed</span>
-                        ) : (
-                          <span className="text-[10px] font-bold text-gray-400 bg-gray-800/20 px-3 py-0.5 rounded-full border border-gray-700/50 uppercase tracking-wider flex items-center gap-2 group-hover:text-[#ffbe00] group-hover:border-[#ffbe00]/30 transition-colors">
-                            Tap to Assess
+                {/* CLICK AREA FOR LINK */}
+                {/* Only clickable if Checked In (Hadir) */}
+                {player.checkInAt ? (
+                  <Link
+                    href={player.hasAssessment
+                      ? `/coach/reports/${player.bookingId}`
+                      : `/coach/session/${sessionId}/assess/${player.userId}`
+                    }
+                    className="flex-1 text-left outline-none"
+                  >
+                    <div className="flex items-center gap-5">
+                      <Avatar className={`w-16 h-16 border-2 transition-colors ${player.hasAssessment ? 'border-green-500/20' : 'border-[#ca1f3d]'}`}>
+                        <AvatarImage src={player.userImage} className="object-cover" />
+                        <AvatarFallback className="bg-[#0a0a0a] text-lg font-black text-gray-500">{player.userName?.substring(0, 2)}</AvatarFallback>
+                      </Avatar>
+
+                      <div>
+                        <h3 className={`font-black text-xl transition-colors uppercase italic ${player.hasAssessment ? 'text-gray-500' : 'text-white'}`}>
+                          {player.userName}
+                        </h3>
+                        <div className="flex items-center gap-3 mt-2">
+                          <Badge variant="secondary" className="text-[10px] h-6 bg-[#0a0a0a] text-gray-500 font-mono tracking-widest border border-white/5">
+                            {player.bookingCode}
+                          </Badge>
+                          <Badge variant="outline" className={`text-[10px] h-6 px-2 font-bold uppercase tracking-widest border ${player.status === 'paid' ? 'text-green-500 border-green-500/50 bg-green-500/10' : 'text-blue-500 border-blue-500/50 bg-blue-500/10'}`}>
+                            {player.status}
+                          </Badge>
+                          {player.hasAssessment ? (
+                            <span className="text-[10px] font-bold text-green-500 bg-green-500/10 px-3 py-0.5 rounded-full border border-green-500/20 uppercase tracking-wider">Completed</span>
+                          ) : (
+                            <span className="text-[10px] font-bold text-gray-400 bg-gray-800/20 px-3 py-0.5 rounded-full border border-gray-700/50 uppercase tracking-wider flex items-center gap-2 group-hover:text-[#ffbe00] group-hover:border-[#ffbe00]/30 transition-colors">
+                              Tap to Assess
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ) : (
+                  // DISABLED STATE (ABSENT)
+                  <div className="flex-1 text-left opacity-50 cursor-not-allowed">
+                    <div className="flex items-center gap-5">
+                      <Avatar className="w-16 h-16 border-2 border-gray-800 grayscale">
+                        <AvatarImage src={player.userImage} className="object-cover" />
+                        <AvatarFallback className="bg-[#0a0a0a] text-lg font-black text-gray-700">{player.userName?.substring(0, 2)}</AvatarFallback>
+                      </Avatar>
+
+                      <div>
+                        <h3 className="font-black text-xl text-gray-600 uppercase italic">
+                          {player.userName}
+                        </h3>
+                        <div className="flex items-center gap-3 mt-2">
+                          <Badge variant="outline" className="text-[10px] h-6 px-2 font-bold uppercase tracking-widest border border-gray-800 text-gray-600">
+                            {player.status}
+                          </Badge>
+                          <span className="text-[10px] font-bold text-red-500/50 bg-red-500/5 px-3 py-0.5 rounded-full border border-red-500/10 uppercase tracking-wider">
+                            Set as Absent
                           </span>
-                        )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </Link>
+                )}
               </div>
 
 
@@ -246,6 +319,37 @@ export default function SessionAssessmentPage() {
         title={statusModal.title}
         description={statusModal.description}
       />
+
+      {/* ABSENT REASON DIALOG */}
+      <Dialog open={!!absentDialog} onOpenChange={(open) => !open && setAbsentDialog(null)}>
+        <DialogContent className="bg-[#151515] border-white/10 text-white rounded-[2rem]">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black uppercase italic text-[#ca1f3d] flex items-center gap-2">
+              <UserCheck className="w-6 h-6" /> Mark as Absent
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-gray-400">
+              Anda akan menandai <strong>{absentDialog?.name}</strong> sebagai tidak hadir. Mohon berikan alasan.
+            </p>
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase text-gray-500">Alasan / Catatan</label>
+              <Textarea
+                placeholder="Contoh: Sakit, Izin, Tanpa Keterangan..."
+                value={absenceReason}
+                onChange={(e) => setAbsenceReason(e.target.value)}
+                className="bg-[#0a0a0a] border-white/10 rounded-xl min-h-[100px]"
+              />
+            </div>
+            <Button
+              className="w-full bg-[#ca1f3d] hover:bg-[#a61932] text-white font-bold h-12 rounded-xl"
+              onClick={() => handleCheckIn(absentDialog!.bookingId, false, absenceReason || '-')}
+            >
+              CONFIRM ABSENT
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </main >
   );
 }

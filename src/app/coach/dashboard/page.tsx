@@ -40,6 +40,7 @@ export default function CoachDashboard() {
     const { toast } = useToast();
     const [subRequestSession, setSubRequestSession] = useState<any>(null);
     const [subReason, setSubReason] = useState('');
+    const [activeTab, setActiveTab] = useState<'upcoming' | 'history'>('upcoming');
 
     // Mutation for Substitute Request
     const subRequestMutation = useMutation({
@@ -76,7 +77,8 @@ export default function CoachDashboard() {
             income: "Rp 0",
             monthlyGoal: 0
         },
-        upcomingSessions: []
+        upcomingSessions: [],
+        pastSessions: []
     };
 
     // Fallback if stats is missing in data structure (safety check)
@@ -89,6 +91,7 @@ export default function CoachDashboard() {
     };
 
     const upcomingSessions = dashboard.upcomingSessions || [];
+    const pastSessions = dashboard.pastSessions || [];
 
     if (isLoading) {
         return <div className="flex h-screen items-center justify-center text-white"><Loader2 className="w-10 h-10 animate-spin text-[#ca1f3d]" /></div>;
@@ -182,59 +185,103 @@ export default function CoachDashboard() {
                     <div className="bg-[#151515] border border-white/5 rounded-[2rem] p-8 shadow-2xl relative overflow-hidden">
                         <div className="flex justify-between items-center mb-8 relative z-10">
                             <h3 className="text-xl font-black text-white flex items-center gap-3 uppercase italic tracking-tighter">
-                                <Clock className="w-6 h-6 text-[#ca1f3d]" /> Upcoming Sessions
+                                <Clock className="w-6 h-6 text-[#ca1f3d]" /> Sesi Latihan
                             </h3>
-                            <Link href="/coach/schedule" className="text-xs font-bold text-gray-500 hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-full">View Calendar</Link>
+                            <div className="flex bg-[#1A1A1A] p-1 rounded-xl border border-white/5 gap-1">
+                                <button
+                                    onClick={() => setActiveTab('upcoming')}
+                                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'upcoming' ? 'bg-[#ffbe00] text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}
+                                >
+                                    UPCOMING
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('history')}
+                                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'history' ? 'bg-white text-black shadow-lg' : 'text-gray-500 hover:text-white'}`}
+                                >
+                                    HISTORY
+                                </button>
+                            </div>
                         </div>
 
                         <div className="space-y-4 relative z-10">
-                            {upcomingSessions.length === 0 ? (
-                                <div className="text-center py-10 text-gray-500 border border-white/5 border-dashed rounded-2xl">
-                                    No upcoming sessions found.
-                                </div>
-                            ) : upcomingSessions.map((session: any) => (
-                                <div key={session.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 rounded-3xl bg-[#0a0a0a] border border-white/5 hover:border-[#ffbe00]/30 transition-all duration-300 group relative overflow-hidden gap-4 hover:translate-x-2 cursor-pointer">
-                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#ffbe00] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            {activeTab === 'upcoming' ? (
+                                upcomingSessions.length === 0 ? (
+                                    <div className="text-center py-10 text-gray-500 border border-white/5 border-dashed rounded-2xl">
+                                        Tidak ada sesi yang akan datang.
+                                    </div>
+                                ) : upcomingSessions.map((session: any) => (
+                                    <div key={session.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 rounded-3xl bg-[#0a0a0a] border border-white/5 hover:border-[#ffbe00]/30 transition-all duration-300 group relative overflow-hidden gap-4 hover:translate-x-2 cursor-pointer">
+                                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#ffbe00] opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
-                                    <Link href={`/coach/session/${session.id}/assess`} className="flex-1 flex items-center gap-5">
-                                        <div className="p-4 rounded-2xl bg-[#ffbe00]/10 text-[#ffbe00] border border-[#ffbe00]/20 group-hover:bg-[#ffbe00] group-hover:text-black transition-colors">
-                                            <Dumbbell className="w-6 h-6" />
+                                        <Link href={`/coach/session/${session.id}/assess`} className="flex-1 flex items-center gap-5">
+                                            <div className="p-4 rounded-2xl bg-[#ffbe00]/10 text-[#ffbe00] border border-[#ffbe00]/20 group-hover:bg-[#ffbe00] group-hover:text-black transition-colors">
+                                                <Dumbbell className="w-6 h-6" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-black text-white text-lg">{session.type || 'Training Session'}</h4>
+                                                <div className="text-xs text-gray-400 flex items-center gap-4 mt-1.5 font-bold uppercase tracking-wide">
+                                                    <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#ca1f3d]" /> {session.time}</span>
+                                                    <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-[#ca1f3d]" /> {session.location}</span>
+                                                </div>
+                                            </div>
+                                        </Link>
+
+                                        <div className="flex items-center gap-4 w-full sm:w-auto pl-20 sm:pl-0">
+                                            <div className="text-left sm:text-right">
+                                                <p className="text-sm font-bold text-gray-300 mb-2">{session.student}</p>
+                                                <Badge variant="secondary" className={`text-[10px] uppercase font-bold px-3 py-1 ${session.status === 'Confirmed' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'} border`}>
+                                                    {session.status || 'Scheduled'}
+                                                </Badge>
+                                            </div>
+
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-10 w-10 rounded-xl text-gray-600 hover:text-red-500 hover:bg-red-500/10"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    e.preventDefault();
+                                                    setSubRequestSession(session);
+                                                }}
+                                                title="Request Substitute"
+                                            >
+                                                <UserMinus className="w-5 h-5" />
+                                            </Button>
                                         </div>
-                                        <div>
-                                            <h4 className="font-black text-white text-lg">{session.type || 'Training Session'}</h4>
-                                            <div className="text-xs text-gray-400 flex items-center gap-4 mt-1.5 font-bold uppercase tracking-wide">
-                                                <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#ca1f3d]" /> {session.time}</span>
-                                                <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-[#ca1f3d]" /> {session.location}</span>
+                                    </div>
+                                ))
+                            ) : (
+                                // HISTORY TAB
+                                pastSessions.length === 0 ? (
+                                    <div className="text-center py-10 text-gray-500 border border-white/5 border-dashed rounded-2xl">
+                                        Belum ada riwayat sesi.
+                                    </div>
+                                ) : pastSessions.map((session: any) => (
+                                    <Link key={session.id} href={`/coach/session/${session.id}/assess`} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 rounded-3xl bg-[#0a0a0a] border border-white/5 hover:border-white/20 transition-all duration-300 group relative overflow-hidden gap-4 hover:translate-x-2 cursor-pointer">
+                                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-white opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                                        <div className="flex-1 flex items-center gap-5">
+                                            <div className="p-4 rounded-2xl bg-white/5 text-gray-400 border border-white/10 group-hover:bg-white/10 group-hover:text-white transition-colors">
+                                                <Dumbbell className="w-6 h-6" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-black text-white text-lg">{session.student || 'Training Session'}</h4>
+                                                <div className="text-xs text-gray-400 flex items-center gap-4 mt-1.5 font-bold uppercase tracking-wide">
+                                                    <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-gray-500" /> {session.time}</span>
+                                                    <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-gray-500" /> {session.location}</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </Link>
 
-                                    <div className="flex items-center gap-4 w-full sm:w-auto pl-20 sm:pl-0">
-                                        <div className="text-left sm:text-right">
-                                            <p className="text-sm font-bold text-gray-300 mb-2">{session.student}</p>
-                                            <Badge variant="secondary" className={`text-[10px] uppercase font-bold px-3 py-1 ${session.status === 'Confirmed' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20'} border`}>
-                                                {session.status || 'Scheduled'}
+                                        <div className="text-left sm:text-right pl-20 sm:pl-0">
+                                            <p className="text-xs text-gray-500 mb-2">{session.date}</p>
+                                            <Badge variant="secondary" className="text-[10px] uppercase font-bold px-3 py-1 bg-gray-800 text-gray-400 border-gray-700">
+                                                COMPLETED
                                             </Badge>
                                         </div>
-
-                                        {/* Request Sub Trigger */}
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-10 w-10 rounded-xl text-gray-600 hover:text-red-500 hover:bg-red-500/10"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                e.preventDefault();
-                                                setSubRequestSession(session);
-                                            }}
-                                            title="Request Substitute"
-                                        >
-                                            <UserMinus className="w-5 h-5" />
-                                        </Button>
-                                    </div>
-                                </div>
-
-                            ))}
+                                    </Link>
+                                ))
+                            )}
 
                             {/* Substitute Dialog */}
                             <Dialog open={!!subRequestSession} onOpenChange={(open) => !open && setSubRequestSession(null)}>

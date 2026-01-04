@@ -58,9 +58,17 @@ export async function GET(
       eventTitle = eventDoc.data()?.title || eventTitle;
     }
 
+    // 4. Fetch Player Name for PDF Filename
+    let playerName = 'Member';
+    const userDoc = await adminDb.collection('users').doc(playerId).get();
+    if (userDoc.exists) {
+      playerName = userDoc.data()?.name || playerName;
+    }
+
     return NextResponse.json({
       data: assessmentData,
-      eventTitle
+      eventTitle,
+      playerName
     });
 
   } catch (error: any) {

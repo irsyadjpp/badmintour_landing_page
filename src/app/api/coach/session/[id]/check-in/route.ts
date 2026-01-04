@@ -13,17 +13,28 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     const sessionId = params.id;
     const body = await req.json();
-    const { bookingId, isCheckedIn } = body;
+    const { bookingId, isCheckedIn, notes } = body;
 
     if (!bookingId) {
       return NextResponse.json({ error: 'Missing bookingId' }, { status: 400 });
     }
 
     // Update the booking document
-    await adminDb.collection('bookings').doc(bookingId).update({
+    const updateData: any = {
       checkInAt: isCheckedIn ? admin.firestore.FieldValue.serverTimestamp() : null,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
+    };
+
+    // If marking as absent (isCheckedIn = false) AND notes provided
+    if (!isCheckedIn && notes) {
+      updateData.absenceReason = notes;
+    }
+    // If checking in, remove absence reason
+    else if (isCheckedIn) {
+      updateData.absenceReason = admin.firestore.FieldValue.delete();
+    }
+
+    await adminDb.collection('bookings').doc(bookingId).update(updateData);
 
     return NextResponse.json({ success: true });
 

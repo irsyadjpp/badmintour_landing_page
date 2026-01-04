@@ -6,9 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
-import { Loader2, ChevronLeft, FileX, ShieldCheck, ClipboardCheck } from 'lucide-react';
+import { Loader2, ChevronLeft, FileX, ShieldCheck, ClipboardCheck, Download } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { useAssessmentPdf } from '@/hooks/use-assessment-pdf';
+import { AssessmentRadarPDF } from '@/components/pdf/assessment-radar-pdf';
 
 // Fetch Report Data (Reusing existing API which allows Admin)
 const fetchReport = async (bookingId: string) => {
@@ -25,11 +27,24 @@ export default function AdminReportPage() {
   const router = useRouter();
   const bookingId = params.bookingId as string;
 
+  const { isGenerating, downloadPdf } = useAssessmentPdf();
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ['admin-report', bookingId],
     queryFn: () => fetchReport(bookingId),
     enabled: !!bookingId
   });
+
+  const handleDownloadPDF = () => {
+    if (!data?.data) return;
+    // Format: nickname_event-name_event-date.pdf
+    const nickname = (data.playerName || 'User').replace(/\s+/g, '_');
+    const eventName = (data.eventTitle || 'Session').replace(/\s+/g, '_');
+    const dateStr = format(new Date(data.data.createdAt), 'yyyy-MM-dd');
+    const filename = `${nickname}_${eventName}_${dateStr}.pdf`;
+
+    downloadPdf(reportData, 'admin-pdf-radar-chart', filename);
+  };
 
   if (isLoading) {
     return (
@@ -115,11 +130,22 @@ export default function AdminReportPage() {
           </Badge>
         </div>
 
-        <AdminReportView report={reportData} />
+        <div id="admin-report-content" className="bg-[#151515] p-4 rounded-[2rem]">
+          <AdminReportView report={reportData} />
+        </div>
+
+        {/* Hidden Chart */}
+        <AssessmentRadarPDF report={reportData} id="admin-pdf-radar-chart" />
 
         <div className="flex justify-end gap-4 mt-6">
-          <Button variant="secondary" className="bg-white text-black font-bold rounded-xl" onClick={() => window.print()}>
-            Cetak PDF / Print
+          <Button
+            variant="secondary"
+            className="bg-white text-black font-bold rounded-xl"
+            onClick={handleDownloadPDF}
+            disabled={isGenerating}
+          >
+            {isGenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+            Export PDF (Admin)
           </Button>
         </div>
       </div>

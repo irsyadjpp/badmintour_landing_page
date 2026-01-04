@@ -8,10 +8,12 @@ import { id as localeId } from 'date-fns/locale';
 import { Loader2, ChevronLeft, FileX, Share2, Download } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import html2canvas from 'html2canvas';
 import { StoryCard } from '@/components/sharing/story-card';
+import { useAssessmentPdf } from '@/hooks/use-assessment-pdf';
+import { AssessmentRadarPDF } from '@/components/pdf/assessment-radar-pdf';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useState } from 'react';
+import html2canvas from 'html2canvas';
 
 // Fetch Report Data
 const fetchReport = async (bookingId: string) => {
@@ -29,7 +31,24 @@ export default function MemberReportPage() {
   const bookingId = params.bookingId as string;
 
   const [isSharing, setIsSharing] = useState(false); // Controls Modal
-  const [isGenerating, setIsGenerating] = useState(false); // Controls Canvas Generation
+
+  // Use Hook
+  const { isGenerating, downloadPdf } = useAssessmentPdf();
+
+  const handleDownloadPDF = () => {
+    if (!data?.data) return;
+    // Format: nickname_event-name_event-date.pdf
+    const nickname = (data.playerName || 'User').replace(/\s+/g, '_');
+    const eventName = (data.eventTitle || 'Session').replace(/\s+/g, '_');
+    const dateStr = format(new Date(data.data.createdAt), 'yyyy-MM-dd');
+    const filename = `${nickname}_${eventName}_${dateStr}.pdf`;
+
+    // Pass data + chart ID
+    downloadPdf(reportData, 'pdf-radar-chart', filename);
+  };
+
+  // State for sharing canvas generation
+  const [isSharingGenerating, setIsSharingGenerating] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['member-report', bookingId],
@@ -39,7 +58,7 @@ export default function MemberReportPage() {
 
   // Share Logic
   const handleShare = async () => {
-    setIsGenerating(true);
+    setIsSharingGenerating(true);
     try {
       const element = document.getElementById('story-capture-area');
       if (!element) return;
@@ -71,12 +90,12 @@ export default function MemberReportPage() {
           link.href = canvas.toDataURL();
           link.click();
         }
-        setIsGenerating(false);
+        setIsSharingGenerating(false);
       }, 'image/png');
 
     } catch (error) {
       console.error("Share failed", error);
-      setIsGenerating(false);
+      setIsSharingGenerating(false);
     }
   };
 
@@ -144,11 +163,15 @@ export default function MemberReportPage() {
           <p className="text-gray-400 text-sm">Hasil analisis skill dari Coach profesional.</p>
         </div>
         <div className="flex gap-2">
-          {/* 
-          <Button variant="outline" className="border-white/10 text-white hover:bg-white/10 rounded-xl" disabled>
-            <Download className="w-4 h-4 mr-2" /> PDF
+          <Button
+            onClick={handleDownloadPDF}
+            disabled={isGenerating}
+            variant="secondary"
+            className="bg-white text-black hover:bg-gray-200 font-bold rounded-xl"
+          >
+            {isGenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+            PDF
           </Button>
-           */}
           <Button
             onClick={() => setIsSharing(true)}
             disabled
@@ -159,7 +182,12 @@ export default function MemberReportPage() {
         </div>
       </div>
 
-      <AdminReportView report={reportData} />
+      <div id="report-content-area" className="bg-[#0a0a0a] p-4 rounded-[2rem]">
+        <AdminReportView report={reportData} />
+      </div>
+
+      {/* Hidden Chart for PDF Generation */}
+      <AssessmentRadarPDF report={reportData} id="pdf-radar-chart" />
 
       {/* Share Preview Modal */}
       <Dialog open={isSharing} onOpenChange={setIsSharing}>

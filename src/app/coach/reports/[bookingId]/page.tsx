@@ -6,9 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
-import { Loader2, ChevronLeft, FileX, ShieldCheck, ClipboardCheck, Dumbbell, Pencil } from 'lucide-react';
+import { Loader2, ChevronLeft, FileX, ShieldCheck, ClipboardCheck, Dumbbell, Pencil, Download } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { useAssessmentPdf } from '@/hooks/use-assessment-pdf';
+import { AssessmentRadarPDF } from '@/components/pdf/assessment-radar-pdf';
 
 // Fetch Report Data
 const fetchReport = async (bookingId: string) => {
@@ -25,11 +27,24 @@ export default function CoachReportPage() {
   const router = useRouter();
   const bookingId = params.bookingId as string;
 
+  const { isGenerating, downloadPdf } = useAssessmentPdf();
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ['coach-report', bookingId],
     queryFn: () => fetchReport(bookingId),
     enabled: !!bookingId
   });
+
+  const handleDownloadPDF = () => {
+    if (!data?.data) return;
+    // Format: nickname_event-name_event-date.pdf
+    const nickname = (data.playerName || 'User').replace(/\s+/g, '_');
+    const eventName = (data.eventTitle || 'Session').replace(/\s+/g, '_');
+    const dateStr = format(new Date(data.data.createdAt), 'yyyy-MM-dd');
+    const filename = `${nickname}_${eventName}_${dateStr}.pdf`;
+
+    downloadPdf(reportData, 'coach-pdf-radar-chart', filename);
+  };
 
   if (isLoading) {
     return (
@@ -96,9 +111,20 @@ export default function CoachReportPage() {
           </h1>
           <p className="text-gray-400 text-sm">Review hasil assessment member sebelum dipublikasi.</p>
         </div>
-        <Button variant="secondary" onClick={() => router.back()} className="bg-white text-black hover:bg-white/90 font-bold">
-          <ChevronLeft className="w-5 h-5 mr-2" /> Kembali
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleDownloadPDF}
+            disabled={isGenerating}
+            variant="secondary"
+            className="bg-white text-black hover:bg-gray-200 font-bold"
+          >
+            {isGenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Download className="w-4 h-4 mr-2" />}
+            PDF
+          </Button>
+          <Button variant="secondary" onClick={() => router.back()} className="bg-white text-black hover:bg-white/90 font-bold">
+            <ChevronLeft className="w-5 h-5 mr-2" /> Kembali
+          </Button>
+        </div>
       </div>
 
       <div className="w-full">
@@ -124,7 +150,12 @@ export default function CoachReportPage() {
           </div>
         </div>
 
-        <AdminReportView report={reportData} />
+        <div id="coach-report-content" className="bg-[#151515] p-4 rounded-[2rem]">
+          <AdminReportView report={reportData} />
+        </div>
+
+        {/* Hidden Chart for PDF */}
+        <AssessmentRadarPDF report={reportData} id="coach-pdf-radar-chart" />
 
       </div>
     </div>

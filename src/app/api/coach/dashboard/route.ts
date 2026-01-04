@@ -10,10 +10,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 1. Get Coach ID (assuming user ID is relevant or stored in profile)
-    // For now, simpler approach: search events where coachEmail matches or coachId matches
-    // Ideally we should have a 'coaches' collection map.
-    // Let's assume session.user.id is the coachId for simplicity in this MVP
+    // 1. Get Coach ID
     const coachId = session.user.id;
 
     // MOCK DATA FALLBACKS (Since we might not have real data yet)
@@ -89,6 +86,29 @@ export async function GET(req: NextRequest) {
 
     stats.activeStudents = uniqueStudents.size;
 
+    // 5. Fetch PAST Sessions (for History Tab)
+    const pastSessions: any[] = [];
+    const pastEventsSnapshot = await eventsRef
+      .where('coachId', '==', coachId)
+      .where('date', '<', now.toISOString().split('T')[0])
+      .orderBy('date', 'desc')
+      .limit(10)
+      .get();
+
+    if (!pastEventsSnapshot.empty) {
+      pastEventsSnapshot.forEach(doc => {
+        const data = doc.data();
+        pastSessions.push({
+          id: doc.id,
+          student: data.title,
+          type: data.type || 'Session',
+          time: data.time || 'TBA',
+          location: data.location || 'Online',
+          status: 'Completed',
+          date: data.date
+        });
+      });
+    }
 
     // FORMAT RESPONSE
     return NextResponse.json({
@@ -98,26 +118,18 @@ export async function GET(req: NextRequest) {
           ...stats,
           income: `Rp ${stats.income.toLocaleString('id-ID')}`
         },
-        upcomingSessions
+        upcomingSessions,
+        pastSessions
       }
     });
 
   } catch (error: any) {
     console.error("Dashboard API Error:", error);
-    // Return Mock if Error (Graceful Degradation)
+    // Return Error for Debugging
     return NextResponse.json({
-      success: true,
-      data: {
-        stats: {
-          activeStudents: 12,
-          totalHours: 45,
-          rating: 4.8,
-          income: "Rp 1.500.000",
-          monthlyGoal: 65,
-          isMock: true
-        },
-        upcomingSessions: []
-      }
+      success: false,
+      error: error.message,
+      details: error.toString() // Capture full error including index link
     });
   }
 }
