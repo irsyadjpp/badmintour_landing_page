@@ -39,7 +39,9 @@ export async function PUT(
             description, type, coachName,
             externalLink, organizer, allowWaitingList,
             assistantCoachIds, assistantCoachNames,
-            cost_court, cost_shuttle, cost_tool, cost_coach
+            cost_court, cost_shuttle, cost_tool, cost_coach,
+            locationMapLink, courts, // New Fields
+            hostId, hostName // New Host Fields
         } = body;
 
         // Update logic
@@ -62,6 +64,11 @@ export async function PUT(
         if (allowWaitingList !== undefined) updateData.allowWaitingList = allowWaitingList;
         if (assistantCoachIds !== undefined) updateData.assistantCoachIds = assistantCoachIds;
         if (assistantCoachNames !== undefined) updateData.assistantCoachNames = assistantCoachNames;
+
+        if (locationMapLink !== undefined) updateData.locationMapLink = locationMapLink;
+        if (courts !== undefined) updateData.courts = courts;
+        if (hostId !== undefined) updateData.hostId = hostId;
+        if (hostName !== undefined) updateData.hostName = hostName;
 
         // Financials Update (For Drilling)
         if (type === 'drilling' || (cost_court || cost_shuttle || cost_tool || cost_coach)) {

@@ -153,15 +153,36 @@ export default function EventsSection() {
                                             </h3>
 
                                             {/* Location & Level */}
-                                            <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-sm text-gray-400 font-medium mb-3">
-                                                <div className="flex items-center gap-1.5 text-white/80">
-                                                    <MapPin className="w-4 h-4 text-[#ca1f3d]" />
-                                                    {event.location}
+                                            {/* Location & Level */}
+                                            <div className="flex flex-col gap-2 mb-3">
+                                                <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-sm text-gray-400 font-medium">
+                                                    {event.locationMapLink ? (
+                                                        <a href={event.locationMapLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-white/80 hover:text-[#ffbe00] hover:underline transition-all">
+                                                            <MapPin className="w-4 h-4 text-[#ca1f3d]" />
+                                                            {event.location}
+                                                        </a>
+                                                    ) : (
+                                                        <div className="flex items-center gap-1.5 text-white/80">
+                                                            <MapPin className="w-4 h-4 text-[#ca1f3d]" />
+                                                            {event.location}
+                                                        </div>
+                                                    )}
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Zap className="w-4 h-4 text-[#ffbe00]" />
+                                                        <span className="uppercase text-xs font-bold tracking-wider">{event.level || event.skillLevel || "All Level"}</span>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-1.5">
-                                                    <Zap className="w-4 h-4 text-[#ffbe00]" />
-                                                    <span className="uppercase text-xs font-bold tracking-wider">{event.level || event.skillLevel || "All Level"}</span>
-                                                </div>
+
+                                                {/* Courts Display */}
+                                                {event.courts && event.courts.length > 0 && (
+                                                    <div className="flex flex-wrap gap-1.5 pl-0.5">
+                                                        {event.courts.map((court: string, idx: number) => (
+                                                            <span key={idx} className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-white/5 text-gray-400 border border-white/10">
+                                                                {court}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* Participants Stack (Social Proof) */}

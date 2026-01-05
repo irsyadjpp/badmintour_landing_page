@@ -36,6 +36,7 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [coaches, setCoaches] = useState<any[]>([]);
+  const [hosts, setHosts] = useState<any[]>([]); // Host List
 
   // State Date & Time
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -63,6 +64,9 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
     { p1: '', p2: '', club: '' }
   ]);
 
+  // Courts List
+  const [courts, setCourts] = useState<string[]>(['']);
+
   // Recurring Schedule State
   const [isRecurring, setIsRecurring] = useState(false);
 
@@ -71,23 +75,26 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
     type: 'mabar',
     coachName: '',
     location: '',
+    locationMapLink: '', // <-- New
     price: '',
     quota: '12',
     description: '',
-    allowWaitingList: false, // Default false
-    coachNickname: '', // Store Nickname
+    allowWaitingList: false,
+    coachNickname: '',
     externalLink: '',
-    allowedUserTypes: 'both', // 'member' | 'both' (guest allowed)
-    partnerMechanism: 'user', // 'user' | 'coach'
-    skillLevel: 'all', // 'beginner' | 'intermediate' | 'advanced' | 'all'
-    curriculum: '', // Drilling curriculum
-    organizer: '', // Tournament Organizer
-    playerCriteria: '', // Tournament Player Criteria
-    prizes: '', // Tournament Prizes
-    sparringOpponent: '', // Sparring: Opponent Team Name (Optional)
-    matchFormat: '', // Sparring: e.g. "5 Partai (3MD, 2XD)"
+    allowedUserTypes: 'both',
+    partnerMechanism: 'user',
+    skillLevel: 'all',
+    curriculum: '',
+    organizer: '',
+    playerCriteria: '',
+    prizes: '',
+    sparringOpponent: '',
+    matchFormat: '',
     assistantCoachIds: [] as string[],
-    assistantCoachNames: [] as string[]
+    assistantCoachNames: [] as string[],
+    hostId: '', // <-- New
+    hostName: '' // <-- New
   });
 
   // Drilling Costs State
@@ -113,6 +120,7 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
         skillLevel: initialData.skillLevel ? initialData.skillLevel.toLowerCase() : 'all',
         curriculum: initialData.curriculum || '',
         location: initialData.location || '',
+        locationMapLink: initialData.locationMapLink || '',
         price: (initialData.price !== undefined && initialData.price !== null) ? formatRupiah(initialData.price) : '',
         quota: initialData.quota?.toString() || '12',
         description: initialData.description || '',
@@ -123,8 +131,14 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
         sparringOpponent: initialData.sparringOpponent || '',
         matchFormat: initialData.matchFormat || '',
         assistantCoachIds: initialData.assistantCoachIds || [],
-        assistantCoachNames: initialData.assistantCoachNames || []
+        assistantCoachNames: initialData.assistantCoachNames || [],
+        hostId: initialData.hostId || '',
+        hostName: initialData.hostName || ''
       }));
+
+      if (initialData.courts && Array.isArray(initialData.courts) && initialData.courts.length > 0) {
+        setCourts(initialData.courts);
+      }
 
       // Update Drill Costs for Edit
       if (initialData.financials) {
@@ -168,7 +182,7 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
     }
   }, [mode, initialData]);
 
-  // FETCH COACHES
+  // FETCH COACHES & HOSTS
   useEffect(() => {
     const fetchCoaches = async () => {
       try {
@@ -181,7 +195,21 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
         console.error("Gagal load coach", error);
       }
     };
+
+    const fetchHosts = async () => {
+      try {
+        const res = await fetch('/api/hosts');
+        const data = await res.json();
+        if (data.success) {
+          setHosts(data.data);
+        }
+      } catch (error) {
+        console.error("Gagal load hosts", error);
+      }
+    };
+
     fetchCoaches();
+    fetchHosts();
   }, []);
 
   // LOAD MODULES
@@ -262,6 +290,7 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
       // Transform allowedUserTypes string to array for backend
       allowedUserTypes: formData.allowedUserTypes === 'both' ? ['member', 'guest'] : ['member'],
       isRecurring, // Include Recurring Flag
+      courts: courts.filter(c => c.trim() !== ''), // Filter empty courts
       // Drilling Costs
       cost_court: cleanCurrency(drillCosts.court),
       cost_shuttle: cleanCurrency(drillCosts.shuttle),
@@ -335,6 +364,35 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
                     <Material3SelectItem value="sparring"><span className="flex items-center gap-2"><Users className="w-4 h-4 text-red-500" /> Sparring (Vs Team)</span></Material3SelectItem>
                     <Material3SelectItem value="drilling"><span className="flex items-center gap-2"><Dumbbell className="w-4 h-4" /> Drilling / Clinic</span></Material3SelectItem>
                     <Material3SelectItem value="tournament"><span className="flex items-center gap-2"><Trophy className="w-4 h-4" /> Turnamen</span></Material3SelectItem>
+                  </Material3SelectContent>
+                </Material3Select>
+              </div>
+
+              {/* HOST SELECTION */}
+              <div className="space-y-2">
+                <Material3Select
+                  value={formData.hostId || ""}
+                  onValueChange={(val) => {
+                    const selectedHost = hosts.find(h => h.id === val);
+                    setFormData({ ...formData, hostId: val, hostName: selectedHost?.name || '' });
+                  }}
+                >
+                  <Material3SelectTrigger label="Pilih Host / Penyelenggara" hasValue={!!formData.hostId}>
+                    <Material3SelectValue placeholder="Siapa host event ini?" />
+                  </Material3SelectTrigger>
+                  <Material3SelectContent>
+                    {hosts.length > 0 ? (
+                      hosts.map(host => (
+                        <Material3SelectItem key={host.id} value={host.id}>
+                          <span className="flex items-center gap-2">
+                            <User className="w-4 h-4 text-[#ffbe00]" />
+                            {host.name}
+                          </span>
+                        </Material3SelectItem>
+                      ))
+                    ) : (
+                      <div className="p-2 text-xs text-gray-500 text-center">Loading Data Host...</div>
+                    )}
                   </Material3SelectContent>
                 </Material3Select>
               </div>
@@ -807,11 +865,66 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
               </div>
 
               <Material3Input
-                label="Lokasi / Lapangan"
+                label="Lokasi / Tempat"
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 required
               />
+
+              <Material3Input
+                label="Link Lokasi (Gmaps)"
+                placeholder="https://maps.app.goo.gl/..."
+                value={formData.locationMapLink}
+                onChange={(e) => setFormData({ ...formData, locationMapLink: e.target.value })}
+              />
+
+              {/* DYNAMIC COURTS LIST */}
+              <div className="space-y-3 bg-white/5 p-4 rounded-xl border border-white/10">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-gray-400 uppercase">Daftar Lapangan (Opsional)</label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setCourts([...courts, ''])}
+                    className="h-6 text-[#ffbe00] hover:text-[#ffbe00] hover:bg-[#ffbe00]/10"
+                  >
+                    <Plus className="w-3 h-3 mr-1" /> Tambah
+                  </Button>
+                </div>
+
+                {courts.map((court, index) => (
+                  <div key={index} className="flex gap-2 items-center animate-in slide-in-from-left-2">
+                    <div className="w-full">
+                      <Material3Input
+                        label={`Lapangan ${index + 1}`}
+                        placeholder="Court 1 / Lap 1"
+                        value={court}
+                        onChange={(e) => {
+                          const newCourts = [...courts];
+                          newCourts[index] = e.target.value;
+                          setCourts(newCourts);
+                        }}
+                      />
+                    </div>
+                    {courts.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          const newCourts = courts.filter((_, i) => i !== index);
+                          setCourts(newCourts);
+                        }}
+                        className="mt-1 text-red-500 hover:text-red-600 hover:bg-red-500/10 h-10 w-10 shrink-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <p className="text-[10px] text-gray-500 italic">*Isi daftar lapangan jika menggunakan lebih dari satu court.</p>
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <Material3Input

@@ -107,13 +107,15 @@ export async function POST(req: Request) {
         const {
             title, date, time, location, price, quota,
             description, type, coachName, coachNickname,
-            externalLink, organizer, allowWaitingList, // <-- Tambah ini
-            allowedUserTypes, partnerMechanism, // <-- Tournament Fields
-            skillLevel, curriculum, // <-- Drilling Fields
-            playerCriteria, prizes, // <-- New Tournament Fields
-            isRecurring, // Ambil flag ini
-            cost_court, cost_shuttle, cost_tool, cost_coach, // Financials
-            sparringOpponent, matchFormat // <-- Sparring Fields
+            externalLink, organizer, allowWaitingList,
+            allowedUserTypes, partnerMechanism,
+            skillLevel, curriculum,
+            playerCriteria, prizes,
+            isRecurring,
+            cost_court, cost_shuttle, cost_tool, cost_coach,
+            sparringOpponent, matchFormat,
+            locationMapLink, courts, // New Fields
+            hostId: selectedHostId, hostName // New Host Fields
         } = body;
 
         // Validasi dasar
@@ -126,22 +128,24 @@ export async function POST(req: Request) {
             date, // Format: YYYY-MM-DD
             time, // Format: HH:mm - HH:mm
             location,
+            locationMapLink: locationMapLink || "", // <-- New
+            courts: courts || [], // <-- New
             price: Number(price),
             quota: Number(quota),
             bookedSlot: 0,
             description: description || "",
-            allowWaitingList: allowWaitingList || false, // <-- Tambah ini (Default: false)
+            allowWaitingList: allowWaitingList || false,
             // Field Penting untuk Drilling:
-            type: type || "mabar", // 'mabar' | 'drilling' | 'tournament'
-            coachName: coachName || "", // Hanya terisi jika type == 'drilling'
-            coachNickname: coachNickname || "", // Saved Nickname
-            skillLevel: skillLevel || "all", // 'beginner' | 'intermediate' | 'advanced' | 'all'
-            curriculum: curriculum || "", // Detailed topic
+            type: type || "mabar",
+            coachName: coachName || "",
+            coachNickname: coachNickname || "",
+            skillLevel: skillLevel || "all",
+            curriculum: curriculum || "",
             // Field untuk Tournament Eksternal
             externalLink: externalLink || "",
             // Field Penting untuk Tournament Internal:
-            allowedUserTypes: allowedUserTypes || ['member', 'guest'], // ['member'] only or both
-            partnerMechanism: partnerMechanism || 'user', // 'user' (pilih sendiri) | 'coach' (ditentukan coach)
+            allowedUserTypes: allowedUserTypes || ['member', 'guest'],
+            partnerMechanism: partnerMechanism || 'user',
             organizer: organizer || "",
             playerCriteria: playerCriteria || "",
             prizes: prizes || "",
@@ -149,7 +153,8 @@ export async function POST(req: Request) {
             moduleId: body.moduleId || null,
             moduleTitle: body.moduleTitle || null,
 
-            hostId: session.user.id,
+            hostId: selectedHostId || session.user.id, // Use selected Host or Current User
+            hostName: hostName || session.user.name, // Save Host Name
             createdAt: new Date().toISOString(),
             status: 'open',
             // Financials for Drilling
