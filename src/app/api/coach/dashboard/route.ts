@@ -13,6 +13,11 @@ export async function GET(req: NextRequest) {
     // 1. Get Coach ID
     const coachId = session.user.id;
 
+    // Fetch User Profile for Nickname
+    const userDoc = await db.collection('users').doc(coachId).get();
+    const userData = userDoc.data();
+    const nickname = userData?.nickname || session.user.name?.split(' ')[0] || 'Coach';
+
     // MOCK DATA FALLBACKS (Since we might not have real data yet)
     const stats = {
       activeStudents: 0,
@@ -159,6 +164,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
+        profile: {
+          nickname: nickname
+        },
         stats: {
           ...stats,
           income: `Rp ${stats.income.toLocaleString('id-ID')}`

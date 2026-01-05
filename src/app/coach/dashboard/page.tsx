@@ -114,7 +114,7 @@ export default function CoachDashboard() {
                     </Avatar>
                     <div>
                         <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-white uppercase italic">
-                            HEAD COACH <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ffbe00] to-[#ca1f3d]">{session?.user?.name?.split(' ')[0] || 'MASTER'}</span>
+                            HEAD COACH <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ffbe00] to-[#ca1f3d]">{dashboard.profile?.nickname || session?.user?.name?.split(' ')[0] || 'MASTER'}</span>
                         </h1>
                         <div className="flex items-center gap-3 mt-1">
                             <Badge variant="outline" className="text-[#ffbe00] border-[#ffbe00]/30 bg-[#ffbe00]/10 text-[10px] uppercase tracking-widest font-bold px-3 py-1 rounded-full">

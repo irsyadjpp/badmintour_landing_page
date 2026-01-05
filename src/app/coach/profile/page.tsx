@@ -19,7 +19,9 @@ export default function CoachProfilePage() {
 
     const [formData, setFormData] = useState({
         name: '',
+        nickname: '',
         phoneNumber: '',
+        domicile: '',
         specialty: '',
         rate: '',
         bio: ''
@@ -46,7 +48,9 @@ export default function CoachProfilePage() {
             if (data.success && data.data) {
                 setFormData({
                     name: data.data.name || session?.user?.name || '',
+                    nickname: data.data.nickname || '',
                     phoneNumber: data.data.phoneNumber || '',
+                    domicile: data.data.domicile || '',
                     specialty: data.data.coachProfile?.specialty || '',
                     rate: data.data.coachProfile?.rate || '',
                     bio: data.data.coachProfile?.bio || '',
@@ -230,16 +234,33 @@ export default function CoachProfilePage() {
                                 className="bg-[#0a0a0a]"
                             />
                             <Material3Input
-                                label="WhatsApp (Pairing Key)"
-                                value={formData.phoneNumber}
-                                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                                label="Nickname (Panggilan)"
+                                value={formData.nickname}
+                                onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
                                 className="bg-[#0a0a0a]"
-                                type="tel"
-                                disabled={isPhoneLocked}
                             />
-                            {isPhoneLocked && (
-                                <p className="text-[10px] text-gray-500 mt-1">*Nomor terkunci. Hubungi admin untuk ubah.</p>
-                            )}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <Material3Input
+                                label="Domisili (Kota)"
+                                value={formData.domicile}
+                                onChange={(e) => setFormData({ ...formData, domicile: e.target.value })}
+                                className="bg-[#0a0a0a]"
+                            />
+                            <div>
+                                <Material3Input
+                                    label="WhatsApp (Pairing Key)"
+                                    value={formData.phoneNumber}
+                                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                                    className="bg-[#0a0a0a]"
+                                    type="tel"
+                                    disabled={isPhoneLocked}
+                                />
+                                {isPhoneLocked && (
+                                    <p className="text-[10px] text-gray-500 mt-1">*Nomor terkunci. Hubungi admin untuk ubah.</p>
+                                )}
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

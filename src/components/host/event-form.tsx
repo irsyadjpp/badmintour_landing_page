@@ -101,31 +101,31 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
   // LOAD INITIAL DATA (FOR EDIT)
   useEffect(() => {
     if (mode === 'edit' && initialData) {
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         title: initialData.title || '',
-        type: initialData.type || 'mabar',
+        type: initialData.type ? initialData.type.toLowerCase() : 'mabar',
         coachName: initialData.coachName || '',
-        coachNickname: initialData.coachNickname || '', // Load Nickname
+        coachNickname: initialData.coachNickname || '',
         externalLink: initialData.externalLink || '',
         allowedUserTypes: initialData.allowedUserTypes?.[1] === 'guest' || initialData.allowedUserTypes?.includes('guest') ? 'both' : 'member',
         partnerMechanism: initialData.partnerMechanism || 'user',
-        skillLevel: initialData.skillLevel || 'all',
+        skillLevel: initialData.skillLevel ? initialData.skillLevel.toLowerCase() : 'all',
         curriculum: initialData.curriculum || '',
         location: initialData.location || '',
         price: (initialData.price !== undefined && initialData.price !== null) ? formatRupiah(initialData.price) : '',
         quota: initialData.quota?.toString() || '12',
         description: initialData.description || '',
-        allowWaitingList: initialData.allowWaitingList || false, // Load WL Setting
+        allowWaitingList: initialData.allowWaitingList || false,
         organizer: initialData.organizer || '',
         playerCriteria: initialData.playerCriteria || '',
         prizes: initialData.prizes || '',
-        sparringOpponent: initialData.sparringOpponent || '', // Load Sparring
-        matchFormat: initialData.matchFormat || '', // Load Sparring
-        assistantCoachIds: initialData.assistantCoachIds || [], // Load Assistant IDs
-        assistantCoachNames: initialData.assistantCoachNames || [] // Load Assistant Names
-      });
+        sparringOpponent: initialData.sparringOpponent || '',
+        matchFormat: initialData.matchFormat || '',
+        assistantCoachIds: initialData.assistantCoachIds || [],
+        assistantCoachNames: initialData.assistantCoachNames || []
+      }));
 
-      // Update Drill Costs for Edit
       // Update Drill Costs for Edit
       if (initialData.financials) {
         setDrillCosts({
@@ -135,7 +135,6 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
           coach: formatRupiah(initialData.financials.coachFee || 0)
         });
       } else if (initialData.cost_court || initialData.cost_shuttle) {
-        // Fallback for flat structure
         setDrillCosts({
           court: formatRupiah(initialData.cost_court || 0),
           shuttle: formatRupiah(initialData.cost_shuttle || 0),
@@ -144,19 +143,27 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
         });
       }
 
+      // Robust Date Parsing
       if (initialData.date) {
         if (initialData.date.includes(' - ')) {
           const [startStr, endStr] = initialData.date.split(' - ');
           setSelectedDate(new Date(startStr));
           setSelectedEndDate(new Date(endStr));
         } else {
-          setSelectedDate(new Date(initialData.date));
+          // Handle potential timestamp or string
+          const d = new Date(initialData.date);
+          if (!isNaN(d.getTime())) setSelectedDate(d);
         }
       }
+
+      // Robust Time Parsing (Handle various separators)
       if (initialData.time) {
-        const [start, end] = initialData.time.split(' - ');
-        setStartTime(start || '');
-        setEndTime(end || '');
+        // Match HH:mm - HH:mm or HH:mm-HH:mm
+        const parts = initialData.time.split(/\s*-\s*/);
+        if (parts.length >= 2) {
+          setStartTime(parts[0]);
+          setEndTime(parts[1]);
+        }
       }
     }
   }, [mode, initialData]);
@@ -191,6 +198,16 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
     };
     fetchModules();
   }, []);
+
+  // SYNC NICKNAME IF MISSING ON LOAD (Legacy Data Support)
+  useEffect(() => {
+    if (formData.coachName && !formData.coachNickname && coaches.length > 0) {
+      const found = coaches.find(c => c.name === formData.coachName);
+      if (found?.nickname) {
+        setFormData(prev => ({ ...prev, coachNickname: found.nickname }));
+      }
+    }
+  }, [coaches, formData.coachName, formData.coachNickname]);
 
   // AUTO-SET END TIME
   useEffect(() => {
