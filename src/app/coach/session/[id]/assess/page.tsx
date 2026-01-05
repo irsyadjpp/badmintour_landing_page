@@ -133,9 +133,9 @@ export default function SessionAssessmentPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {/* Total Players Card */}
-        <div className="bg-[#151515] p-8 rounded-[2.5rem] border border-white/5 relative overflow-hidden group hover:border-[#ca1f3d]/30 transition-colors">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Card 1: Total Participants */}
+        <div className="bg-[#151515] p-6 lg:p-8 rounded-[2.5rem] border border-white/5 relative overflow-hidden group hover:border-[#ca1f3d]/30 transition-colors">
           <div className="absolute top-0 right-0 w-32 h-32 bg-[#ca1f3d]/5 blur-[60px] rounded-full pointer-events-none group-hover:bg-[#ca1f3d]/10 transition"></div>
           <div className="relative z-10 flex flex-col justify-between h-full">
             <div className="flex justify-between items-start mb-4">
@@ -145,27 +145,51 @@ export default function SessionAssessmentPage() {
               <span className="text-[10px] font-bold text-gray-500 uppercase border border-white/5 px-2 py-1 rounded-md">Total</span>
             </div>
             <div>
-              <h3 className="text-5xl font-black text-white tracking-tight">{participants.length}</h3>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Participants</p>
+              <h3 className="text-4xl lg:text-5xl font-black text-white tracking-tight">{participants.length}</h3>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Registrations</p>
             </div>
           </div>
         </div>
 
-        {/* Assessment Progress Card */}
-        <div className="bg-[#151515] p-8 rounded-[2.5rem] border border-white/5 relative overflow-hidden group hover:border-[#ffbe00]/30 transition-colors">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[#ffbe00]/5 blur-[60px] rounded-full pointer-events-none group-hover:bg-[#ffbe00]/10 transition"></div>
+        {/* Card 2: Assessed (Progress) */}
+        <div className="bg-[#151515] p-6 lg:p-8 rounded-[2.5rem] border border-white/5 relative overflow-hidden group hover:border-[#22c55e]/30 transition-colors">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#22c55e]/5 blur-[60px] rounded-full pointer-events-none group-hover:bg-[#22c55e]/10 transition"></div>
           <div className="relative z-10 flex flex-col justify-between h-full">
             <div className="flex justify-between items-start mb-4">
-              <div className="w-12 h-12 bg-[#ffbe00]/10 text-[#ffbe00] border border-[#ffbe00]/20 rounded-2xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20 rounded-2xl flex items-center justify-center">
                 <Trophy className="w-6 h-6" />
               </div>
-              <span className="text-[10px] font-bold text-gray-500 uppercase border border-white/5 px-2 py-1 rounded-md">Progress</span>
+              <span className="text-[10px] font-bold text-gray-500 uppercase border border-white/5 px-2 py-1 rounded-md">Done</span>
             </div>
             <div>
-              <h3 className="text-5xl font-black text-white tracking-tight">
-                {participants.filter((p: any) => p.hasAssessment).length} <span className="text-2xl text-gray-600">/ {participants.length}</span>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-4xl lg:text-5xl font-black text-white tracking-tight">
+                  {participants.filter((p: any) => p.hasAssessment).length}
+                </h3>
+                <span className="text-xl text-gray-600 font-bold">
+                  / {participants.filter((p: any) => p.checkInAt).length || participants.length}
+                </span>
+              </div>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Completed</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: Pending Action */}
+        <div className="bg-[#151515] p-6 lg:p-8 rounded-[2.5rem] border border-white/5 relative overflow-hidden group hover:border-[#3b82f6]/30 transition-colors">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#3b82f6]/5 blur-[60px] rounded-full pointer-events-none group-hover:bg-[#3b82f6]/10 transition"></div>
+          <div className="relative z-10 flex flex-col justify-between h-full">
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-12 h-12 bg-[#3b82f6]/10 text-[#3b82f6] border border-[#3b82f6]/20 rounded-2xl flex items-center justify-center">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <span className="text-[10px] font-bold text-gray-500 uppercase border border-white/5 px-2 py-1 rounded-md">Pending</span>
+            </div>
+            <div>
+              <h3 className="text-4xl lg:text-5xl font-black text-white tracking-tight">
+                {participants.filter((p: any) => p.checkInAt && !p.hasAssessment).length}
               </h3>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Assessed</p>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Need Review</p>
             </div>
           </div>
         </div>
@@ -210,8 +234,8 @@ export default function SessionAssessmentPage() {
                       setAbsentDialog({ isOpen: true, bookingId: player.bookingId, name: participant?.userName || 'Participant' });
                     }}
                     className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold uppercase cursor-pointer transition-all hover:scale-105 active:scale-95 ${!player.checkInAt
-                        ? 'bg-red-500 text-white border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)]'
-                        : 'bg-transparent text-gray-500 border-gray-700 hover:text-red-400 hover:border-red-400'
+                      ? 'bg-red-500 text-white border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)]'
+                      : 'bg-transparent text-gray-500 border-gray-700 hover:text-red-400 hover:border-red-400'
                       }`}
                   >
                     Tidak Hadir
@@ -224,8 +248,8 @@ export default function SessionAssessmentPage() {
                       handleCheckIn(player.bookingId, true);
                     }}
                     className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold uppercase cursor-pointer transition-all hover:scale-105 active:scale-95 ${player.checkInAt
-                        ? 'bg-green-500 text-black border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.4)]'
-                        : 'bg-transparent text-gray-500 border-gray-700 hover:text-green-400 hover:border-green-400'
+                      ? 'bg-green-500 text-black border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.4)]'
+                      : 'bg-transparent text-gray-500 border-gray-700 hover:text-green-400 hover:border-green-400'
                       }`}
                   >
                     Hadir

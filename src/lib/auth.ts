@@ -169,6 +169,12 @@ export const authOptions: NextAuthOptions = {
             if (userData?.status && userData.status !== 'active') {
               return `/login?error=AccountInactive`;
             }
+
+            // Auto-Sync request by user: DISABLE sync here.
+            // Only update lastLogin
+            await userRef.update({
+              lastLogin: new Date().toISOString()
+            });
           }
           return true;
         } catch (error) {

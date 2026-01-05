@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { db } from "@/lib/firebase-admin";
+import { db, admin } from "@/lib/firebase-admin";
 import { logActivity } from "@/lib/audit-logger";
 
 export async function GET(req: Request) {
@@ -44,8 +44,9 @@ export async function PUT(req: Request) {
 
         const { userId, role } = await req.json();
 
-        await db.collection("users").doc(userId).update({ 
+        await db.collection("users").doc(userId).update({
             role,
+            roles: admin.firestore.FieldValue.arrayUnion(role),
             updatedAt: new Date().toISOString()
         });
 

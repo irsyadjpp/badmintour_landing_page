@@ -30,29 +30,53 @@ export async function GET(req: NextRequest) {
     const eventsRef = db.collection('events');
     const now = new Date();
 
-    // Filter by coach (assuming 'coachId' field exists on event)
-    // If not, we might need to filter manually or rely on 'host' field if coach is host
-    const eventsSnapshot = await eventsRef
+    // 33. Filter by coach OR assistant
+    // Run two queries because Firestore OR queries across different fields are tricky in older SDKs
+    // Query A: Head Coach
+    const headCoachPromise = eventsRef
       .where('coachId', '==', coachId)
-      .where('date', '>=', now.toISOString().split('T')[0]) // Simple date string comparison or timestamp
+      .where('date', '>=', now.toISOString().split('T')[0])
       .orderBy('date', 'asc')
       .limit(5)
       .get();
 
-    if (!eventsSnapshot.empty) {
-      eventsSnapshot.forEach(doc => {
-        const data = doc.data();
-        upcomingSessions.push({
+    // Query B: Assistant Coach
+    const assistantCoachPromise = eventsRef
+      .where('assistantCoachIds', 'array-contains', coachId)
+      .where('date', '>=', now.toISOString().split('T')[0])
+      .orderBy('date', 'asc')
+      .limit(5)
+      .get();
+
+    const [headEvents, assistantEvents] = await Promise.all([headCoachPromise, assistantCoachPromise]);
+
+    const sessionMap = new Map();
+
+    // Helper to process docs
+    const processDoc = (doc: any, role: string) => {
+      const data = doc.data();
+      if (!sessionMap.has(doc.id)) {
+        sessionMap.set(doc.id, {
           id: doc.id,
-          student: data.title, // Or fetch participants if needed
+          student: data.title,
           type: data.type || 'Session',
           time: data.time || 'TBA',
           location: data.location || 'Online',
-          status: 'Scheduled', // Logic to determine status
-          date: data.date
+          status: 'Scheduled',
+          date: data.date,
+          role: role // 'Head' or 'Assistant'
         });
-      });
-    }
+      }
+    };
+
+    headEvents.forEach(doc => processDoc(doc, 'Head Coach'));
+    assistantEvents.forEach(doc => processDoc(doc, 'Assistant'));
+
+    // Convert map to array and sort
+    upcomingSessions.push(...Array.from(sessionMap.values())
+      .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .slice(0, 5) // Limit total to 5
+    );
 
     // 3. Fetch Earnings (from finance_ledger or transactions)
     // Simple aggregation for MVP
@@ -87,28 +111,49 @@ export async function GET(req: NextRequest) {
     stats.activeStudents = uniqueStudents.size;
 
     // 5. Fetch PAST Sessions (for History Tab)
-    const pastSessions: any[] = [];
-    const pastEventsSnapshot = await eventsRef
+    const pastSessions: any[] = []; // Explicitly declare array
+
+    // Query A: Head Coach
+    const pastHeadPromise = eventsRef
       .where('coachId', '==', coachId)
       .where('date', '<', now.toISOString().split('T')[0])
       .orderBy('date', 'desc')
       .limit(10)
       .get();
 
-    if (!pastEventsSnapshot.empty) {
-      pastEventsSnapshot.forEach(doc => {
-        const data = doc.data();
-        pastSessions.push({
+    // Query B: Assistant Coach
+    const pastAssistantPromise = eventsRef
+      .where('assistantCoachIds', 'array-contains', coachId)
+      .where('date', '<', now.toISOString().split('T')[0])
+      .orderBy('date', 'desc')
+      .limit(10)
+      .get();
+
+    const [pastHead, pastAssistant] = await Promise.all([pastHeadPromise, pastAssistantPromise]);
+
+    const pastSessionMap = new Map();
+    const processPastDoc = (doc: any, role: string) => {
+      const data = doc.data();
+      if (!pastSessionMap.has(doc.id)) {
+        pastSessionMap.set(doc.id, {
           id: doc.id,
           student: data.title,
           type: data.type || 'Session',
           time: data.time || 'TBA',
           location: data.location || 'Online',
           status: 'Completed',
-          date: data.date
+          date: data.date,
+          role: role
         });
-      });
-    }
+      }
+    };
+
+    pastHead.forEach(doc => processPastDoc(doc, 'Head Coach'));
+    pastAssistant.forEach(doc => processPastDoc(doc, 'Assistant'));
+
+    pastSessions.push(...Array.from(pastSessionMap.values())
+      .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()) // Descending
+      .slice(0, 10));
 
     // FORMAT RESPONSE
     return NextResponse.json({

@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CustomAlertModal } from '@/components/ui/custom-alert-modal';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -57,7 +58,22 @@ export default function SuperAdminUsersPage() {
     // State untuk Modal Edit Role
     const [selectedUser, setSelectedUser] = useState<any>(null);
     const [newRole, setNewRole] = useState('');
+
     const [updating, setUpdating] = useState(false);
+
+    // Custom Alert State
+    const [alertConfig, setAlertConfig] = useState<{
+        open: boolean;
+        type: 'success' | 'error';
+        title: string;
+        message: React.ReactNode;
+        buttonText?: string;
+    }>({
+        open: false,
+        type: 'success',
+        title: '',
+        message: '',
+    });
 
     // Fetch All Users
     const fetchUsers = async () => {
@@ -133,14 +149,32 @@ export default function SuperAdminUsersPage() {
             });
 
             if (res.ok) {
-                toast({ title: "Sukses", description: `Role diubah menjadi ${newRole.toUpperCase()}.`, className: "bg-green-600 text-white" });
+                // toast({ title: "Sukses", description: `Role diubah menjadi ${newRole.toUpperCase()}.`, className: "bg-green-600 text-white" });
+                setAlertConfig({
+                    open: true,
+                    type: 'success',
+                    title: 'ROLE UPDATED!',
+                    message: (
+                        <span>
+                            Role user <strong className="text-white">{selectedUser.name}</strong> berhasil diubah menjadi <span className="text-[#22c55e] font-black">{newRole.toUpperCase()}</span>.
+                        </span>
+                    ),
+                    buttonText: 'OK, LANJUT'
+                });
                 fetchUsers();
                 setSelectedUser(null);
             } else {
                 throw new Error("Gagal update role");
             }
         } catch (error) {
-            toast({ title: "Gagal", description: "Terjadi kesalahan sistem.", variant: "destructive" });
+            // toast({ title: "Gagal", description: "Terjadi kesalahan sistem.", variant: "destructive" });
+            setAlertConfig({
+                open: true,
+                type: 'error',
+                title: 'DOUBLE FAULT!',
+                message: "Gagal mengubah role user. Terjadi kesalahan sistem atau koneksi.",
+                buttonText: 'COBA LAGI'
+            });
         } finally {
             setUpdating(false);
         }
@@ -375,6 +409,15 @@ export default function SuperAdminUsersPage() {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <CustomAlertModal
+                isOpen={alertConfig.open}
+                onClose={() => setAlertConfig(prev => ({ ...prev, open: false }))}
+                type={alertConfig.type}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                buttonText={alertConfig.buttonText}
+            />
         </div>
     );
 }

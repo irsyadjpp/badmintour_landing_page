@@ -29,14 +29,36 @@ export async function PUT(req: Request) {
         const body = await req.json();
         const { phoneNumber, name, nickname, domicile, image } = body;
 
+        console.log("!!! PROFILE PUT HIT !!!");
+        console.log(`User ID: ${session.user.id} | Name: ${session.user.name}`);
+        console.log("Payload:", JSON.stringify(body));
+
         // Validasi
         if (!phoneNumber) {
             return NextResponse.json({ error: "Nomor WhatsApp wajib diisi untuk pairing akun." }, { status: 400 });
         }
 
+        // --- PHONE FORMAT GENERATOR ---
+        const cleanPhone = phoneNumber.replace(/\D/g, '');
+        const formats = new Set<string>();
+        formats.add(phoneNumber); // Original input
+        formats.add(cleanPhone);  // Digits only
+
+        if (cleanPhone.startsWith('0')) {
+            formats.add('62' + cleanPhone.substring(1));
+            formats.add('+62' + cleanPhone.substring(1));
+        }
+        if (cleanPhone.startsWith('62')) {
+            formats.add('0' + cleanPhone.substring(2));
+            formats.add('+' + cleanPhone);
+        }
+
+        const phoneFormats = Array.from(formats);
+        console.log(`[PROFILE_SYNC] Checking phones: ${JSON.stringify(phoneFormats)}`);
+
         // --- LOGIKA PAIRING: CEK DUPLIKASI & AUTO-MERGE ---
         const duplicateCheck = await db.collection("users")
-            .where("phoneNumber", "==", phoneNumber)
+            .where("phoneNumber", "in", phoneFormats)
             .get();
 
         let conflictingGuestId: string | null = null;
@@ -63,15 +85,28 @@ export async function PUT(req: Request) {
         }
 
         // --- UPDATE & PAIRING ---
-        await db.collection("users").doc(session.user.id).update({
-            phoneNumber: phoneNumber, // Field kunci pairing
+        // --- UPDATE & PAIRING ---
+        // Force clean phone for storage to ensure matching works
+        const finalPhone = cleanPhone; // Use the cleaned version (digits only) or format as needed. 
+        // Or better: Use the format the user provided but ensure we can query it? 
+        // Best practice: Store cleaned version for indexing, display version separately? 
+        // For this app, let's store the cleaned version or at least ensured it's consistent.
+        // Actually, let's just stick to what `cleanPhone` variable holds (digits only).
+        // Check `cleanPhone` definition above.
+
+        await db.collection("users").doc(session.user.id).set({
+            phoneNumber: cleanPhone, // SAVE CLEANED PHONE (08...)
+            originalPhone: phoneNumber, // Backup input
             name: name || session.user.name,
-            image: image || session.user.image, // New: Update Image if provided
+            image: image || session.user.image || "",
             nickname: nickname || (session.user as any).nickname || "",
             domicile: domicile || "",
             updatedAt: new Date().toISOString(),
-            isProfileComplete: true
-        });
+            isProfileComplete: true,
+            // Ensure essential fields exist if recreating
+            email: session.user.email || "",
+            role: (session.user as any).role || "member"
+        }, { merge: true });
 
         // ==========================================
         // 3. MAGIC PAIRING: MIGRASI HISTORY GUEST
@@ -81,55 +116,75 @@ export async function PUT(req: Request) {
         let totalSynced = 0;
 
         // A. Sync Bookings
-        const guestBookingsSnapshot = await db.collection("bookings")
-            .where("phoneNumber", "==", phoneNumber)
-            .where("type", "==", "GUEST")
+        // A. Sync Bookings (Remove 'type' filter from query to handle mixed cases 'guest'/'GUEST')
+        const bookingsSnapshot = await db.collection("bookings")
+            .where("phoneNumber", "in", phoneFormats)
             .get();
 
-        if (!guestBookingsSnapshot.empty) {
-            guestBookingsSnapshot.forEach((doc) => {
-                batch.update(doc.ref, {
-                    userId: session.user.id,
-                    type: "MEMBER",
-                    userName: session.user.name
-                });
-                totalSynced++;
+        if (!bookingsSnapshot.empty) {
+            bookingsSnapshot.forEach((doc) => {
+                const data = doc.data();
+                // Logic: Claim ONLY if currently unowned (guest) or explicitly marked as GUEST
+                const isGuestBooking = data.userId === 'guest' ||
+                    data.type === 'GUEST' ||
+                    data.type === 'guest' ||
+                    !data.userId;
+
+                // Sync if it's a guest booking AND not already owned by this user
+                if (isGuestBooking && data.userId !== session.user.id) {
+                    batch.update(doc.ref, {
+                        userId: session.user.id,
+                        type: "MEMBER", // Standardize
+                        userName: session.user.name
+                    });
+                    totalSynced++;
+                }
             });
         }
 
         // B. Sync Jersey Orders
-        const guestJerseySnapshot = await db.collection("jersey_orders")
-            .where("senderPhone", "==", phoneNumber)
-            .where("type", "==", "GUEST")
+        const jerseySnapshot = await db.collection("jersey_orders")
+            .where("senderPhone", "in", phoneFormats)
             .get();
 
-        if (!guestJerseySnapshot.empty) {
-            guestJerseySnapshot.forEach((doc) => {
-                batch.update(doc.ref, {
-                    userId: session.user.id,
-                    isMember: true,
-                    type: "MEMBER",
-                    fullName: session.user.name // Opsional: Update nama
-                });
-                totalSynced++;
+        if (!jerseySnapshot.empty) {
+            jerseySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const isGuestOrder = data.type === 'GUEST' ||
+                    data.type === 'guest' ||
+                    !data.isMember ||
+                    data.userId === 'guest';
+
+                if (isGuestOrder && data.userId !== session.user.id) {
+                    batch.update(doc.ref, {
+                        userId: session.user.id,
+                        isMember: true,
+                        type: "MEMBER",
+                        fullName: session.user.name
+                    });
+                    totalSynced++;
+                }
             });
         }
 
         // C. Sync Waiting Lists
-        const guestWLSnapshot = await db.collection("waiting_lists")
-            .where("phone", "==", phoneNumber)
-            .where("type", "==", "guest")
+        const wlSnapshot = await db.collection("waiting_lists")
+            .where("phone", "in", phoneFormats)
             .get();
 
-        if (!guestWLSnapshot.empty) {
-            guestWLSnapshot.forEach((doc) => {
-                batch.update(doc.ref, {
-                    userId: session.user.id,
-                    name: session.user.name,
-                    email: session.user.email,
-                    type: 'member'
-                });
-                totalSynced++;
+        if (!wlSnapshot.empty) {
+            wlSnapshot.forEach((doc) => {
+                const data = doc.data();
+                // WL usually has type 'guest' or 'member'
+                if (data.type !== 'member' && data.userId !== session.user.id) {
+                    batch.update(doc.ref, {
+                        userId: session.user.id,
+                        name: session.user.name,
+                        email: session.user.email,
+                        type: 'member'
+                    });
+                    totalSynced++;
+                }
             });
         }
 
@@ -191,6 +246,8 @@ export async function PUT(req: Request) {
         if (totalSynced > 0) {
             await batch.commit();
             console.log(`[PAIRING] ${totalSynced} items (Bookings/Jersey/WL) synced to user ${session.user.name}`);
+        } else {
+            console.log(`[PAIRING] No items found for phones: ${JSON.stringify(phoneFormats)}`);
         }
 
         return NextResponse.json({

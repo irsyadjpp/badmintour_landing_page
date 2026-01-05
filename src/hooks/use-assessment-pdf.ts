@@ -195,11 +195,32 @@ export function useAssessmentPdf() {
 
       yPos += Math.max(strText.length, weakText.length) * 5 + 10;
 
-      // 10. AI Generated Analysis (7 Parameters)
+      // 10. HEAD COACH SUMMARY (Using AI Feedback content but rebranded)
+      if (report.aiFeedback) {
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(0); // Black
+        pdf.text("HEAD COACH SUMMARY", margin, yPos);
+        yPos += 6;
+
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+        const summaryText = pdf.splitTextToSize(report.aiFeedback.replace(/AI/g, "Coach"), pageWidth - (margin * 2));
+        pdf.text(summaryText, margin, yPos);
+        yPos += (summaryText.length * 5) + 10;
+      }
+
+      // 11. Detailed Skill Analysis (Renamed from AI Generated)
       if (report.skillAnalysis) {
+        // Check page break
+        if (yPos > pageHeight - 60) {
+          pdf.addPage();
+          yPos = 20;
+        }
+
         pdf.setFont('helvetica', 'bold');
         pdf.setTextColor(0);
-        pdf.text("DETAILED ANALYSIS (AI GENERATED)", margin, yPos);
+        pdf.setFontSize(11);
+        pdf.text("DETAILED SKILL ANALYSIS", margin, yPos);
         yPos += 6;
 
         pdf.setFontSize(8);
@@ -216,7 +237,8 @@ export function useAssessmentPdf() {
             pdf.text(`• ${item.label.split('(')[0].trim()}:`, margin, yPos);
 
             pdf.setFont('helvetica', 'normal');
-            const desc = pdf.splitTextToSize(analysisText, pageWidth - margin - 50);
+            const cleanAnalysis = analysisText.replace(/AI/g, "Coach"); // Remove mentions of AI in text too
+            const desc = pdf.splitTextToSize(cleanAnalysis, pageWidth - margin - 50);
             pdf.text(desc, margin + 40, yPos);
 
             yPos += (desc.length * 4) + 2;

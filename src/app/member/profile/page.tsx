@@ -132,8 +132,8 @@ export default function ProfilePage() {
                     isOpen: true,
                     type: 'success',
                     title: 'SYNCHRONIZED!',
-                    description: 'Data profil Anda berhasil disinkronisasi dengan akun Google.',
-                    actionLabel: "OK, MANTAP"
+                    description: 'Data profil disamakan dengan sesi login. Jika baru saja mengubah data di Google, silakan Logout & Login kembali.',
+                    actionLabel: "OK, MENGERTI"
                 });
             }
         } catch (e) {
