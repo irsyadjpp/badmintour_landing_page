@@ -27,6 +27,7 @@ import {
 export interface AssessmentReport {
   date: string;
   coachName: string;
+  memberName?: string; // Added field
   moduleTitle: string;
   level: string;
   totalScore: number;

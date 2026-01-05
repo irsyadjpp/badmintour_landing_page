@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 
 export interface AssessmentReportData {
   coachName: string;
+  memberName?: string; // Added member name
   moduleTitle: string;
   level: string;
   totalScore: number;
@@ -59,7 +60,6 @@ export function useAssessmentPdf() {
       let yPos = 20;
 
       // 3. Branding - Logo (Scaled Down)
-      // 3. Branding - Logo (Scaled Down & Aspect Ratio Preserved)
       try {
         const logoUrl = window.location.origin + '/images/logo.png';
         const img = new Image();
@@ -84,7 +84,7 @@ export function useAssessmentPdf() {
 
       // 4. Header Text
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(16); // Slightly smaller title
+      pdf.setFontSize(16);
       pdf.setTextColor(202, 31, 61); // #ca1f3d Red
       pdf.text("OFFICIAL ASSESSMENT REPORT", pageWidth - margin, 20, { align: 'right' });
 
@@ -108,7 +108,6 @@ export function useAssessmentPdf() {
       // @ts-ignore
       pdf.setGState(new pdf.GState({ opacity: 1.0 }));
 
-
       // 6. Report Metadata
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(14);
@@ -119,7 +118,14 @@ export function useAssessmentPdf() {
       pdf.setFontSize(10);
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(60);
-      pdf.text(`Level: ${report.level}  |  Coach: ${report.coachName}  |  Date: ${report.date}`, margin, yPos);
+
+      // Update metadata line to include Member Name
+      const metadataText = `Member: ${report.memberName || '-'}  |  Level: ${report.level}  |  Coach: ${report.coachName}`;
+      pdf.text(metadataText, margin, yPos);
+      yPos += 5;
+
+      pdf.setFontSize(9);
+      pdf.text(`Date: ${report.date}`, margin, yPos);
 
       yPos += 5;
       pdf.setLineWidth(0.5);

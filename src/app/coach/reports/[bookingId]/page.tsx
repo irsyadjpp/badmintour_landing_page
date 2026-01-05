@@ -87,6 +87,7 @@ export default function CoachReportPage() {
   const reportData: AssessmentReport = {
     date: format(getSafeDate(data.data.createdAt), 'dd MMMM yyyy', { locale: localeId }),
     coachName: data.data.coachName || 'Coach',
+    memberName: data.playerName || 'User', // Added member name
     moduleTitle: data.eventTitle || 'Sesi Latihan',
     level: data.data.level,
     totalScore: data.data.totalScore,
