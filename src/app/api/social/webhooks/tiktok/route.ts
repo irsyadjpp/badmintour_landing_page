@@ -34,12 +34,12 @@ export async function POST(req: NextRequest) {
     const signature = headers.get('x-tiktok-event-signature') || headers.get('X-TikTok-Event-Signature');
     const timestamp = headers.get('x-tiktok-event-signature-timestamp') || headers.get('X-TikTok-Event-Signature-Timestamp');
 
-    // 1. Verification Challenge (First time setup often sends a challenge)
-    // TikTok might send a specific challenge request.
     const body = JSON.parse(bodyText);
 
-    if (body.event === 'verify_webhook') {
-      // If manual verification is needed or TikTok sends a specific verification event
+    // 1. Verification Challenge (Priority)
+    // Checks if 'challenge' exists in body. Return it immediately to verify ownership.
+    if (body.challenge) {
+      console.log("[TikTok Webhook] Handling Verification Challenge:", body.challenge);
       return NextResponse.json({ challenge: body.challenge }, { status: 200 });
     }
 
@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
     // Note: For MVP in development (localhost), we might skip strict check if headers missing,
     // but for production it's mandatory.
     if (process.env.NODE_ENV === 'production' && (!signature || !timestamp)) {
+      console.error("[TikTok Webhook] Missing Signature Headers");
       return NextResponse.json({ error: "Missing signature" }, { status: 401 });
     }
 
