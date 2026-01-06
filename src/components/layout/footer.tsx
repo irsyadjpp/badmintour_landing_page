@@ -50,17 +50,17 @@ export default function Footer() {
               </h4>
               <ul className="space-y-3 text-gray-400">
                 <li>
-                  <a href="#schedule" className="hover:text-white transition">
+                  <a href="/mabar" className="hover:text-white transition">
                     Cari Jadwal Mabar
                   </a>
                 </li>
                 <li>
-                  <a href="#schedule" className="hover:text-white transition">
+                  <a href="#" className="hover:text-white transition">
                     Tantang Tim Lain (Sparring)
                   </a>
                 </li>
                 <li>
-                  <a href="#services" className="hover:text-white transition">
+                  <a href="/drilling" className="hover:text-white transition">
                     Daftar Kelas Drilling
                   </a>
                 </li>
@@ -77,8 +77,13 @@ export default function Footer() {
               </h4>
               <ul className="space-y-3 text-gray-400">
                 <li>
-                  <a href="#" className="hover:text-white transition">
+                  <a href="/hall-of-fame" className="hover:text-white transition">
                     Hall of Fame
+                  </a>
+                </li>
+                <li>
+                  <a href="/moments" className="hover:text-white transition">
+                    Momen Seru
                   </a>
                 </li>
                 <li>

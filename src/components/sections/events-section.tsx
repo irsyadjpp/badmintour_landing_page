@@ -34,14 +34,23 @@ export default function EventsSection() {
     }, []);
 
     // LOGIC FILTER
+    // LOGIC FILTER
     const filteredEvents = events.filter(event => {
         if (filter === 'ALL') return true;
-        // Asumsi di data event ada field 'type' atau deteksi dari judul
-        // Jika belum ada field type, kita cek keyword di title
-        const isDrilling = event.title?.toLowerCase().includes('drilling') || event.title?.toLowerCase().includes('coaching') || event.type === 'Drilling';
+
+        // Normalize checking
+        const title = event.title?.toLowerCase() || "";
+        const type = event.type?.toLowerCase() || "";
+
+        const isDrilling =
+            title.includes('drilling') ||
+            title.includes('coaching') ||
+            type === 'drilling' ||
+            type === 'class';
 
         if (filter === 'DRILLING') return isDrilling;
-        if (filter === 'MABAR') return !isDrilling;
+        if (filter === 'MABAR') return !isDrilling; // Includes mabar, sparring, tournament
+
         return true;
     });
 
