@@ -9,6 +9,7 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import TikTokGallery from "@/components/social/tiktok-gallery";
 
 export default function SocialAdminDashboard() {
   const router = useRouter();
@@ -198,12 +199,18 @@ export default function SocialAdminDashboard() {
       </div>
 
       {/* RECENT ACTIVITY OR QUICK ACTIONS */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <span className="text-cyan-400 font-black">♪</span> Recent TikToks
+        </h2>
+        <div className="bg-[#1A1A1A] border-[#333] text-white rounded-xl p-4 border overflow-hidden">
+          <TikTokGallery />
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card className="bg-[#1A1A1A] border-[#333] text-white h-[300px] flex items-center justify-center border-dashed">
           <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">Review Analytics Chart (Coming Soon)</p>
-        </Card>
-        <Card className="bg-[#1A1A1A] border-[#333] text-white h-[300px] flex items-center justify-center border-dashed">
-          <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">Recent Uploads (Coming Soon)</p>
         </Card>
       </div>
     </div>

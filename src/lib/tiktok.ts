@@ -74,3 +74,42 @@ export const getTikTokUserInfo = async (accessToken: string) => {
 
   return data.data.user;
 };
+
+/**
+ * Fetches User's Video List
+ */
+export const getTikTokVideos = async (accessToken: string, cursor: number = 0) => {
+  const fields = [
+    "id", "title", "cover_image_url", "embed_html", "embed_link",
+    "like_count", "comment_count", "share_count", "view_count", "create_time"
+  ].join(",");
+
+  // Note: Max limit is usually 20
+  const url = 'https://open.tiktokapis.com/v2/video/list/';
+
+  const body = {
+    max_count: 20,
+    cursor: cursor,
+    fields: [
+      "id", "title", "cover_image_url", "embed_html", "embed_link",
+      "like_count", "comment_count", "share_count", "view_count", "create_time"
+    ]
+  };
+
+  const res = await fetch(url + `?fields=${fields}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+
+  const data = await res.json();
+
+  if (data.error && data.error.code !== 0) {
+    throw new Error(data.error.message || "Failed to fetch TikTok videos");
+  }
+
+  return data.data; // contains videos: [], cursor: number, has_more: boolean
+};
