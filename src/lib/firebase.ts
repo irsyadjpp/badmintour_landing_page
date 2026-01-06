@@ -21,4 +21,16 @@ console.warn("[FIREBASE INIT] Config:", firebaseConfig);
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-export { app, db };
+// Initialize Analytics (Client Side Only)
+let analytics;
+if (typeof window !== 'undefined') {
+  import("firebase/analytics").then(({ getAnalytics, isSupported }) => {
+    isSupported().then((supported) => {
+      if (supported) {
+        analytics = getAnalytics(app);
+      }
+    });
+  });
+}
+
+export { app, db, analytics };
