@@ -1,11 +1,37 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Repeat, Zap, CalendarClock } from 'lucide-react';
 import Link from 'next/link';
 
 export default function HeroSection() {
+  const [nextSession, setNextSession] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchNextSession = async () => {
+      try {
+        const res = await fetch('/api/events?upcoming=true');
+        const data = await res.json();
+        if (data.success && data.data.length > 0) {
+          // Find first 'mabar' or 'sparring' event (exclude drilling)
+          const mabarEvents = data.data.filter((e: any) =>
+            !e.title.toLowerCase().includes('drilling') &&
+            e.type?.toLowerCase() !== 'drilling'
+          );
+
+          if (mabarEvents.length > 0) {
+            setNextSession(mabarEvents[0]);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch next session", error);
+      }
+    };
+    fetchNextSession();
+  }, []);
+
   return (
     <section className="relative w-full overflow-hidden pt-28 pb-12 lg:pt-36">
       {/* Background Gradients */}
@@ -99,8 +125,15 @@ export default function HeroSection() {
                   <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Next Session</p>
                 </div>
-                <p className="text-xl font-black text-foreground leading-none">Kamis, 17:00 WIB</p>
-                <p className="text-xs font-bold text-primary mt-1">GOR Wartawan</p>
+                <p className="text-xl font-black text-foreground leading-none">
+                  {nextSession
+                    ? `${new Date(nextSession.date).toLocaleDateString('id-ID', { weekday: 'long' })}, ${nextSession.time} WIB`
+                    : "Memuat Jadwal..."
+                  }
+                </p>
+                <p className="text-xs font-bold text-primary mt-1 line-clamp-1 max-w-[150px]">
+                  {nextSession ? nextSession.location : "Cek Jadwal Lengkap"}
+                </p>
               </div>
             </div>
           </div>
