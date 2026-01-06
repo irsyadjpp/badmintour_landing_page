@@ -132,7 +132,8 @@ export async function POST(req: Request) {
             cost_court, cost_shuttle, cost_tool, cost_coach,
             sparringOpponent, matchFormat,
             locationMapLink, courts, // New Fields
-            hostId: selectedHostId, hostName // New Host Fields
+            hostId: selectedHostId, hostName, // New Host Fields
+            tournamentCategories // <-- New Field
         } = body;
 
         // Validasi dasar
@@ -166,6 +167,7 @@ export async function POST(req: Request) {
             organizer: organizer || "",
             playerCriteria: playerCriteria || "",
             prizes: prizes || "",
+            tournamentCategories: tournamentCategories || [], // <-- New
             // Module Link (Coaching System)
             moduleId: body.moduleId || null,
             moduleTitle: body.moduleTitle || null,

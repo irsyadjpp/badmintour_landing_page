@@ -53,7 +53,7 @@ function MobileMenu() {
           <div className="grid gap-2">
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest px-4 mt-2 mb-1">Play Area</p>
             <SheetClose asChild>
-              <Link href="/#schedule" className="flex items-center justify-between py-3 px-4 text-sm font-bold bg-secondary/50 rounded-xl">
+              <Link href="/mabar" className="flex items-center justify-between py-3 px-4 text-sm font-bold bg-secondary/50 rounded-xl">
                 Mabar Rutin <ArrowRight className="w-4 h-4 text-muted-foreground" />
               </Link>
             </SheetClose>
@@ -164,7 +164,7 @@ export default function Header() {
             </button>
             <div className="absolute top-full left-1/2 -translate-x-1/2 mt-6 w-56 opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300 ease-out pt-2">
               <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-2xl p-2 shadow-xl overflow-hidden ring-1 ring-black/5 text-left">
-                <Link href="/#schedule" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-primary hover:text-white transition text-sm font-bold">🔥 Mabar Rutin</Link>
+                <Link href="/mabar" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-primary hover:text-white transition text-sm font-bold">🔥 Mabar Rutin</Link>
                 <Link href="/#services" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-primary hover:text-white transition text-sm font-bold">⚔️ Sparring & Fun</Link>
                 <Link href="/#schedule" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-accent hover:text-black transition text-sm font-bold border-t border-gray-100 mt-1">🏆 Turnamen Resmi</Link>
               </div>
@@ -179,8 +179,8 @@ export default function Header() {
             </button>
             <div className="absolute top-full left-1/2 -translate-x-1/2 mt-6 w-48 opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-300 ease-out pt-2">
               <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-2xl p-2 shadow-xl ring-1 ring-black/5 text-left">
-                <Link href="/#services" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-primary hover:text-white transition text-sm font-bold">🚀 Drilling Program</Link>
-                <Link href="#" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-primary hover:text-white transition text-sm font-bold">👟 Private Coach</Link>
+                <Link href="/drilling" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-primary hover:text-white transition text-sm font-bold">🚀 Drilling Program</Link>
+                <Link href="/private-coach" className="block px-4 py-3 rounded-xl text-gray-700 hover:bg-primary hover:text-white transition text-sm font-bold">👟 Private Coach</Link>
               </div>
             </div>
           </div>

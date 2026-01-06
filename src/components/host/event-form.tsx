@@ -1,6 +1,6 @@
 import { cn, formatRupiah, cleanCurrency } from '@/lib/utils';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { CalendarPlus, Save, Loader2, Dumbbell, Users, Trophy, Info, MapPin, Clock, DollarSign, User, ArrowRight, Pencil, AlertCircle, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ import {
   Material3SelectContent,
   Material3SelectItem
 } from '@/components/ui/material-3-select';
+import { EventTypeSelection } from './event-type-selection';
 
 interface EventFormProps {
   mode: 'create' | 'edit';
@@ -38,11 +39,7 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
   const [coaches, setCoaches] = useState<any[]>([]);
   const [hosts, setHosts] = useState<any[]>([]); // Host List
 
-  // State Date & Time
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedEndDate, setSelectedEndDate] = useState<Date | undefined>(undefined);
-  const [startTime, setStartTime] = useState<string>('');
-  const [endTime, setEndTime] = useState<string>('');
+  // State Initialization with Lazy Initializers
 
   // Status Modal State
   const [statusModal, setStatusModal] = useState<{
@@ -64,67 +61,29 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
     { p1: '', p2: '', club: '' }
   ]);
 
-  // Courts List
-  const [courts, setCourts] = useState<string[]>(['']);
-
   // Recurring Schedule State
-  const [isRecurring, setIsRecurring] = useState(false);
-
-  const [formData, setFormData] = useState({
-    title: '',
-    type: 'mabar',
-    coachName: '',
-    location: '',
-    locationMapLink: '', // <-- New
-    price: '',
-    quota: '12',
-    description: '',
-    allowWaitingList: false,
-    coachNickname: '',
-    externalLink: '',
-    allowedUserTypes: 'both',
-    partnerMechanism: 'user',
-    skillLevel: 'all',
-    curriculum: '',
-    organizer: '',
-    playerCriteria: '',
-    prizes: '',
-    sparringOpponent: '',
-    matchFormat: '',
-    assistantCoachIds: [] as string[],
-    assistantCoachNames: [] as string[],
-    hostId: '', // <-- New
-    hostName: '' // <-- New
+  const [isRecurring, setIsRecurring] = useState(() => {
+    if (mode === 'edit' && initialData?.isRecurring) return true;
+    return false;
   });
-
-  // Drilling Costs State
-  const [drillCosts, setDrillCosts] = useState({
-    court: formatRupiah(175000),
-    shuttle: formatRupiah(83000),
-    tool: formatRupiah(20000),
-    coach: formatRupiah(300000)
-  });
-
-  // LOAD INITIAL DATA (FOR EDIT)
-  useEffect(() => {
+  const [formData, setFormData] = useState(() => {
     if (mode === 'edit' && initialData) {
-      setFormData(prev => ({
-        ...prev,
+      return {
         title: initialData.title || '',
         type: initialData.type ? initialData.type.toLowerCase() : 'mabar',
         coachName: initialData.coachName || '',
-        coachNickname: initialData.coachNickname || '',
-        externalLink: initialData.externalLink || '',
-        allowedUserTypes: initialData.allowedUserTypes?.[1] === 'guest' || initialData.allowedUserTypes?.includes('guest') ? 'both' : 'member',
-        partnerMechanism: initialData.partnerMechanism || 'user',
-        skillLevel: initialData.skillLevel ? initialData.skillLevel.toLowerCase() : 'all',
-        curriculum: initialData.curriculum || '',
         location: initialData.location || '',
         locationMapLink: initialData.locationMapLink || '',
         price: (initialData.price !== undefined && initialData.price !== null) ? formatRupiah(initialData.price) : '',
         quota: initialData.quota?.toString() || '12',
         description: initialData.description || '',
         allowWaitingList: initialData.allowWaitingList || false,
+        coachNickname: initialData.coachNickname || '',
+        externalLink: initialData.externalLink || '',
+        allowedUserTypes: initialData.allowedUserTypes?.[1] === 'guest' || initialData.allowedUserTypes?.includes('guest') ? 'both' : 'member',
+        partnerMechanism: initialData.partnerMechanism || 'user',
+        skillLevel: initialData.skillLevel ? initialData.skillLevel.toLowerCase() : 'all',
+        curriculum: initialData.curriculum || '',
         organizer: initialData.organizer || '',
         playerCriteria: initialData.playerCriteria || '',
         prizes: initialData.prizes || '',
@@ -134,53 +93,129 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
         assistantCoachNames: initialData.assistantCoachNames || [],
         hostId: initialData.hostId || '',
         hostName: initialData.hostName || ''
-      }));
+      };
+    }
+    return {
+      title: '',
+      type: 'mabar',
+      coachName: '',
+      location: '',
+      locationMapLink: '',
+      price: '',
+      quota: '12',
+      description: '',
+      allowWaitingList: false,
+      coachNickname: '',
+      externalLink: '',
+      allowedUserTypes: 'both',
+      partnerMechanism: 'user',
+      skillLevel: 'all',
+      curriculum: '',
+      organizer: '',
+      playerCriteria: '',
+      prizes: '',
+      sparringOpponent: '',
+      matchFormat: '',
+      assistantCoachIds: [] as string[],
+      assistantCoachNames: [] as string[],
+      hostId: '',
+      hostName: ''
+    };
+  });
 
-      if (initialData.courts && Array.isArray(initialData.courts) && initialData.courts.length > 0) {
-        setCourts(initialData.courts);
-      }
-
-      // Update Drill Costs for Edit
+  // Drilling Costs State
+  const [drillCosts, setDrillCosts] = useState(() => {
+    if (mode === 'edit' && initialData) {
       if (initialData.financials) {
-        setDrillCosts({
+        return {
           court: formatRupiah(initialData.financials.courtCost || 0),
           shuttle: formatRupiah(initialData.financials.shuttlecockCost || 0),
           tool: formatRupiah(initialData.financials.toolCost || 0),
           coach: formatRupiah(initialData.financials.coachFee || 0)
-        });
+        };
       } else if (initialData.cost_court || initialData.cost_shuttle) {
-        setDrillCosts({
+        return {
           court: formatRupiah(initialData.cost_court || 0),
           shuttle: formatRupiah(initialData.cost_shuttle || 0),
           tool: formatRupiah(initialData.cost_tool || 0),
           coach: formatRupiah(initialData.cost_coach || 0)
-        });
-      }
-
-      // Robust Date Parsing
-      if (initialData.date) {
-        if (initialData.date.includes(' - ')) {
-          const [startStr, endStr] = initialData.date.split(' - ');
-          setSelectedDate(new Date(startStr));
-          setSelectedEndDate(new Date(endStr));
-        } else {
-          // Handle potential timestamp or string
-          const d = new Date(initialData.date);
-          if (!isNaN(d.getTime())) setSelectedDate(d);
-        }
-      }
-
-      // Robust Time Parsing (Handle various separators)
-      if (initialData.time) {
-        // Match HH:mm - HH:mm or HH:mm-HH:mm
-        const parts = initialData.time.split(/\s*-\s*/);
-        if (parts.length >= 2) {
-          setStartTime(parts[0]);
-          setEndTime(parts[1]);
-        }
+        };
       }
     }
-  }, [mode, initialData]);
+    return {
+      court: formatRupiah(175000),
+      shuttle: formatRupiah(83000),
+      tool: formatRupiah(20000),
+      coach: formatRupiah(300000)
+    };
+  });
+
+  // Courts List
+  const [courts, setCourts] = useState<string[]>(() => {
+    if (mode === 'edit' && initialData?.courts && Array.isArray(initialData.courts) && initialData.courts.length > 0) {
+      return initialData.courts;
+    }
+    return [''];
+  });
+
+  // Tournament Categories State
+  const [tournamentCategories, setTournamentCategories] = useState<{ name: string; quota: string; price: string }[]>(() => {
+    if (mode === 'edit' && initialData?.tournamentCategories && Array.isArray(initialData.tournamentCategories) && initialData.tournamentCategories.length > 0) {
+      return initialData.tournamentCategories.map((c: any) => ({
+        name: c.name || '',
+        quota: c.quota?.toString() || '12',
+        price: c.price ? formatRupiah(c.price) : ''
+      }));
+    }
+    return [{ name: '', quota: '12', price: '' }];
+  });
+
+
+  // State Date & Time
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(() => {
+    if (mode === 'edit' && initialData?.date) {
+      if (initialData.date.includes(' - ')) {
+        const [startStr] = initialData.date.split(' - ');
+        return new Date(startStr);
+      } else {
+        const d = new Date(initialData.date);
+        return !isNaN(d.getTime()) ? d : undefined;
+      }
+    }
+    return undefined;
+  });
+
+  const [selectedEndDate, setSelectedEndDate] = useState<Date | undefined>(() => {
+    if (mode === 'edit' && initialData?.date && initialData.date.includes(' - ')) {
+      const [, endStr] = initialData.date.split(' - ');
+      return new Date(endStr);
+    }
+    return undefined;
+  });
+
+  const [startTime, setStartTime] = useState<string>(() => {
+    if (mode === 'edit' && initialData?.time) {
+      const parts = initialData.time.split(/\s*-\s*/);
+      if (parts.length >= 2) return parts[0];
+    }
+    return '';
+  });
+
+  const [endTime, setEndTime] = useState<string>(() => {
+    if (mode === 'edit' && initialData?.time) {
+      const parts = initialData.time.split(/\s*-\s*/);
+      if (parts.length >= 2) return parts[1];
+    }
+    return '';
+  });
+
+  // Ensure current coach is in the list (handle loading or deleted coaches)
+  const displayedCoaches = useMemo(() => {
+    if (!formData.coachName) return coaches;
+    if (coaches.some(c => c.name === formData.coachName)) return coaches;
+    // If current coach name not found in list, add it as a temporary option
+    return [...coaches, { id: 'current-value', name: formData.coachName, nickname: '' }];
+  }, [coaches, formData.coachName]);
 
   // FETCH COACHES & HOSTS
   useEffect(() => {
@@ -248,6 +283,9 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
     }
   }, [startTime, endTime, mode]);
 
+  // Step Logic for Separated Forms
+  const [step, setStep] = useState<'selection' | 'form'>(mode === 'create' ? 'selection' : 'form');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -265,8 +303,6 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
       return;
     }
 
-    const cleanPrice = formData.price.replace(/\D/g, '');
-
     // Serialize Criteria List to String if it has data
     let serializedCriteria = formData.playerCriteria;
     if (criteriaList.some(c => c.p1 || c.p2 || c.club)) {
@@ -281,21 +317,48 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
       finalDate = `${format(selectedDate, 'yyyy-MM-dd')} - ${format(selectedEndDate, 'yyyy-MM-dd')}`;
     }
 
+    // Transform allowedUserTypes string to array for backend
+    const allowedTypesArray = formData.allowedUserTypes === 'both' ? ['member', 'guest'] : ['member'];
+
+    // Auto-calculate for Tournament
+    let finalPrice = Number(formData.price.replace(/\D/g, ''));
+    let finalQuota = Number(formData.quota);
+
+    if (formData.type === 'tournament') {
+      const validCategories = tournamentCategories.filter(c => c.name.trim() !== '');
+      if (validCategories.length > 0) {
+        const prices = validCategories.map(c => Number(cleanCurrency(c.price)) || 0);
+        finalPrice = Math.min(...prices); // "Starts from" price
+        finalQuota = validCategories.reduce((acc, c) => acc + (Number(c.quota) || 0), 0);
+      } else {
+        finalPrice = 0;
+        finalQuota = 0;
+      }
+    }
+
     const finalPayload = {
       ...formData,
       playerCriteria: serializedCriteria,
-      price: cleanPrice,
+      price: finalPrice,
+      quota: finalQuota,
       date: finalDate,
       time: `${startTime} - ${endTime}`,
-      // Transform allowedUserTypes string to array for backend
-      allowedUserTypes: formData.allowedUserTypes === 'both' ? ['member', 'guest'] : ['member'],
+      allowedUserTypes: allowedTypesArray,
       isRecurring, // Include Recurring Flag
       courts: courts.filter(c => c.trim() !== ''), // Filter empty courts
       // Drilling Costs
       cost_court: cleanCurrency(drillCosts.court),
       cost_shuttle: cleanCurrency(drillCosts.shuttle),
       cost_tool: cleanCurrency(drillCosts.tool),
-      cost_coach: cleanCurrency(drillCosts.coach)
+      cost_coach: cleanCurrency(drillCosts.coach),
+      // Tournament Categories (Clean Price)
+      tournamentCategories: tournamentCategories
+        .filter(c => c.name.trim() !== '')
+        .map(c => ({
+          name: c.name,
+          quota: Number(c.quota),
+          price: Number(cleanCurrency(c.price))
+        }))
     };
 
     try {
@@ -340,33 +403,34 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
     }
   };
 
+  if (step === 'selection') {
+    return <EventTypeSelection onSelect={(type) => {
+      setFormData(prev => ({ ...prev, type }));
+      setStep('form');
+    }} />;
+  }
+
   return (
     <form onSubmit={handleSubmit} className="w-full">
+      <div className="flex justify-end mb-4">
+        {mode === 'create' && (
+          <Button variant="outline" size="sm" onClick={() => setStep('selection')} className="border-white/10 text-gray-400 hover:text-white">
+            <ArrowRight className="w-4 h-4 rotate-180 mr-2" /> Ganti Tipe Event
+          </Button>
+        )}
+      </div>
+
       <Card className="bg-[#151515] border border-white/5 p-6 md:p-8 rounded-[2rem] shadow-xl w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* KOLOM KIRI: Informasi Dasar */}
           <div className="space-y-6">
             <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
-              <Info className="w-5 h-5 text-[#ffbe00]" /> Informasi Utama
+              <Info className="w-5 h-5 text-[#ffbe00]" /> Informasi Utama ({formData.type.toUpperCase()})
             </h3>
 
             <div className="space-y-5">
-              <div className="space-y-2">
-                <Material3Select
-                  value={formData.type}
-                  onValueChange={(val) => setFormData({ ...formData, type: val, coachName: val !== 'drilling' ? '' : formData.coachName })}
-                >
-                  <Material3SelectTrigger label="Jenis Event" hasValue={!!formData.type}>
-                    <Material3SelectValue />
-                  </Material3SelectTrigger>
-                  <Material3SelectContent>
-                    <Material3SelectItem value="mabar"><span className="flex items-center gap-2"><Users className="w-4 h-4" /> Mabar (Fun Game)</span></Material3SelectItem>
-                    <Material3SelectItem value="sparring"><span className="flex items-center gap-2"><Users className="w-4 h-4 text-red-500" /> Sparring (Vs Team)</span></Material3SelectItem>
-                    <Material3SelectItem value="drilling"><span className="flex items-center gap-2"><Dumbbell className="w-4 h-4" /> Drilling / Clinic</span></Material3SelectItem>
-                    <Material3SelectItem value="tournament"><span className="flex items-center gap-2"><Trophy className="w-4 h-4" /> Turnamen</span></Material3SelectItem>
-                  </Material3SelectContent>
-                </Material3Select>
-              </div>
+              {/* HIDDEN INPUT FOR TYPE (Managed by Selection Step) */}
+              <input type="hidden" value={formData.type} />
 
               {/* HOST SELECTION */}
               <div className="space-y-2">
@@ -398,6 +462,20 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
               </div>
 
               {/* LOGIC DROPDOWN COACH */}
+
+              <Material3Input
+                label="Judul Kegiatan"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                required
+              />
+
+              <Material3Textarea
+                label="Deskripsi / Catatan"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
+
               {formData.type === 'drilling' && (
                 <>
                   <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
@@ -417,8 +495,8 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
                         <Material3SelectValue placeholder="Siapa pelatihnya?" />
                       </Material3SelectTrigger>
                       <Material3SelectContent>
-                        {coaches.length > 0 ? (
-                          coaches.map((coach) => (
+                        {displayedCoaches.length > 0 ? (
+                          displayedCoaches.map((coach) => (
                             <Material3SelectItem key={coach.id} value={coach.name}>
                               <span className="flex items-center gap-2">
                                 <User className="w-4 h-4 text-[#00f2ea]" />
@@ -672,148 +750,71 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
                 </div>
               )}
               {/* LOGIC DROPDOWN TOURNAMENT */}
+              {/* LOGIC DROPDOWN TOURNAMENT */}
               {formData.type === 'tournament' && (
-                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 border border-white/10 bg-white/5 p-4 rounded-xl mt-2 mb-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Trophy className="w-4 h-4 text-[#ffbe00]" />
-                    <span className="text-xs font-bold text-[#ffbe00] uppercase">Pengaturan Tournament</span>
-                  </div>
+                <div className="space-y-6 animate-in fade-in slide-in-from-top-2 mt-4">
 
-                  {/* Access Control */}
-                  <div className="space-y-1">
-                    <Material3Select
-                      value={formData.allowedUserTypes}
-                      onValueChange={(val) => setFormData({ ...formData, allowedUserTypes: val })}
-                    >
-                      <Material3SelectTrigger label="Akses Pendaftaran" hasValue={!!formData.allowedUserTypes}>
-                        <Material3SelectValue />
-                      </Material3SelectTrigger>
-                      <Material3SelectContent>
-                        <Material3SelectItem value="member">Hanya Member</Material3SelectItem>
-                        <Material3SelectItem value="both">Member & Guest (Umum)</Material3SelectItem>
-                      </Material3SelectContent>
-                    </Material3Select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <Material3Select
-                      value={formData.partnerMechanism}
-                      onValueChange={(val) => setFormData({ ...formData, partnerMechanism: val })}
-                    >
-                      <Material3SelectTrigger label="Mekanisme Pasangan" hasValue={!!formData.partnerMechanism}>
-                        <Material3SelectValue />
-                      </Material3SelectTrigger>
-                      <Material3SelectContent>
-                        <Material3SelectItem value="user">Pilih Pasangan Sendiri</Material3SelectItem>
-                        <Material3SelectItem value="coach">Ditentukan Coach / Panitia</Material3SelectItem>
-                      </Material3SelectContent>
-                    </Material3Select>
-                  </div>
-
-                  <Material3Input
-                    label="Penyelenggara (Organizer)"
-                    placeholder="Contoh: PB Djarum / Internal Club"
-                    value={formData.organizer}
-                    onChange={(e) => setFormData({ ...formData, organizer: e.target.value })}
-                  />
-
-                  {/* DYNAMIC PLAYER CRITERIA LIST */}
-                  <div className="space-y-3 bg-white/5 p-4 rounded-xl border border-white/10">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-gray-400 uppercase">Kriteria Peserta (Patokan)</label>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setCriteriaList([...criteriaList, { p1: '', p2: '', club: '' }])}
-                        className="h-6 text-[#ffbe00] hover:text-[#ffbe00] hover:bg-[#ffbe00]/10"
-                      >
-                        <Plus className="w-3 h-3 mr-1" /> Tambah
-                      </Button>
+                  {/* SECTION 1: Tournament Config */}
+                  <div className="border border-[#ffbe00]/20 bg-[#ffbe00]/5 p-5 rounded-2xl space-y-4">
+                    {/* Header */}
+                    <div className="flex items-center gap-2 border-b border-[#ffbe00]/10 pb-3 mb-3">
+                      <Trophy className="w-5 h-5 text-[#ffbe00]" />
+                      <span className="text-sm font-black text-[#ffbe00] uppercase tracking-wider">Konfigurasi Turnamen</span>
                     </div>
 
-                    {criteriaList.map((item, index) => (
-                      <div key={index} className="flex gap-2 items-start animate-in slide-in-from-left-2">
-                        <div className="grid grid-cols-3 gap-2 flex-1">
-                          <Material3Input
-                            label={`Patokan (${index + 1})`}
-                            placeholder="Grade A"
-                            value={item.p1}
-                            onChange={(e) => {
-                              const newList = [...criteriaList];
-                              newList[index].p1 = e.target.value;
-                              setCriteriaList(newList);
-                            }}
-                          />
-                          <Material3Input
-                            label={`Partner (${index + 1})`}
-                            placeholder="Grade B"
-                            value={item.p2}
-                            onChange={(e) => {
-                              const newList = [...criteriaList];
-                              newList[index].p2 = e.target.value;
-                              setCriteriaList(newList);
-                            }}
-                          />
-                          <Material3Input
-                            label={`Asal PB (${index + 1})`}
-                            placeholder="PB Djarum"
-                            value={item.club}
-                            onChange={(e) => {
-                              const newList = [...criteriaList];
-                              newList[index].club = e.target.value;
-                              setCriteriaList(newList);
-                            }}
-                          />
-                        </div>
-                        {criteriaList.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              const newList = criteriaList.filter((_, i) => i !== index);
-                              setCriteriaList(newList);
-                            }}
-                            className="mt-1 text-red-500 hover:text-red-600 hover:bg-red-500/10 h-10 w-10 shrink-0"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                    <p className="text-[10px] text-gray-500 italic">*Isi detail patokan, pasangan patokan, dan asal klub.</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Organizer */}
+                      <Material3Input
+                        label="Penyelenggara (Organizer)"
+                        placeholder="Contoh: PB Djarum / Internal Club"
+                        value={formData.organizer}
+                        onChange={(e) => setFormData({ ...formData, organizer: e.target.value })}
+                      />
+
+                      {/* External Link */}
+                      <Material3Input
+                        label="Link Info / Pendaftaran (Opsional)"
+                        placeholder="https://..."
+                        value={formData.externalLink}
+                        onChange={(e) => setFormData({ ...formData, externalLink: e.target.value })}
+                      />
+
+                      {/* Access Control */}
+                      <Material3Select
+                        value={formData.allowedUserTypes}
+                        onValueChange={(val) => setFormData({ ...formData, allowedUserTypes: val })}
+                      >
+                        <Material3SelectTrigger label="Akses Pendaftaran" hasValue={!!formData.allowedUserTypes}>
+                          <Material3SelectValue />
+                        </Material3SelectTrigger>
+                        <Material3SelectContent>
+                          <Material3SelectItem value="member">Hanya Member</Material3SelectItem>
+                          <Material3SelectItem value="both">Member & Guest (Umum)</Material3SelectItem>
+                        </Material3SelectContent>
+                      </Material3Select>
+
+                      {/* Partner Mech */}
+                      <Material3Select
+                        value={formData.partnerMechanism}
+                        onValueChange={(val) => setFormData({ ...formData, partnerMechanism: val })}
+                      >
+                        <Material3SelectTrigger label="Mekanisme Pasangan" hasValue={!!formData.partnerMechanism}>
+                          <Material3SelectValue />
+                        </Material3SelectTrigger>
+                        <Material3SelectContent>
+                          <Material3SelectItem value="user">Pilih Pasangan Sendiri</Material3SelectItem>
+                          <Material3SelectItem value="coach">Ditentukan Coach / Panitia</Material3SelectItem>
+                        </Material3SelectContent>
+                      </Material3Select>
+                    </div>
                   </div>
 
-                  <Material3Textarea
-                    label="Hadiah (Prizes)"
-                    placeholder="Contoh: Juara 1: Rp 1.000.000 + Trophy"
-                    value={formData.prizes}
-                    onChange={(e) => setFormData({ ...formData, prizes: e.target.value })}
-                    className="min-h-[80px]"
-                  />
+                  {/* Sections 2 & 3 moved to Right Column */}
 
-                  <Material3Input
-                    label="Link Eksternal (Opsional)"
-                    placeholder="Kosongkan jika pendaftaran internal"
-                    value={formData.externalLink}
-                    onChange={(e) => setFormData({ ...formData, externalLink: e.target.value })}
-                  />
                 </div>
               )}
 
-              <Material3Input
-                label="Judul Kegiatan"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                required
-              />
 
-              <Material3Textarea
-                label="Deskripsi / Catatan"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
             </div>
           </div>
 
@@ -878,97 +879,204 @@ export function EventForm({ mode, initialData, eventId, successRedirectUrl }: Ev
                 onChange={(e) => setFormData({ ...formData, locationMapLink: e.target.value })}
               />
 
-              {/* DYNAMIC COURTS LIST */}
-              <div className="space-y-3 bg-white/5 p-4 rounded-xl border border-white/10">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-gray-400 uppercase">Daftar Lapangan (Opsional)</label>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setCourts([...courts, ''])}
-                    className="h-6 text-[#ffbe00] hover:text-[#ffbe00] hover:bg-[#ffbe00]/10"
-                  >
-                    <Plus className="w-3 h-3 mr-1" /> Tambah
-                  </Button>
-                </div>
+              {/* TOURNAMENT CATEGORIES & PRIZES (Moved to Right Column) */}
+              {formData.type === 'tournament' && (
+                <div className="space-y-6 animate-in slide-in-from-right-4">
 
-                {courts.map((court, index) => (
-                  <div key={index} className="flex gap-2 items-center animate-in slide-in-from-left-2">
-                    <div className="w-full">
-                      <Material3Input
-                        label={`Lapangan ${index + 1}`}
-                        placeholder="Court 1 / Lap 1"
-                        value={court}
-                        onChange={(e) => {
-                          const newCourts = [...courts];
-                          newCourts[index] = e.target.value;
-                          setCourts(newCourts);
-                        }}
-                      />
-                    </div>
-                    {courts.length > 1 && (
+                  {/* CATEGORIES CARD */}
+                  <div className="bg-[#1A1A1A] border-l-4 border-[#ffbe00] p-5 rounded-r-xl space-y-4 shadow-lg shadow-black/50">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-white font-bold text-lg">Kategori Pertandingan</h4>
+                        <p className="text-xs text-gray-400">Tentukan kategori yang dilombakan.</p>
+                      </div>
                       <Button
                         type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          const newCourts = courts.filter((_, i) => i !== index);
-                          setCourts(newCourts);
-                        }}
-                        className="mt-1 text-red-500 hover:text-red-600 hover:bg-red-500/10 h-10 w-10 shrink-0"
+                        size="sm"
+                        className="bg-[#ffbe00] text-black hover:bg-[#d4a000] font-bold"
+                        onClick={() => setTournamentCategories([...tournamentCategories, { name: '', quota: '12', price: '' }])}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Plus className="w-4 h-4 mr-1" /> Tambah
                       </Button>
-                    )}
-                  </div>
-                ))}
-                <p className="text-[10px] text-gray-500 italic">*Isi daftar lapangan jika menggunakan lebih dari satu court.</p>
-              </div>
+                    </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <Material3Input
-                  label="Harga (IDR)"
-                  type="text"
-                  value={formData.price}
-                  onChange={(e) => {
-                    const raw = e.target.value.replace(/\D/g, '');
-                    if (!raw) {
-                      setFormData({ ...formData, price: '' });
-                    } else {
-                      setFormData({ ...formData, price: formatRupiah(raw) });
-                    }
-                  }}
-                  required
-                />
-                <Material3Input
-                  label="Slot / Kuota"
-                  type="number"
-                  value={formData.quota}
-                  onChange={(e) => setFormData({ ...formData, quota: e.target.value })}
-                  required
-                />
-              </div>
+                    <div className="space-y-3">
+                      {tournamentCategories.map((item, index) => (
+                        <div key={index} className="flex gap-3 items-start bg-white/5 p-4 rounded-xl border border-white/5 hover:border-[#ffbe00]/50 transition-colors group">
+                          <span className="text-[#ffbe00] font-mono text-xl font-bold w-8 h-8 flex items-center justify-center bg-[#ffbe00]/10 rounded-lg opacity-50 group-hover:opacity-100 transition-opacity mt-1">
+                            {index + 1}
+                          </span>
+                          <div className="flex-1 grid grid-cols-1 gap-3">
+                            <Material3Input
+                              label="Nama Kategori"
+                              placeholder="e.g. Ganda Putra A"
+                              value={item.name}
+                              onChange={(e) => {
+                                const newList = [...tournamentCategories];
+                                newList[index].name = e.target.value;
+                                setTournamentCategories(newList);
+                              }}
+                            />
+                            <div className="grid grid-cols-2 gap-3">
+                              <Material3Input
+                                label="Kuota (Tim)"
+                                type="number"
+                                placeholder="32"
+                                value={item.quota}
+                                onChange={(e) => {
+                                  const newList = [...tournamentCategories];
+                                  newList[index].quota = e.target.value;
+                                  setTournamentCategories(newList);
+                                }}
+                              />
+                              <Material3Input
+                                label="Biaya"
+                                placeholder="Rp 150.000"
+                                value={item.price}
+                                onChange={(e) => {
+                                  const newList = [...tournamentCategories];
+                                  newList[index].price = formatRupiah(e.target.value);
+                                  setTournamentCategories(newList);
+                                }}
+                              />
+                            </div>
+                          </div>
+                          {tournamentCategories.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                const newList = tournamentCategories.filter((_, i) => i !== index);
+                                setTournamentCategories(newList);
+                              }}
+                              className="text-white/20 hover:text-red-500 hover:bg-red-500/10 h-10 w-10 shrink-0 mt-1"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* PRIZES CARD */}
+                  <div className="bg-gradient-to-r from-[#ffbe00]/20 to-transparent p-[1px] rounded-2xl">
+                    <div className="bg-[#151515] p-5 rounded-[15px] space-y-2">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Trophy className="w-4 h-4 text-[#ffbe00]" />
+                        <label className="text-sm font-bold text-white uppercase">Hadiah & Benefit</label>
+                      </div>
+                      <Material3Textarea
+                        label="Rincian Hadiah" // Fixed Missing Label
+                        placeholder="Contoh: Juara 1: Rp 1.000.000 + Trophy..."
+                        value={formData.prizes}
+                        onChange={(e) => setFormData({ ...formData, prizes: e.target.value })}
+                        className="min-h-[80px] bg-transparent border-none focus:ring-0 px-0 text-white placeholder:text-gray-600 resize-none text-lg"
+                      />
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* DYNAMIC COURTS LIST */}
+              {formData.type !== 'tournament' && (
+                <div className="space-y-3 bg-white/5 p-4 rounded-xl border border-white/10">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-gray-400 uppercase">Daftar Lapangan (Opsional)</label>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setCourts([...courts, ''])}
+                      className="h-6 text-[#ffbe00] hover:text-[#ffbe00] hover:bg-[#ffbe00]/10"
+                    >
+                      <Plus className="w-3 h-3 mr-1" /> Tambah
+                    </Button>
+                  </div>
+
+                  {courts.map((court, index) => (
+                    <div key={index} className="flex gap-2 items-center animate-in slide-in-from-left-2">
+                      <div className="w-full">
+                        <Material3Input
+                          label={`Lapangan ${index + 1}`}
+                          placeholder="Court 1 / Lap 1"
+                          value={court}
+                          onChange={(e) => {
+                            const newCourts = [...courts];
+                            newCourts[index] = e.target.value;
+                            setCourts(newCourts);
+                          }}
+                        />
+                      </div>
+                      {courts.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            const newCourts = courts.filter((_, i) => i !== index);
+                            setCourts(newCourts);
+                          }}
+                          className="mt-1 text-red-500 hover:text-red-600 hover:bg-red-500/10 h-10 w-10 shrink-0"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <p className="text-[10px] text-gray-500 italic">*Isi daftar lapangan jika menggunakan lebih dari satu court.</p>
+                </div>
+              )}
+
+              {formData.type !== 'tournament' && (
+                <div className="grid grid-cols-2 gap-4">
+                  <Material3Input
+                    label="Harga (IDR)"
+                    type="text"
+                    value={formData.price}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\D/g, '');
+                      if (!raw) {
+                        setFormData({ ...formData, price: '' });
+                      } else {
+                        setFormData({ ...formData, price: formatRupiah(raw) });
+                      }
+                    }}
+                    required={formData.type !== 'tournament'}
+                  />
+                  <Material3Input
+                    label="Slot / Kuota"
+                    type="number"
+                    value={formData.quota}
+                    onChange={(e) => setFormData({ ...formData, quota: e.target.value })}
+                    required={formData.type !== 'tournament'}
+                  />
+                </div>
+              )}
 
               {/* WAITING LIST TOGGLE */}
-              <div className="flex items-center justify-between bg-white/5 p-4 rounded-xl border border-white/10">
-                <div className="space-y-0.5">
-                  <label className="text-sm font-bold text-white flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-[#ffbe00]" /> Waiting List
-                  </label>
-                  <p className="text-[10px] text-gray-400">
-                    Izinkan user mendaftar waiting list jika kuota penuh.
-                  </p>
+              {formData.type !== 'tournament' && (
+                <div className="flex items-center justify-between bg-white/5 p-4 rounded-xl border border-white/10">
+                  <div className="space-y-0.5">
+                    <label className="text-sm font-bold text-white flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-[#ffbe00]" /> Waiting List
+                    </label>
+                    <p className="text-[10px] text-gray-400">
+                      Izinkan user mendaftar waiting list jika kuota penuh.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.allowWaitingList}
+                    onCheckedChange={(checked: boolean) => setFormData({ ...formData, allowWaitingList: checked })}
+                    className="data-[state=checked]:bg-[#ffbe00]"
+                  />
                 </div>
-                <Switch
-                  checked={formData.allowWaitingList}
-                  onCheckedChange={(checked: boolean) => setFormData({ ...formData, allowWaitingList: checked })}
-                  className="data-[state=checked]:bg-[#ffbe00]"
-                />
-              </div>
+              )}
 
               {/* RECURRING SCHEDULE TOGGLE (Create Mode Only) */}
-              {mode === 'create' && (
+              {mode === 'create' && formData.type !== 'tournament' && (
                 <div className="flex items-center justify-between bg-[#00f2ea]/5 p-4 rounded-xl border border-[#00f2ea]/20">
                   <div className="space-y-0.5">
                     <label className="text-sm font-bold text-white flex items-center gap-2">

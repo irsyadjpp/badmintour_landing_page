@@ -7,6 +7,7 @@ export const config = {
     "/member/:path*",
     "/superadmin/:path*",
     "/profile/:path*",
-    "/coach/:path*"
+    "/coach/:path*",
+    "/social-admin/:path*"
   ]
 };

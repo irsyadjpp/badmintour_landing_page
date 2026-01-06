@@ -10,8 +10,6 @@ export async function GET(req: Request) {
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     try {
-        console.log("Fetching notifications for:", session.user.id);
-
         // Remove orderBy to prevent Index Errors or Invalid Argument on some SDK versions
         const snapshot = await db.collection("notifications")
             .where("userId", "==", session.user.id)

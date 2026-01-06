@@ -46,19 +46,19 @@ const ITEMS_PER_PAGE = 10;
 
 export default function SuperAdminUsersPage() {
     const { toast } = useToast();
-    const [allUsers, setAllUsers] = useState<any[]>([]); // Data mentah dari API
+    const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // States untuk Filter & Sort & Pagination
+    // States
     const [search, setSearch] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
-    const [sortBy, setSortBy] = useState('newest'); // 'newest', 'oldest', 'a-z', 'z-a'
+    const [sortBy, setSortBy] = useState('newest');
     const [currentPage, setCurrentPage] = useState(1);
+    const [hasMore, setHasMore] = useState(false);
 
     // State untuk Modal Edit Role
     const [selectedUser, setSelectedUser] = useState<any>(null);
-    const [newRole, setNewRole] = useState('');
-
+    const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
     const [updating, setUpdating] = useState(false);
 
     // Custom Alert State
@@ -75,14 +75,36 @@ export default function SuperAdminUsersPage() {
         message: '',
     });
 
-    // Fetch All Users
+    // Debounce Search
+    const [debouncedSearch, setDebouncedSearch] = useState(search);
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(search), 500);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    // Reset Page on Filter Change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearch, roleFilter, sortBy]);
+
+    // Fetch API
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/superadmin/users');
+            const params = new URLSearchParams({
+                page: currentPage.toString(),
+                limit: ITEMS_PER_PAGE.toString(),
+                search: debouncedSearch,
+                role: roleFilter,
+                sortBy: sortBy
+            });
+
+            const res = await fetch(`/api/superadmin/users?${params}`);
             const data = await res.json();
+
             if (data.success) {
-                setAllUsers(data.data);
+                setUsers(data.data);
+                setHasMore(data.meta.hasMore);
             }
         } catch (error) {
             console.error(error);
@@ -94,69 +116,30 @@ export default function SuperAdminUsersPage() {
 
     useEffect(() => {
         fetchUsers();
-    }, []);
+    }, [currentPage, debouncedSearch, roleFilter, sortBy]);
 
-    // LOGIC: Filter -> Sort -> Pagination
-    const processedUsers = useMemo(() => {
-        let data = [...allUsers];
-
-        // 1. Filter Search
-        if (search) {
-            data = data.filter(user =>
-                user.name?.toLowerCase().includes(search.toLowerCase()) ||
-                user.email?.toLowerCase().includes(search.toLowerCase())
-            );
-        }
-
-        // 2. Filter Role
-        if (roleFilter !== 'all') {
-            data = data.filter(user => user.role === roleFilter);
-        }
-
-        // 3. Sorting
-        data.sort((a, b) => {
-            if (sortBy === 'newest') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-            if (sortBy === 'oldest') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-            if (sortBy === 'a-z') return a.name.localeCompare(b.name);
-            if (sortBy === 'z-a') return b.name.localeCompare(a.name);
-            return 0;
-        });
-
-        return data;
-    }, [allUsers, search, roleFilter, sortBy]);
-
-    // 4. Pagination Slicing
-    const totalPages = Math.ceil(processedUsers.length / ITEMS_PER_PAGE);
-    const paginatedUsers = processedUsers.slice(
-        (currentPage - 1) * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE
-    );
-
-    // Reset page jika filter berubah
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [search, roleFilter, sortBy]);
+    // Cleanup: Remove client-side logic (processedUsers, etc)
+    const paginatedUsers = users; // Direct mapping
 
     // Handle Update Role
     const handleUpdateRole = async () => {
-        if (!selectedUser || !newRole) return;
+        if (!selectedUser || selectedRoles.length === 0) return;
         setUpdating(true);
         try {
             const res = await fetch('/api/superadmin/users', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: selectedUser.id, role: newRole })
+                body: JSON.stringify({ userId: selectedUser.id, roles: selectedRoles })
             });
 
             if (res.ok) {
-                // toast({ title: "Sukses", description: `Role diubah menjadi ${newRole.toUpperCase()}.`, className: "bg-green-600 text-white" });
                 setAlertConfig({
                     open: true,
                     type: 'success',
-                    title: 'ROLE UPDATED!',
+                    title: 'ROLES UPDATED!',
                     message: (
                         <span>
-                            Role user <strong className="text-white">{selectedUser.name}</strong> berhasil diubah menjadi <span className="text-[#22c55e] font-black">{newRole.toUpperCase()}</span>.
+                            Roles user <strong className="text-white">{selectedUser.name}</strong> berhasil diubah menjadi <span className="text-[#22c55e] font-black">{selectedRoles.join(', ').toUpperCase()}</span>.
                         </span>
                     ),
                     buttonText: 'OK, LANJUT'
@@ -167,11 +150,10 @@ export default function SuperAdminUsersPage() {
                 throw new Error("Gagal update role");
             }
         } catch (error) {
-            // toast({ title: "Gagal", description: "Terjadi kesalahan sistem.", variant: "destructive" });
             setAlertConfig({
                 open: true,
                 type: 'error',
-                title: 'DOUBLE FAULT!',
+                title: 'GAGAL MENYIMPAN',
                 message: "Gagal mengubah role user. Terjadi kesalahan sistem atau koneksi.",
                 buttonText: 'COBA LAGI'
             });
@@ -184,9 +166,18 @@ export default function SuperAdminUsersPage() {
         switch (role) {
             case 'superadmin': return <Badge className="bg-red-600 text-white border-none">SUPERADMIN</Badge>;
             case 'admin': return <Badge className="bg-orange-500 text-white border-none">ADMIN</Badge>;
+            case 'social_admin': return <Badge className="bg-[#ffbe00] text-black border-none font-bold">SOCIAL</Badge>;
             case 'host': return <Badge className="bg-[#ca1f3d] text-white border-none">HOST</Badge>;
             case 'coach': return <Badge className="bg-[#ffbe00] text-black border-none font-bold">COACH</Badge>;
             default: return <Badge variant="outline" className="text-gray-400 border-gray-600">MEMBER</Badge>;
+        }
+    };
+
+    const toggleRole = (role: string) => {
+        if (selectedRoles.includes(role)) {
+            setSelectedRoles(selectedRoles.filter(r => r !== role));
+        } else {
+            setSelectedRoles([...selectedRoles, role]);
         }
     };
 
@@ -198,7 +189,7 @@ export default function SuperAdminUsersPage() {
                     <h1 className="text-3xl font-black text-white flex items-center gap-3">
                         <ShieldAlert className="w-8 h-8 text-[#ca1f3d]" /> USER MANAGEMENT
                     </h1>
-                    <p className="text-gray-400">Total User: {allUsers.length} | Menampilkan: {paginatedUsers.length}</p>
+                    <p className="text-gray-400">Halaman {currentPage} | Menampilkan {users.length} user</p>
                 </div>
 
                 {/* Controls */}
@@ -228,6 +219,7 @@ export default function SuperAdminUsersPage() {
                             <SelectItem value="coach">Coach</SelectItem>
                             <SelectItem value="host">Host</SelectItem>
                             <SelectItem value="admin">Admin</SelectItem>
+                            <SelectItem value="social_admin">Social Admin</SelectItem>
                             <SelectItem value="superadmin">Superadmin</SelectItem>
                         </SelectContent>
                     </Select>
@@ -263,7 +255,7 @@ export default function SuperAdminUsersPage() {
                                 <thead className="bg-[#1A1A1A] text-xs uppercase text-gray-500 font-bold border-b border-white/5">
                                     <tr>
                                         <th className="p-6">User Info</th>
-                                        <th className="p-6">Role</th>
+                                        <th className="p-6">Roles</th>
                                         <th className="p-6">Bergabung</th>
                                         <th className="p-6 text-right">Action</th>
                                     </tr>
@@ -286,7 +278,13 @@ export default function SuperAdminUsersPage() {
                                                 </div>
                                             </td>
                                             <td className="p-6">
-                                                {getRoleBadge(user.role)}
+                                                <div className="flex flex-wrap gap-1">
+                                                    {(user.roles || [user.role]).map((r: string) => (
+                                                        <div key={r}>
+                                                            {getRoleBadge(r)}
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </td>
                                             <td className="p-6 text-sm text-gray-400">
                                                 {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
@@ -303,7 +301,7 @@ export default function SuperAdminUsersPage() {
                                                             className="cursor-pointer focus:bg-[#ca1f3d]/10 focus:text-[#ca1f3d]"
                                                             onClick={() => {
                                                                 setSelectedUser(user);
-                                                                setNewRole(user.role);
+                                                                setSelectedRoles(user.roles || [user.role]);
                                                             }}
                                                         >
                                                             <UserCog className="w-4 h-4 mr-2" /> Ubah Role Access
@@ -323,39 +321,37 @@ export default function SuperAdminUsersPage() {
                             </table>
                         </div>
 
-                        {/* Pagination Controls */}
-                        {totalPages > 1 && (
-                            <div className="p-4 border-t border-white/5 flex items-center justify-between bg-[#1A1A1A]">
-                                <div className="text-xs text-gray-500 font-bold">
-                                    Page {currentPage} of {totalPages}
-                                </div>
-                                <div className="flex gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={currentPage === 1}
-                                        onClick={() => setCurrentPage(p => p - 1)}
-                                        className="border-white/10 text-white hover:bg-white/10"
-                                    >
-                                        <ChevronLeft className="w-4 h-4" /> Prev
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={currentPage === totalPages}
-                                        onClick={() => setCurrentPage(p => p + 1)}
-                                        className="border-white/10 text-white hover:bg-white/10"
-                                    >
-                                        Next <ChevronRight className="w-4 h-4" />
-                                    </Button>
-                                </div>
+                        {/* Pagination Controls (Server Side) */}
+                        <div className="p-4 border-t border-white/5 flex items-center justify-between bg-[#1A1A1A]">
+                            <div className="text-xs text-gray-500 font-bold">
+                                Page {currentPage}
                             </div>
-                        )}
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={currentPage === 1 || loading}
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    className="border-white/10 text-white hover:bg-white/10"
+                                >
+                                    <ChevronLeft className="w-4 h-4" /> Prev
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={!hasMore || loading}
+                                    onClick={() => setCurrentPage(p => p + 1)}
+                                    className="border-white/10 text-white hover:bg-white/10"
+                                >
+                                    Next <ChevronRight className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
                     </>
                 )}
             </Card>
 
-            {/* Modal Edit Role (Sama seperti sebelumnya) */}
+            {/* Modal Edit Role (Updated for Multi-Select) */}
             <Dialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
                 <DialogContent className="bg-[#1A1A1A] border-white/10 text-white rounded-2xl sm:max-w-md">
                     <DialogHeader>
@@ -376,32 +372,43 @@ export default function SuperAdminUsersPage() {
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-400 uppercase">Pilih Role Baru</label>
-                            <Select value={newRole} onValueChange={setNewRole}>
-                                <SelectTrigger className="bg-[#0a0a0a] border-white/10 text-white h-12 rounded-xl">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
-                                    <SelectItem value="member">
-                                        <span className="flex items-center gap-2"><Users className="w-4 h-4" /> Member (User Biasa)</span>
-                                    </SelectItem>
-                                    <SelectItem value="coach">
-                                        <span className="flex items-center gap-2"><Trophy className="w-4 h-4" /> Coach (Pelatih)</span>
-                                    </SelectItem>
-                                    <SelectItem value="host">
-                                        <span className="flex items-center gap-2"><CheckCircle className="w-4 h-4" /> Host (Pengelola GOR)</span>
-                                    </SelectItem>
-                                    <SelectItem value="admin">
-                                        <span className="flex items-center gap-2"><ShieldAlert className="w-4 h-4" /> Admin</span>
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
+                        <div className="space-y-3">
+                            <label className="text-xs font-bold text-gray-400 uppercase">Pilih Role (Bisa Lebih Dari Satu)</label>
+
+                            <div className="grid grid-cols-1 gap-2">
+                                {[
+                                    { id: 'member', label: 'Member', icon: <Users className="w-4 h-4" />, color: 'text-gray-400' },
+                                    { id: 'coach', label: 'Coach', icon: <Trophy className="w-4 h-4" />, color: 'text-[#ffbe00]' },
+                                    { id: 'host', label: 'Host', icon: <CheckCircle className="w-4 h-4" />, color: 'text-[#ca1f3d]' },
+                                    { id: 'admin', label: 'Admin', icon: <ShieldAlert className="w-4 h-4" />, color: 'text-orange-500' },
+                                    { id: 'social_admin', label: 'Social Admin', icon: <Users className="w-4 h-4" />, color: 'text-[#ffbe00]' },
+                                    { id: 'superadmin', label: 'Superadmin', icon: <ShieldAlert className="w-4 h-4" />, color: 'text-red-500' }
+                                ].map((role) => {
+                                    const isSelected = selectedRoles.includes(role.id);
+                                    return (
+                                        <div
+                                            key={role.id}
+                                            onClick={() => toggleRole(role.id)}
+                                            className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${isSelected ? 'bg-white/10 border-white/20' : 'bg-[#0a0a0a] border-white/5 hover:bg-white/5'}`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`p-2 rounded-full bg-white/5 ${role.color}`}>
+                                                    {role.icon}
+                                                </div>
+                                                <span className="text-sm font-bold">{role.label}</span>
+                                            </div>
+                                            <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${isSelected ? 'bg-[#ca1f3d] border-[#ca1f3d]' : 'border-gray-600'}`}>
+                                                {isSelected && <CheckCircle className="w-3 h-3 text-white" />}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
                         </div>
 
                         <Button
                             onClick={handleUpdateRole}
-                            disabled={updating}
+                            disabled={updating || selectedRoles.length === 0}
                             className="w-full h-12 bg-[#ca1f3d] hover:bg-[#a01830] text-white font-black rounded-xl"
                         >
                             {updating ? <Loader2 className="animate-spin" /> : "SIMPAN PERUBAHAN"}
@@ -420,4 +427,4 @@ export default function SuperAdminUsersPage() {
             />
         </div>
     );
-}
+};

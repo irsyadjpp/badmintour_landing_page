@@ -25,25 +25,25 @@ export async function GET(req: Request) {
         const users = usersSnap.docs.map(doc => doc.data());
         const userStats = {
             total: users.length,
-            admins: users.filter(u => u.role === 'admin' || u.role === 'superadmin').length,
-            hosts: users.filter(u => u.role === 'host').length,
-            coaches: users.filter(u => u.role === 'coach').length,
-            members: users.filter(u => !u.role || u.role === 'member').length
+            admins: users.filter(u => u.roles?.includes('admin') || u.roles?.includes('superadmin')).length,
+            hosts: users.filter(u => u.roles?.includes('host')).length,
+            coaches: users.filter(u => u.roles?.includes('coach')).length,
+            members: users.filter(u => !u.roles || u.roles?.includes('member')).length
         };
 
         // 2. System Load (Total Records di Database)
         // Menjumlahkan semua dokumen untuk melihat beban penyimpanan
-        const totalDatabaseRecords = 
-            usersSnap.size + 
-            eventsSnap.size + 
-            bookingsSnap.size + 
-            jerseySnap.size + 
+        const totalDatabaseRecords =
+            usersSnap.size +
+            eventsSnap.size +
+            bookingsSnap.size +
+            jerseySnap.size +
             logsSnap.data().count;
 
         // 3. Operational Stats
         // Event yang tanggalnya >= hari ini
         const activeEvents = eventsSnap.docs.filter(d => new Date(d.data().date) >= new Date()).length;
-        
+
         // 4. Recent Security Logs
         const recentLogs = recentLogsSnap.docs.map(doc => ({
             id: doc.id,

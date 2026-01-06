@@ -450,11 +450,11 @@ export default function AdminEventDetailPage() {
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
                       <p className="text-gray-500">Court Cost</p>
-                      <p className="text-white">Rp {Number(event.cost_court || 0).toLocaleString()}</p>
+                      <p className="text-white">Rp {Number(event.financials?.courtCost ?? event.cost_court ?? 0).toLocaleString()}</p>
                     </div>
                     <div>
                       <p className="text-gray-500">Coach Fee</p>
-                      <p className="text-white">Rp {Number(event.cost_coach || 0).toLocaleString()}</p>
+                      <p className="text-white">Rp {Number(event.financials?.coachFee ?? event.cost_coach ?? 0).toLocaleString()}</p>
                     </div>
                   </div>
                 </div>

@@ -22,8 +22,10 @@ export default function AdminEditEventPage() {
 
   const fetchEventDetail = async (id: string) => {
     try {
+      console.log("Fetching event:", id);
       const res = await fetch(`/api/events/${id}`);
       const data = await res.json();
+      console.log("Event API Response:", data);
       if (data.success) {
         setEventData(data.data);
       } else {

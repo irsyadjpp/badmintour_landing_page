@@ -41,3 +41,9 @@ export const formatIndonesianPhoneNumber = (phone: string): string => {
   return clean;
 };
 
+
+export function cleanCurrency(value: string | number): number {
+  if (!value) return 0;
+  const str = value.toString();
+  return Number(str.replace(/\D/g, ''));
+}

@@ -27,22 +27,24 @@ export async function POST(req: Request) {
     }
 
     const { appId, action } = await req.json(); // action: 'approve' | 'reject'
-    
+
     const appRef = db.collection("coach_applications").doc(appId);
     const appDoc = await appRef.get();
 
     if (!appDoc.exists) return NextResponse.json({ error: "Application not found" }, { status: 404 });
-    
+
     const appData = appDoc.data();
 
     // LOGIC APPROVAL
     if (action === 'approve') {
         // 1. Update status aplikasi
         await appRef.update({ status: 'approved', approvedAt: new Date().toISOString() });
-        
-        // 2. Update ROLE USER jadi 'coach'
+
+        // 2. Update ROLE USER jadi 'coach' (tambahkan ke array roles)
+        const FieldValue = require('firebase-admin').firestore.FieldValue;
         await db.collection("users").doc(appData?.userId).update({
-            role: 'coach',
+            role: 'coach', // Set as active role
+            roles: FieldValue.arrayUnion('coach'), // Add to roles array
             coachProfile: {
                 specialty: appData?.specialty,
                 rate: appData?.rate,

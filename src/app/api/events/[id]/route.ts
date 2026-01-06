@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth"; // Fixed import path
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/firebase-admin";
 import { logActivity } from "@/lib/audit-logger";
 import { generatePriceTiers } from "@/lib/pricing";
@@ -41,7 +41,8 @@ export async function PUT(
             assistantCoachIds, assistantCoachNames,
             cost_court, cost_shuttle, cost_tool, cost_coach,
             locationMapLink, courts, // New Fields
-            hostId, hostName // New Host Fields
+            hostId, hostName, // New Host Fields
+            tournamentCategories // <-- New Field
         } = body;
 
         // Update logic
@@ -60,7 +61,6 @@ export async function PUT(
         if (coachName !== undefined) updateData.coachName = coachName;
         if (externalLink !== undefined) updateData.externalLink = externalLink;
         if (organizer !== undefined) updateData.organizer = organizer;
-        if (organizer !== undefined) updateData.organizer = organizer;
         if (allowWaitingList !== undefined) updateData.allowWaitingList = allowWaitingList;
         if (assistantCoachIds !== undefined) updateData.assistantCoachIds = assistantCoachIds;
         if (assistantCoachNames !== undefined) updateData.assistantCoachNames = assistantCoachNames;
@@ -69,6 +69,7 @@ export async function PUT(
         if (courts !== undefined) updateData.courts = courts;
         if (hostId !== undefined) updateData.hostId = hostId;
         if (hostName !== undefined) updateData.hostName = hostName;
+        if (tournamentCategories !== undefined) updateData.tournamentCategories = tournamentCategories;
 
         // Financials Update (For Drilling)
         if (type === 'drilling' || (cost_court || cost_shuttle || cost_tool || cost_coach)) {
@@ -82,12 +83,6 @@ export async function PUT(
             };
             updateData.financials = costs;
             updateData.price_tier = generatePriceTiers(costs);
-
-            // Override price fields to match "Member" price from tier calculation for consistency? 
-            // Or trust the input 'price'? 
-            // Usually 'price' input is manual, but for drilling it might be derived. 
-            // For now, let's keep 'price' as passed (which is usually manually saved), 
-            // but ensure financials are stored for P&L.
         }
 
         await db.collection("events").doc(id).update(updateData);
@@ -153,8 +148,6 @@ export async function PATCH(
 
                     wlSnap.docs.forEach((doc) => {
                         // Promote to pending_payment (or 'paid' if price is 0?)
-                        // Safe bet: pending_payment. System will auto-cancel if not paid.
-                        // UNLESS event is free.
                         const newStatus = eventData.price === 0 ? 'paid' : 'pending_payment';
                         t.update(doc.ref, {
                             status: newStatus,
@@ -242,7 +235,6 @@ export async function DELETE(
         const { id } = await params;
         const body = await req.json().catch(() => ({}));
 
-        // SOFT DELETE or HARD DELETE? default hard delete based on existing code.
         await db.collection("events").doc(id).delete();
 
         await logActivity({

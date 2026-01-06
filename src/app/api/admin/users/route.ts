@@ -13,10 +13,10 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
-        // Fetch User dengan Role Tertentu Saja
-        // Firestore 'in' query supports up to 10 values
+        // Fetch User dengan Role Tertentu Saja (Check roles array)
+        // Firestore 'array-contains-any' query supports up to 10 values
         const snapshot = await db.collection("users")
-            .where("role", "in", ["member", "host", "coach"]) 
+            .where("roles", "array-contains-any", ["member", "host", "coach"])
             .get();
 
         const users = snapshot.docs.map(doc => ({

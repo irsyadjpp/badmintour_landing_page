@@ -29,10 +29,6 @@ export async function PUT(req: Request) {
         const body = await req.json();
         const { phoneNumber, name, nickname, domicile, image } = body;
 
-        console.log("!!! PROFILE PUT HIT !!!");
-        console.log(`User ID: ${session.user.id} | Name: ${session.user.name}`);
-        console.log("Payload:", JSON.stringify(body));
-
         // Validasi
         if (!phoneNumber) {
             return NextResponse.json({ error: "Nomor WhatsApp wajib diisi untuk pairing akun." }, { status: 400 });
@@ -54,7 +50,6 @@ export async function PUT(req: Request) {
         }
 
         const phoneFormats = Array.from(formats);
-        console.log(`[PROFILE_SYNC] Checking phones: ${JSON.stringify(phoneFormats)}`);
 
         // --- LOGIKA PAIRING: CEK DUPLIKASI & AUTO-MERGE ---
         const duplicateCheck = await db.collection("users")
@@ -190,8 +185,6 @@ export async function PUT(req: Request) {
 
         // D. Sync Data from Conflicting Guest ID (Auto-Merge)
         if (conflictingGuestId) {
-            console.log(`[MERGE] Merging data from Guest ID: ${conflictingGuestId} to User: ${session.user.id}`);
-
             // 1. Migrate Bookings by UserID
             const oldUserBookings = await db.collection("bookings").where("userId", "==", conflictingGuestId).get();
             oldUserBookings.forEach(doc => {
@@ -208,7 +201,6 @@ export async function PUT(req: Request) {
 
             // 3. Delete Old Guest Document
             batch.delete(db.collection("users").doc(conflictingGuestId));
-            console.log(`[MERGE] Deleting old guest document: ${conflictingGuestId}`);
         }
 
         // E. Sync Assessments (NEW - for drilling/coaching sessions)
@@ -245,9 +237,6 @@ export async function PUT(req: Request) {
 
         if (totalSynced > 0) {
             await batch.commit();
-            console.log(`[PAIRING] ${totalSynced} items (Bookings/Jersey/WL) synced to user ${session.user.name}`);
-        } else {
-            console.log(`[PAIRING] No items found for phones: ${JSON.stringify(phoneFormats)}`);
         }
 
         return NextResponse.json({
