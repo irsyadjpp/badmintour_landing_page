@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { User, Phone, Save, Loader2, ShieldCheck, Copy, MapPin, UserCog, RefreshCw } from 'lucide-react';
+import { User, Phone, Save, Loader2, ShieldCheck, Copy, MapPin, UserCog, RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn, isValidIndonesianPhoneNumber, formatIndonesianPhoneNumber } from '@/lib/utils';
 import { Material3Input } from '@/components/ui/material-3-input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -152,6 +153,19 @@ export default function ProfilePage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // VALIDATION: Phone Number
+        if (formData.phoneNumber && !isValidIndonesianPhoneNumber(formData.phoneNumber)) {
+            setStatusModal({
+                isOpen: true,
+                type: 'error',
+                title: 'INVALID PHONE NUMBER',
+                description: 'Mohon masukkan nomor WhatsApp yang valid (Format: 08xx atau 628xx, 10-14 digit).',
+                actionLabel: "PERBAIKI"
+            });
+            return;
+        }
+
         setIsLoading(true);
 
         try {
@@ -315,6 +329,11 @@ export default function ProfilePage() {
                                     onChange={(e) => {
                                         const val = e.target.value.replace(/\D/g, '');
                                         setFormData({ ...formData, phoneNumber: val });
+                                    }}
+                                    onBlur={() => {
+                                        if (formData.phoneNumber) {
+                                            setFormData(prev => ({ ...prev, phoneNumber: formatIndonesianPhoneNumber(prev.phoneNumber) }));
+                                        }
                                     }}
                                     className="bg-[#0a0a0a] font-mono"
                                     disabled={isPhoneLocked}

@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { UserCog, Save, Loader2, ShieldCheck, RefreshCw } from 'lucide-react';
+import { UserCog, Save, Loader2, ShieldCheck, RefreshCw, AlertCircle } from 'lucide-react';
+import { cn, isValidIndonesianPhoneNumber, formatIndonesianPhoneNumber } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Material3Input } from '@/components/ui/material-3-input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -133,6 +134,19 @@ export default function AdminProfilePage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // VALIDATION: Phone Number
+        if (formData.phoneNumber && !isValidIndonesianPhoneNumber(formData.phoneNumber)) {
+            setStatusModal({
+                isOpen: true,
+                type: 'error',
+                title: 'INVALID PHONE NUMBER',
+                description: 'Mohon masukkan nomor WhatsApp yang valid (Format: 08xx atau 628xx, 10-14 digit).',
+                actionLabel: "PERBAIKI"
+            });
+            return;
+        }
+
         setIsLoading(true);
 
         try {
@@ -273,7 +287,12 @@ export default function AdminProfilePage() {
                                     label="Emergency WhatsApp (Pairing)"
                                     type="tel"
                                     value={formData.phoneNumber}
-                                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value.replace(/\D/g, '') })}
+                                    onBlur={() => {
+                                        if (formData.phoneNumber) {
+                                            setFormData(prev => ({ ...prev, phoneNumber: formatIndonesianPhoneNumber(prev.phoneNumber) }));
+                                        }
+                                    }}
                                     className="bg-[#0a0a0a] font-mono"
                                     disabled={isPhoneLocked}
                                 />

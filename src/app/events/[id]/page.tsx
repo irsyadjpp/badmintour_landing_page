@@ -23,7 +23,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
 import QRCode from 'react-qr-code';
-import { cn } from '@/lib/utils';
+import { cn, isValidIndonesianPhoneNumber, formatIndonesianPhoneNumber } from '@/lib/utils';
 import { FeedbackModal } from '@/components/ui/feedback-modal';
 
 export default function PublicEventPage() {
@@ -70,6 +70,13 @@ export default function PublicEventPage() {
 
     const handleGuestBooking = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // VALIDATION
+        if (!isValidIndonesianPhoneNumber(guestPhone)) {
+            toast({ title: "Nomor Tidak Valid", description: "Gunakan format Indonesia (08xx... atau 628xx...).", variant: "destructive" });
+            return;
+        }
+
         setSubmitting(true);
 
         try {
@@ -112,6 +119,13 @@ export default function PublicEventPage() {
 
     const handleJoinWaitingList = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // VALIDATION
+        if (!isValidIndonesianPhoneNumber(guestPhone)) {
+            toast({ title: "Nomor Tidak Valid", description: "Gunakan format Indonesia (08xx... atau 628xx...).", variant: "destructive" });
+            return;
+        }
+
         setSubmitting(true);
 
         try {
@@ -601,7 +615,10 @@ export default function PublicEventPage() {
                                                     required
                                                     type="tel"
                                                     value={guestPhone}
-                                                    onChange={(e) => setGuestPhone(e.target.value)}
+                                                    onChange={(e) => setGuestPhone(e.target.value.replace(/\D/g, ''))}
+                                                    onBlur={() => {
+                                                        if (guestPhone) setGuestPhone(formatIndonesianPhoneNumber(guestPhone));
+                                                    }}
                                                     placeholder="08xxxxxxxxxx"
                                                     className="h-14 pl-12 bg-white/5 border-white/10 rounded-2xl text-white placeholder:text-gray-600 focus:border-white/30 focus:bg-white/10 focus:ring-0 transition-all"
                                                 />

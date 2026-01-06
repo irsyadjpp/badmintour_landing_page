@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { User, Phone, Save, Loader2, ShieldCheck, MapPin, RefreshCw } from 'lucide-react';
+import { User, Phone, Save, Loader2, ShieldCheck, MapPin, RefreshCw, AlertCircle } from 'lucide-react';
+import { cn, isValidIndonesianPhoneNumber, formatIndonesianPhoneNumber } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -59,6 +60,19 @@ export default function HostProfilePage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // VALIDATION: Phone Number
+        if (formData.phoneNumber && !isValidIndonesianPhoneNumber(formData.phoneNumber)) {
+            setStatusModal({
+                isOpen: true,
+                type: 'error',
+                title: 'INVALID PHONE NUMBER',
+                description: 'Mohon masukkan nomor WhatsApp yang valid (Format: 08xx atau 628xx, 10-14 digit).',
+                actionLabel: "PERBAIKI"
+            });
+            return;
+        }
+
         setIsLoading(true);
 
         try {
@@ -177,7 +191,12 @@ export default function HostProfilePage() {
                             <Label className="text-[#7c3aed] font-bold flex items-center gap-2">Nomor WhatsApp (Pairing Key) <Phone className="w-4 h-4" /></Label>
                             <Input
                                 value={formData.phoneNumber}
-                                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value.replace(/\D/g, '') })}
+                                onBlur={() => {
+                                    if (formData.phoneNumber) {
+                                        setFormData(prev => ({ ...prev, phoneNumber: formatIndonesianPhoneNumber(prev.phoneNumber) }));
+                                    }
+                                }}
                                 className="bg-[#0a0a0a] border-[#7c3aed]/50 text-white h-12 font-mono"
                                 placeholder="08xxxxxxxxxx"
                                 disabled={isPhoneLocked}

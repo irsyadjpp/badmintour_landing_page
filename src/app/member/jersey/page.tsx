@@ -4,7 +4,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
-import { cn } from '@/lib/utils';
+import { cn, isValidIndonesianPhoneNumber, formatIndonesianPhoneNumber } from '@/lib/utils';
 import { Ruler, X, Check, Loader2, Lock, RefreshCw, Download, Shirt, ShoppingBag, TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -93,6 +93,12 @@ export default function MemberJerseyPage() {
 
         if (!fullName || !finalBackName || !whatsAppNumber) {
             toast({ title: "Data Kurang", description: "Mohon lengkapi semua data.", variant: "destructive" });
+            return;
+        }
+
+        // VALIDATION: Phone Number
+        if (!isValidIndonesianPhoneNumber(whatsAppNumber)) {
+            toast({ title: "Nomor Tidak Valid", description: "Format nomor WhatsApp harus Indonesia (08xx... / 628xx...).", variant: "destructive" });
             return;
         }
 
@@ -367,7 +373,10 @@ export default function MemberJerseyPage() {
                                 <input
                                     type="tel"
                                     value={whatsAppNumber}
-                                    onChange={e => setWhatsAppNumber(e.target.value)}
+                                    onChange={e => setWhatsAppNumber(e.target.value.replace(/\D/g, ''))}
+                                    onBlur={() => {
+                                        if (whatsAppNumber) setWhatsAppNumber(formatIndonesianPhoneNumber(whatsAppNumber));
+                                    }}
                                     className="w-full bg-[#1A1A1A] border border-white/10 rounded-xl px-5 py-4 text-white font-bold focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
                                     placeholder="08..."
                                 />
