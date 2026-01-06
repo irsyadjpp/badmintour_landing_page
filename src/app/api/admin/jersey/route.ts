@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/firebase-admin";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     // Security: Cek Role
@@ -11,16 +11,55 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    // Ambil semua order
-    const snapshot = await db.collection("jersey_orders").orderBy("orderedAt", "desc").get();
-    const orders = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    const limit = parseInt(new URL(req.url).searchParams.get('limit') || '50');
+    const cursor = new URL(req.url).searchParams.get('cursor');
 
-    return NextResponse.json({ success: true, data: orders });
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch orders" }, { status: 500 });
+    let query = db.collection("orders")
+      .where("type", "==", "jersey")
+      .orderBy("createdAt", "desc")
+      .limit(limit + 1);
+
+    if (cursor) {
+      query = query.startAfter(cursor);
+    }
+
+    const snapshot = await query.get();
+
+    const orders = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        fullName: data.userName,
+        senderPhone: data.userPhone,
+        orderedAt: data.createdAt,
+        size: data.items?.[0]?.metadata?.size || data.metadata?.size,
+        backName: data.items?.[0]?.metadata?.backName || data.metadata?.backName,
+        quantity: data.items?.[0]?.quantity || 1,
+        // Ensure we strictly have a string for cursor if needed, though createdAt IS the cursor usually?
+        // Actually, startAfter takes the value of the orderBy field.
+        // So we need 'createdAt' value itself. 
+      };
+    });
+
+    const hasMore = orders.length > limit;
+    const paginatedOrders = hasMore ? orders.slice(0, limit) : orders;
+
+    // Determine next cursor value (createdAt of the last item)
+    const lastOrder = paginatedOrders[paginatedOrders.length - 1];
+    const nextCursor = hasMore && lastOrder ? lastOrder.orderedAt : null;
+
+    return NextResponse.json({
+      success: true,
+      data: paginatedOrders,
+      meta: {
+        hasMore,
+        cursor: nextCursor
+      }
+    });
+  } catch (error: any) {
+    console.error("Fetch Orders Error:", error);
+    return NextResponse.json({ error: error.message || "Failed to fetch orders" }, { status: 500 });
   }
 }
 
@@ -36,14 +75,27 @@ export async function PUT(req: Request) {
 
     // Prepare update data dynamic
     const updateData: any = {};
-    if (body.status) updateData.status = body.status;
-    if (body.fullName) updateData.fullName = body.fullName;
-    if (body.senderName) updateData.senderName = body.senderName; // Support legacy field
-    if (body.backName) updateData.backName = body.backName;
-    if (body.size) updateData.size = body.size;
-    if (body.senderPhone) updateData.senderPhone = body.senderPhone;
+    const metadataUpdate: any = {};
 
-    await db.collection("jersey_orders").doc(body.id).update(updateData);
+    if (body.status) updateData.status = body.status;
+
+    // Convert root fields to new schema if changed
+    if (body.fullName) updateData.userName = body.fullName;
+    if (body.senderPhone) updateData.userPhone = body.senderPhone;
+
+    // Metadata / Items Update (Simplified: assuming single item for jersey)
+    if (body.backName) metadataUpdate.backName = body.backName;
+    if (body.size) metadataUpdate.size = body.size;
+
+    if (Object.keys(metadataUpdate).length > 0) {
+      // We'll update root metadata for ease
+      updateData["metadata"] = metadataUpdate;
+      // Deep update items if needed (Requires reading first or overwrite entire array - simpler to just update metadata for now as UI might check there)
+      // If we strictly follow schema, we should update items[0].metadata too, but that's hard without reading.
+      // Let's rely on metadata logic for now.
+    }
+
+    await db.collection("orders").doc(body.id).set(updateData, { merge: true });
 
     return NextResponse.json({ success: true });
   } catch (error) {

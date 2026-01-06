@@ -13,7 +13,8 @@ import {
     Download,
     RefreshCw,
     User,
-    Users
+    Users,
+    DatabaseZap // <--- Import Icon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,9 +53,30 @@ export default function AdminJerseyPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [migrating, setMigrating] = useState(false); // <--- State
 
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
+
+    // 0. MIGRATE HANDLER
+    const handleMigrate = async () => {
+        if (!confirm("Start data migration from jersey_orders to orders?")) return;
+        setMigrating(true);
+        try {
+            const res = await fetch('/api/system/migrate-orders', { method: 'POST' });
+            const data = await res.json();
+            if (res.ok) {
+                toast({ title: "Migration Log", description: data.message, className: "bg-blue-600 text-white" });
+                fetchOrders(); // Refresh table
+            } else {
+                throw new Error(data.error || "Migration failed");
+            }
+        } catch (error: any) {
+            toast({ title: "Migration Error", description: error.message, variant: "destructive" });
+        } finally {
+            setMigrating(false);
+        }
+    };
 
     // 1. FETCH DATA
     const fetchOrders = async () => {
@@ -235,6 +257,15 @@ export default function AdminJerseyPage() {
                     <p className="text-gray-400">Pantau produksi, pembayaran, dan pengiriman Season 1.</p>
                 </div>
                 <div className="flex gap-3">
+                    <Button
+                        variant="outline"
+                        onClick={handleMigrate}
+                        disabled={migrating}
+                        className="border-blue-500/20 bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 rounded-xl"
+                    >
+                        <DatabaseZap className={`w-4 h-4 mr-2 ${migrating ? 'animate-pulse' : ''}`} />
+                        {migrating ? 'Migrating...' : 'Migrate Data'}
+                    </Button>
                     <Button variant="outline" onClick={fetchOrders} className="border-white/10 hover:bg-white/5 text-gray-300 hover:text-white rounded-xl">
                         <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
                     </Button>

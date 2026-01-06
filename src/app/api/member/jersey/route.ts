@@ -30,8 +30,10 @@ export async function POST(req: Request) {
         }
 
         // CEK DUPLICATE ORDER BY PHONE
-        const existingOrderQuery = await db.collection("jersey_orders")
-            .where("senderPhone", "==", senderPhone)
+        // Changed collection to 'orders'
+        const existingOrderQuery = await db.collection("orders")
+            .where("userPhone", "==", senderPhone)
+            .where("type", "==", "jersey")
             .limit(1)
             .get();
 
@@ -42,8 +44,11 @@ export async function POST(req: Request) {
         }
 
         // [NEW] LIMIT 20 PCS CHECK
-        // Hitung total dokumen di collection 'jersey_orders'
-        const totalOrdersSnap = await db.collection("jersey_orders").count().get();
+        // Hitung total dokumen di collection 'orders' where type='jersey'
+        const totalOrdersSnap = await db.collection("orders")
+            .where("type", "==", "jersey")
+            .count()
+            .get();
         const totalOrders = totalOrdersSnap.data().count;
 
         if (totalOrders >= 20) {
@@ -53,41 +58,58 @@ export async function POST(req: Request) {
         }
 
         // Generate Order ID (Format: JSY-YYYYMMDD-XXXX)
-        // Ini penting agar sesuai dengan QR Code generator di frontend
         const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
         const randomSuffix = Math.floor(1000 + Math.random() * 9000);
         const orderId = `JSY-${dateStr}-${randomSuffix}`;
+        const price = 150000;
+        const totalCost = (Math.max(0, (quantity || 1) - 1)) * price;
 
         const orderData = {
-            orderId,
-            size,
-            backName,
-            fullName: fullName, // Use the provided fullName
-            senderPhone,
-            quantity: quantity || 1,
-            totalPrice: (Math.max(0, (quantity || 1) - 1)) * 150000,
-            orderedAt: new Date().toISOString(),
-            status: ((Math.max(0, (quantity || 1) - 1)) * 150000) === 0 ? "paid" : "pending", // Auto-Paid if Free
-            pickupStatus: "pending",
-            season: "Season 1 - 2026",
-            isMember: !!session?.user?.id,
+            id: orderId,
+            type: "jersey",
             userId: session?.user?.id || "guest",
-            type: session?.user?.id ? "MEMBER" : "GUEST"
+            userName: fullName,
+            userPhone: senderPhone,
+
+            // Unified Item Structure
+            items: [
+                {
+                    name: 'Jersey Custom Season 1',
+                    quantity: quantity || 1,
+                    price: price,
+                    variant: `${size} - ${backName}`,
+                    metadata: {
+                        size,
+                        backName
+                    }
+                }
+            ],
+
+            totalPrice: totalCost,
+            status: totalCost === 0 ? "paid" : "pending",
+
+            // Legacy/Specific Metadata
+            metadata: {
+                orderedAt: new Date().toISOString(),
+                season: "Season 1 - 2026",
+                pickupStatus: "pending",
+                isMember: !!session?.user?.id,
+                size,         // Keep for easy query if needed (optional)
+                backName,     // Keep for easy query if needed (optional)
+            },
+
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         };
 
-        // A. SIMPAN KE DATABASE PUSAT (jersey_orders)
-        await db.collection("jersey_orders").doc(orderId).set(orderData);
+        // A. SIMPAN KE DATABASE PUSAT (orders)
+        await db.collection("orders").doc(orderId).set(orderData);
 
         // B. LOGIKA PAIRING ACCOUNT (Khusus Member)
-        // Jika user login, simpan No HP ke profile mereka untuk menautkan akun
         if (session?.user?.id) {
             const userRef = db.collection("users").doc(session.user.id);
-
-            // Update data user:
-            // 1. phoneNumber: Tautkan nomor WA ke akun Google ini
-            // 2. jerseyOrder: Simpan history order terakhir (opsional)
             await userRef.update({
-                phoneNumber: senderPhone, // <--- FITUR PAIRING DI SINI
+                phoneNumber: senderPhone,
                 updatedAt: new Date().toISOString()
             });
         }
@@ -98,7 +120,7 @@ export async function POST(req: Request) {
             userName: session?.user?.name || fullName,
             role: session?.user?.role || 'guest',
             action: 'create',
-            entity: 'JerseyOrder',
+            entity: 'Order',
             entityId: orderId,
             details: `Memesan Jersey Custom: ${backName}`
         });
@@ -119,19 +141,32 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
 
-    // Jika tidak login, return unauthorized/empty
     if (!session?.user?.id) {
         return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     try {
-        // Ambil semua order milik user ini dari collection central
-        const snapshot = await db.collection("jersey_orders")
+        // Ambil semua order milik user ini (type 'jersey')
+        const snapshot = await db.collection("orders")
             .where("userId", "==", session.user.id)
-            .orderBy("orderedAt", "desc")
+            .where("type", "==", "jersey")
+            .orderBy("createdAt", "desc")
             .get();
 
-        const orders = snapshot.docs.map(doc => doc.data());
+        const orders = snapshot.docs.map(doc => {
+            const data = doc.data();
+            // Transform back to convenient UI format if needed, or UI will adapt.
+            // Keeping it raw with mapped fields for UI backward compat
+            return {
+                ...data,
+                // Flatten fields for UI compatibility
+                orderId: data.id,
+                orderedAt: data.createdAt,
+                size: data.items?.[0]?.metadata?.size || data.metadata?.size,
+                backName: data.items?.[0]?.metadata?.backName || data.metadata?.backName,
+                quantity: data.items?.[0]?.quantity || 1,
+            };
+        });
 
         return NextResponse.json({ success: true, data: orders });
     } catch (error) {

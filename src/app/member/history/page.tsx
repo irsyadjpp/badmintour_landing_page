@@ -3,7 +3,7 @@
 import { History, Calendar, Clock, MapPin, Loader2, XCircle, CheckCircle, Dumbbell } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -11,20 +11,40 @@ import Link from 'next/link';
 export default function HistoryPage() {
   const { data: session } = useSession();
 
-  // Fetch History Bookings
-  const { data: history = [], isLoading } = useQuery({
+
+
+  // Fetch History Bookings (Pagination)
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading
+  } = useInfiniteQuery({
     queryKey: ['bookings', 'history', session?.user?.id],
-    queryFn: async () => {
-      const res = await fetch('/api/member/bookings?mode=list');
-      const data = await res.json();
-      // Filter: Status Selesai / Gagal / Completed (Past Date)
-      return data.data ? data.data.filter((b: any) =>
-        ['cancelled', 'rejected', 'completed', 'expired'].includes(b.status) ||
-        (new Date(b.eventDate) < new Date() && !['cancelled', 'rejected'].includes(b.status)) // Auto complete if date passed
-      ) : [];
+    queryFn: async ({ pageParam = undefined }) => { // pageParam is cursor
+      // Build URL with cursor
+      const url = new URL('/api/member/bookings', window.location.origin);
+      url.searchParams.set('mode', 'list');
+      url.searchParams.set('limit', '10'); // Limit per page
+      if (pageParam) {
+        url.searchParams.set('cursor', pageParam as string);
+      }
+
+      const res = await fetch(url.toString());
+      const json = await res.json();
+      return json; // Expects { success: true, data: [...], meta: { cursor: ... } }
     },
+    getNextPageParam: (lastPage) => {
+      // API returns meta.cursor if hasMore
+      return lastPage.meta?.hasMore ? lastPage.meta.cursor : undefined;
+    },
+    initialPageParam: undefined,
     enabled: !!session?.user?.id
   });
+
+  // Flatten Pages
+  const history = data?.pages.flatMap((page) => page.data || []) || [];
 
   if (isLoading) {
     return (
@@ -154,7 +174,23 @@ export default function HistoryPage() {
             )
           })
         )}
+        )}
       </div>
+
+      {/* LOAD MORE BUTTON */}
+      {hasNextPage && (
+        <div className="flex justify-center mt-12">
+          <button
+            onClick={() => fetchNextPage()}
+            disabled={isFetchingNextPage}
+            className="px-8 py-3 bg-white/10 text-white rounded-full font-bold hover:bg-white/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {isFetchingNextPage ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+            {isFetchingNextPage ? 'Memuat...' : 'Tampilkan Lebih Banyak'}
+          </button>
+        </div>
+      )}
+
     </div>
   );
 }

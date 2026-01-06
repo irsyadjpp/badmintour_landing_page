@@ -138,24 +138,24 @@ export async function PUT(req: Request) {
         }
 
         // B. Sync Jersey Orders
-        const jerseySnapshot = await db.collection("jersey_orders")
-            .where("senderPhone", "in", phoneFormats)
+        const jerseySnapshot = await db.collection("orders")
+            .where("userPhone", "in", phoneFormats)
+            .where("type", "==", "jersey")
             .get();
 
         if (!jerseySnapshot.empty) {
             jerseySnapshot.forEach((doc) => {
                 const data = doc.data();
-                const isGuestOrder = data.type === 'GUEST' ||
-                    data.type === 'guest' ||
-                    !data.isMember ||
+                // Logic: Claim if unowned or Guest
+                const isGuestOrder = data.type === 'guest' || // legacy
+                    !data.userId ||
                     data.userId === 'guest';
 
                 if (isGuestOrder && data.userId !== session.user.id) {
                     batch.update(doc.ref, {
                         userId: session.user.id,
-                        isMember: true,
-                        type: "MEMBER",
-                        fullName: session.user.name
+                        userName: session.user.name,
+                        // Fix legacy/mixed types if any
                     });
                     totalSynced++;
                 }
@@ -193,9 +193,12 @@ export async function PUT(req: Request) {
             });
 
             // 2. Migrate Jersey Orders by UserID
-            const oldUserJersey = await db.collection("jersey_orders").where("userId", "==", conflictingGuestId).get();
+            const oldUserJersey = await db.collection("orders")
+                .where("userId", "==", conflictingGuestId)
+                .where("type", "==", "jersey")
+                .get();
             oldUserJersey.forEach(doc => {
-                batch.update(doc.ref, { userId: session.user.id, type: "MEMBER", isMember: true });
+                batch.update(doc.ref, { userId: session.user.id });
                 totalSynced++;
             });
 

@@ -6,11 +6,37 @@ import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useState, useEffect } from 'react'; // Fix Import
+
+import { doc, getDoc } from 'firebase/firestore'; // Import Firestore
+import { db } from '@/lib/firebase'; // Import Client DB
 
 export default function FeaturesSection() {
   const imgMabar = PlaceHolderImages.find((img) => img.id === 'feature-mabar');
   const imgTournament = PlaceHolderImages.find((img) => img.id === 'feature-sparring');
   const imgDrilling = PlaceHolderImages.find((img) => img.id === 'feature-coaching');
+
+  // Live Stats State
+  const [memberCount, setMemberCount] = useState<string | number>("1K+");
+
+  useEffect(() => {
+    // Fetch aggregated stats loosely
+    const fetchStats = async () => {
+      try {
+        const snap = await getDoc(doc(db, "aggregates", "dashboard_stats"));
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data.activeMemberCount) {
+            // Format: 1200 -> 1.2K if needed, or just raw number if > 1000
+            setMemberCount(data.activeMemberCount > 1000 ? (data.activeMemberCount / 1000).toFixed(1) + "K+" : data.activeMemberCount);
+          }
+        }
+      } catch (e) {
+        // Silent fail to default
+      }
+    };
+    fetchStats();
+  }, []);
 
   return (
     <section id="services" className="w-full py-24 bg-background dark:bg-black">
@@ -125,7 +151,7 @@ export default function FeaturesSection() {
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Sesi / Bulan</p>
               </div>
               <div className="text-center md:text-left">
-                <h3 className="text-4xl md:text-5xl font-black text-foreground">1K+</h3>
+                <h3 className="text-4xl md:text-5xl font-black text-foreground">{memberCount}</h3>
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Member Aktif</p>
               </div>
               <div className="col-span-2 flex items-center justify-center md:justify-end">

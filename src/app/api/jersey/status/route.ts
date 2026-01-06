@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const snapshot = await db.collection("jersey_orders").count().get();
+    const snapshot = await db.collection("orders").where('type', '==', 'jersey').count().get();
     const total = snapshot.data().count;
     const LIMIT = 20;
 

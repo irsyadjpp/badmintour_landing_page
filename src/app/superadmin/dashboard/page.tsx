@@ -14,10 +14,12 @@ import {
     Crown,
     User,
     Calendar,
-    Dumbbell
+    Dumbbell,
+    RefreshCw // <-- Import Icon
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button'; // <-- Import Button
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,6 +27,7 @@ export default function SuperAdminDashboard() {
     const { toast } = useToast();
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [syncing, setSyncing] = useState(false); // <-- Sync State
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -42,6 +45,25 @@ export default function SuperAdminDashboard() {
         };
         fetchStats();
     }, [toast]);
+
+    const handleResync = async () => {
+        setSyncing(true);
+        try {
+            const res = await fetch('/api/system/aggregates/recalc', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                toast({ title: "Sukses", description: "Data dashboard berhasil dihitung ulang.", className: "bg-green-600 text-white border-0" });
+                // Refresh data manually or reload
+                window.location.reload();
+            } else {
+                throw new Error("Failed");
+            }
+        } catch (e) {
+            toast({ title: "Gagal", description: "Sync gagal.", variant: "destructive" });
+        } finally {
+            setSyncing(false);
+        }
+    };
 
     if (loading || !stats) {
         return (
@@ -66,16 +88,27 @@ export default function SuperAdminDashboard() {
     return (
         <div className="space-y-8 pb-20">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-black text-white flex items-center gap-3">
                         <Server className="w-8 h-8 text-[#ca1f3d]" /> SYSTEM CONTROL
                     </h1>
                     <p className="text-gray-400">Monitoring infrastruktur, user database, dan keamanan.</p>
                 </div>
-                <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20 px-4 py-2 flex gap-2">
-                    <CheckCircle2 className="w-4 h-4" /> SYSTEM OPERATIONAL
-                </Badge>
+                <div className="flex items-center gap-3">
+                    <Button
+                        onClick={handleResync}
+                        disabled={syncing}
+                        variant="outline"
+                        className="bg-[#151515] text-white border-white/10 hover:bg-white/5"
+                    >
+                        <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                        {syncing ? 'Syncing...' : 'Resync Data'}
+                    </Button>
+                    <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20 px-4 py-2 flex gap-2 h-10">
+                        <CheckCircle2 className="w-4 h-4" /> SYSTEM OPERATIONAL
+                    </Badge>
+                </div>
             </div>
 
             {/* 1. TOP SYSTEM METRICS (No Finance) */}

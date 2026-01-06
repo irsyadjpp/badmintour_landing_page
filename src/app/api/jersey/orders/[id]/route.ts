@@ -13,7 +13,7 @@ export async function GET(
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     try {
-        const docRef = db.collection("jersey_orders").doc(params.id);
+        const docRef = db.collection("orders").doc(params.id);
         const docSnap = await docRef.get();
 
         if (!docSnap.exists) {
@@ -44,7 +44,7 @@ export async function PUT(
 
     try {
         const body = await req.json();
-        const docRef = db.collection("jersey_orders").doc(params.id);
+        const docRef = db.collection("orders").doc(params.id);
         const docSnap = await docRef.get();
 
         if (!docSnap.exists) return NextResponse.json({ error: "Not Found" }, { status: 404 });

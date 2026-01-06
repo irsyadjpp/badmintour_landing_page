@@ -14,8 +14,8 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-console.warn("[FIREBASE INIT] Env Project ID:", process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
-console.warn("[FIREBASE INIT] Config:", firebaseConfig);
+// console.warn("[FIREBASE INIT] Env Project ID:", process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+// console.warn("[FIREBASE INIT] Config:", firebaseConfig);
 
 // Initialize Firebase
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);

@@ -77,8 +77,13 @@ export async function PUT(req: Request) {
         // Cek apakah ada order jersey dengan nomor ini yang masih status 'guest'
         // Ini menangani kasus: Guest beli Jersey -> Register -> Isi No HP
         // =================================================================================
-        const jerseySnap = await db.collection("jersey_orders")
-            .where("senderPhone", "==", phoneNumber)
+        // 2.5. CLAIM JERSEY ORDERS (ORPHAN GUEST ORDERS)
+        // Cek apakah ada order jersey dengan nomor ini yang masih status 'guest'
+        // Ini menangani kasus: Guest beli Jersey -> Register -> Isi No HP
+        // =================================================================================
+        const jerseySnap = await db.collection("orders")
+            .where("userPhone", "==", phoneNumber)
+            .where("type", "==", "jersey")
             .where("userId", "==", "guest") // Hanya claim yang guest
             .get();
 
@@ -89,8 +94,7 @@ export async function PUT(req: Request) {
             jerseySnap.forEach(doc => {
                 jerseyBatch.update(doc.ref, {
                     userId: session.user.id,
-                    isMember: true,
-                    type: "MEMBER"
+                    userName: session.user.name
                 });
             });
 
