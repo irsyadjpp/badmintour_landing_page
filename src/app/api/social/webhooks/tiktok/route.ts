@@ -26,15 +26,31 @@ const verifySignature = (body: string, signature: string, timestamp: string) => 
   return hash === signature;
 };
 
+export async function GET() {
+  return NextResponse.json({ status: "TikTok Webhook Ready", message: "Use POST for events" }, { status: 200 });
+}
+
 export async function POST(req: NextRequest) {
   try {
     const bodyText = await req.text();
-    const headers = req.headers;
 
+    // Handle Empty Code (Ping)
+    if (!bodyText) {
+      console.log("[TikTok Webhook] Empty body received (Ping check)");
+      return NextResponse.json({ status: "alive" }, { status: 200 });
+    }
+
+    const headers = req.headers;
     const signature = headers.get('x-tiktok-event-signature') || headers.get('X-TikTok-Event-Signature');
     const timestamp = headers.get('x-tiktok-event-signature-timestamp') || headers.get('X-TikTok-Event-Signature-Timestamp');
 
-    const body = JSON.parse(bodyText);
+    let body;
+    try {
+      body = JSON.parse(bodyText);
+    } catch (e) {
+      console.error("[TikTok Webhook] Invalid JSON:", e);
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
 
     // 1. Verification Challenge (Priority)
     // Checks if 'challenge' exists in body. Return it immediately to verify ownership.
@@ -44,12 +60,15 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Validate Signature (Security)
-    // Note: For MVP in development (localhost), we might skip strict check if headers missing,
-    // but for production it's mandatory.
-    if (process.env.NODE_ENV === 'production' && (!signature || !timestamp)) {
-      console.error("[TikTok Webhook] Missing Signature Headers");
-      return NextResponse.json({ error: "Missing signature" }, { status: 401 });
+    // Note: Logging only for debugging purposes. Re-enable strict check later.
+    if (!signature || !timestamp) {
+      console.warn("[TikTok Webhook] Warning: Missing Signature Headers in request");
+      // if (process.env.NODE_ENV === 'production') {
+      //   return NextResponse.json({ error: "Missing signature" }, { status: 401 });
+      // }
     }
+
+    console.log("[TikTok Webhook] Body Received:", body);
 
     // Uncomment to enable strict signature verification
     // if (signature && timestamp && !verifySignature(bodyText, signature, timestamp)) {
