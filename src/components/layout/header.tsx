@@ -16,6 +16,7 @@ import {
   SheetClose
 } from '@/components/ui/sheet';
 import { useSession } from 'next-auth/react';
+import RoleSwitcher from '@/components/layout/role-switcher';
 
 function MobileMenu() {
   const [isMobileOpen, setIsMobileOpen] = React.useState(false);
@@ -72,7 +73,14 @@ function MobileMenu() {
             </SheetClose>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-border">
+          <div className="mt-6 pt-6 border-t border-border space-y-3">
+            {/* ROLE SWITCHER MOBILE */}
+            {session && (
+              <div className="flex justify-center">
+                <RoleSwitcher />
+              </div>
+            )}
+
             {isAdmin && (
               <SheetClose asChild>
                 <Link href="/admin/dashboard" className="flex items-center justify-center w-full h-12 rounded-xl text-base font-bold bg-destructive text-white shadow-lg hover:bg-destructive/90 transition mb-2">
@@ -203,6 +211,9 @@ export default function Header() {
               </Button>
             </Link>
           )}
+
+          {/* ROLE SWITCHER */}
+          {session && <RoleSwitcher />}
 
           {/* Jika tidak login, tampilkan tombol Login */}
           {!session && (

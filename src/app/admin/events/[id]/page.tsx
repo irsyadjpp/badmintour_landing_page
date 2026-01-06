@@ -40,9 +40,38 @@ export default function AdminEventDetailPage() {
   const [activeTab, setActiveTab] = useState('participants');
 
   // Modal State
-  const [showCancelModal, setShowCancelModal] = useState(false);
+
   const [editParticipant, setEditParticipant] = useState<any>(null);
   const [editForm, setEditForm] = useState({ partnerName: '', isSponsored: false });
+
+  // Delete Participant State
+  // UNIFIED FEEDBACK STATE
+  const [feedback, setFeedback] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'error' | 'warning';
+    title: string;
+    description: React.ReactNode;
+    onConfirm?: () => void;
+  }>({
+    isOpen: false,
+    type: 'warning',
+    title: '',
+    description: '',
+    onConfirm: undefined
+  });
+
+  const closeFeedback = () => setFeedback(prev => ({ ...prev, isOpen: false }));
+
+  // Helper to Show Feedback
+  const showFeedback = (type: 'success' | 'error' | 'warning', title: string, desc: React.ReactNode, onConfirm?: () => void) => {
+    setFeedback({
+      isOpen: true,
+      type,
+      title,
+      description: desc,
+      onConfirm
+    });
+  };
 
   const loadData = async () => {
     // Handle async params in Next.js 15
@@ -54,6 +83,11 @@ export default function AdminEventDetailPage() {
     try {
       // 1. Fetch Event Details
       const eventRes = await fetch(`/api/events/${id}`);
+      if (!eventRes.ok) {
+        const text = await eventRes.text();
+        console.error("Fetch Event Error:", text);
+        throw new Error(`Event API Error: ${eventRes.status} ${eventRes.statusText}`);
+      }
       const eventData = await eventRes.json();
 
       if (eventData.success) {
@@ -62,6 +96,11 @@ export default function AdminEventDetailPage() {
 
       // 2. Fetch Participants
       const partRes = await fetch(`/api/events/${id}/participants`);
+      if (!partRes.ok) {
+        const text = await partRes.text();
+        console.error("Fetch Participants Error:", text);
+        throw new Error(`Participants API Error: ${partRes.status}`);
+      }
       const partData = await partRes.json();
 
       if (partData.success) {
@@ -88,13 +127,27 @@ export default function AdminEventDetailPage() {
       });
 
       if (res.ok) {
-        toast({ title: "Sukses", description: `Status berhasil diubah menjadi ${newStatus.toUpperCase()}` });
+        let title = "STATUS UPDATED!";
+        let description = `Status berhasil diubah menjadi ${newStatus.toUpperCase()}`;
+
+        if (newStatus === 'paid') {
+          title = "TICKET SECURED!";
+          description = "Pembayaran lunas. Slot aman terkendali. Siap tanding!";
+        } else if (newStatus === 'confirmed') {
+          title = "GAME ON!";
+          description = "Peserta dikonfirmasi hadir. Raket siap?";
+        } else if (newStatus === 'rejected') {
+          title = "SERVICE FAULT!";
+          description = "Pendaftaran ditolak/dibatalkan.";
+        }
+
+        showFeedback('success', title, description);
         loadData(); // Refresh data
       } else {
         throw new Error("Gagal update status");
       }
     } catch (error) {
-      toast({ title: "Error", description: "Gagal mengupdate status pembayaran", variant: "destructive" });
+      showFeedback('error', 'GAGAL UPDATE!', 'Terjadi kesalahan saat mengupdate status peserta.');
     }
   };
 
@@ -134,38 +187,61 @@ export default function AdminEventDetailPage() {
 
   // HANDLERS
   const handleExtend = async () => {
-    if (!confirm("Extend waktu 1 jam?")) return;
-    try {
-      const res = await fetch(`/api/events/${event.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'extend_time', additionalMinutes: 60 })
-      });
-      if (res.ok) {
-        toast({ title: "Success", description: "Waktu diperpanjang 1 jam" });
-        loadData();
-      } else throw new Error();
-    } catch (e) {
-      toast({ title: "Error", description: "Gagal extend waktu", variant: "destructive" });
-    }
+    showFeedback('warning', 'RUBBER GAME?', 'Tambah durasi 1 Jam lagi? Pastikan fisik masih kuat!', async () => {
+      closeFeedback(); // Close confirm modal
+      try {
+        const res = await fetch(`/api/events/${event.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'extend_time', additionalMinutes: 60 })
+        });
+        if (res.ok) {
+          showFeedback('success', 'MATCH EXTENDED!', 'Waktu berhasil ditambah. Gas terus!');
+          loadData();
+        } else throw new Error();
+      } catch (e) {
+        showFeedback('error', 'UNFORCED ERROR!', 'Gagal menambah waktu. Coba lagi.');
+      }
+    });
   };
 
+
   const handleAddCourt = async () => {
-    if (!confirm("Buka 1 Lapangan Tambahan (+12 Slot)? \nWaiting list akan otomatis masuk.")) return;
-    try {
-      const res = await fetch(`/api/events/${event.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'add_court', additionalQuota: 12 })
-      });
-      if (res.ok) {
-        toast({ title: "Success", description: "Lapangan & Kuota ditambah" });
-        loadData();
-      } else throw new Error();
-    } catch (e) {
-      toast({ title: "Error", description: "Gagal menambah lapangan", variant: "destructive" });
-    }
+    showFeedback('warning', 'EXPAND ARENA?', <span>Buka <strong>1 Lapangan (+12 Slot)</strong>?<br />Waiting list akan otomatis masuk ke Main Draw.</span>, async () => {
+      closeFeedback();
+      try {
+        const res = await fetch(`/api/events/${event.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'add_court', additionalQuota: 12 })
+        });
+        if (res.ok) {
+          showFeedback('success', 'COURT READY!', 'Lapangan baru dibuka. Lebih banyak aksi!');
+          loadData();
+        } else throw new Error();
+      } catch (e) {
+        showFeedback('error', 'NETTING!', 'Gagal menambah lapangan.');
+      }
+    });
   };
+
+  const handleDeleteClick = (participant: any) => {
+    showFeedback('warning', 'WALKOVER (WO)?',
+      <span>Kick <strong>{participant.name}</strong> dari event?<br />Slot akan menjadi kosong (Open).</span>,
+      async () => {
+        closeFeedback();
+        try {
+          const res = await fetch(`/api/bookings/${participant.bookingId}`, { method: 'DELETE' });
+          if (res.ok) {
+            showFeedback('success', 'PLAYER RETIRED', `Peserta ${participant.name} berhasil dikeluarkan.`);
+            loadData();
+          } else throw new Error();
+        } catch (error) {
+          showFeedback('error', 'FAULT!', 'Gagal menghapus peserta.');
+        }
+      });
+  };
+
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[50vh]">
@@ -175,8 +251,34 @@ export default function AdminEventDetailPage() {
 
   if (!event) return <div className="text-white">Event not found</div>;
 
-  // Gunakan jumlah participants aktual dari list, bukan dari event.bookedSlot yang mungkin tidak sync
-  const bookedCount = participants.length > 0 ? participants.length : (event.bookedSlot || 0);
+  // FILTER: Pisahkan Staff (Host/Coach/Admin) dari Peserta Biasa
+  // Staff tidak dihitung dalam kuota event.
+  // UPDATE: Hanya yang explicitly ASSIGNED sebagai Host, Coach, atau Asisten Coach.
+  const isAssignedStaff = (p: any) => {
+    // Check ID (Use p.userId if available from booking, fallback to p.id)
+    const uid = p.userId || p.id;
+
+    // 1. Check Host
+    if (event.hostId && uid === event.hostId) return true;
+    if (event.organizer && uid === event.organizer) return true; // Fallback for legacy
+
+    // 2. Check Assistant Coach (Array of IDs)
+    if (event.assistantCoachIds && Array.isArray(event.assistantCoachIds) && event.assistantCoachIds.includes(uid)) return true;
+
+    // 3. Check Main Coach (Best effort by Name match since coachId might not be strictly linked)
+    // If exact name match AND user has coach role, assume they are the assigned coach.
+    if (event.coachName && p.name && p.name.toLowerCase() === event.coachName.toLowerCase()) return true;
+
+    return false;
+  };
+
+  const staff = participants.filter(p => isAssignedStaff(p));
+  const realParticipants = participants.filter(p => !isAssignedStaff(p));
+
+  // Gunakan realParticipants untuk perhitungan kuota
+  const bookedCount = realParticipants.length;
+  // Fallback ke event.bookedSlot jika data participant kosong (optional, tapi lebih aman pakai real count)
+
   const progress = Math.min(100, (bookedCount / event.quota) * 100);
   const totalRevenue = bookedCount * event.price;
 
@@ -213,27 +315,51 @@ export default function AdminEventDetailPage() {
           </div>
         </div>
 
-        <div className="flex gap-2">
+        {/* NEW MODERN ACTION BAR (Moved & Redesigned) */}
+        <div className="flex items-center gap-3 bg-[#0a0a0a]/50 backdrop-blur-md p-1.5 rounded-full border border-white/10 shadow-2xl">
           {/* Quick Actions (Mabar Only) */}
           {event.type === 'mabar' && (
-            <>
-              <Button variant="secondary" onClick={handleExtend} className="bg-white/5 text-white hover:bg-white/10 border border-white/10">
+            <div className="flex items-center gap-1 pr-3 border-r border-white/10 mr-1">
+              <Button
+                variant="ghost"
+                onClick={handleExtend}
+                className="h-10 rounded-full px-4 text-xs font-black uppercase tracking-wider bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition-all duration-300"
+              >
                 <Clock className="w-4 h-4 mr-2" /> +1 Jam
               </Button>
-              <Button variant="secondary" onClick={handleAddCourt} className="bg-white/5 text-white hover:bg-white/10 border border-white/10">
+              <Button
+                variant="ghost"
+                onClick={handleAddCourt}
+                className="h-10 rounded-full px-4 text-xs font-black uppercase tracking-wider bg-green-500/10 text-green-400 hover:bg-green-500 hover:text-white transition-all duration-300"
+              >
                 <Users className="w-4 h-4 mr-2" /> +1 Court
               </Button>
-            </>
+            </div>
           )}
 
-          <Link href={`/admin/events/${event.id}/edit`}>
-            <Button variant="outline" className="border-white/10 text-white bg-[#1A1A1A] hover:bg-white/10 gap-2 h-10 px-4 rounded-xl">
-              <Pencil className="w-4 h-4" /> Edit
+          <div className="flex items-center gap-2">
+            <Link href={`/admin/events/${event.id}/edit`}>
+              <Button variant="ghost" className="h-10 rounded-full px-5 text-xs font-black uppercase tracking-wider text-white hover:bg-white/10 border border-white/5 transition-all">
+                <Pencil className="w-3.5 h-3.5 mr-2" /> Edit
+              </Button>
+            </Link>
+
+            <Button
+              variant="ghost"
+              className="h-10 rounded-full px-5 text-xs font-black uppercase tracking-wider bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white border border-red-500/20 transition-all duration-300 group"
+              onClick={() => {
+                showFeedback('warning', 'GAME OVER?',
+                  <span>Event <strong>{event.title}</strong> akan dihapus permanen.<br />Tidak ada <i>rematch</i> setelah ini.</span>,
+                  () => {
+                    alert("Logic Cancel Executed"); // Placeholder
+                    closeFeedback();
+                  }
+                );
+              }}>
+              <span className="group-hover:hidden">Cancel</span>
+              <span className="hidden group-hover:inline">Delete</span>
             </Button>
-          </Link>
-          <Button variant="destructive" className="bg-red-900/50 text-red-200 hover:bg-red-900 border border-red-900 rounded-xl h-10 px-4" onClick={() => setShowCancelModal(true)}>
-            Cancel
-          </Button>
+          </div>
         </div>
       </div>
 
@@ -385,7 +511,30 @@ export default function AdminEventDetailPage() {
         </div>
 
         {/* RIGHT COLUMN: PARTICIPANTS (8 Cols) */}
-        <div className="xl:col-span-8">
+        <div className="xl:col-span-8 flex flex-col gap-6">
+
+          {/* 1. SEPARATE STAFF / OFFICIALS CARD */}
+          {staff.length > 0 && (
+            <Card className="bg-[#1A1A1A] border-white/5 rounded-3xl p-6">
+              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Event Staff & Officials</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {staff.map((s, idx) => (
+                  <div key={idx} className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
+                    <Avatar className="w-10 h-10 border border-white/10">
+                      <AvatarImage src={s.avatar} className="object-cover" />
+                      <AvatarFallback className="bg-[#1A1A1A] text-xs font-bold">{s.name ? s.name.charAt(0) : 'S'}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-white font-bold text-sm">{s.name}</p>
+                      <Badge className="bg-[#ffbe00]/20 text-[#ffbe00] border-0 text-[10px] mt-0.5">{s.role?.toUpperCase() || 'STAFF'}</Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* 2. REAL PARTICIPANTS CARD */}
           <Card className="bg-[#151515] border-white/5 rounded-[2.5rem] overflow-hidden min-h-[600px] flex flex-col">
             <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
               <div>
@@ -403,9 +552,9 @@ export default function AdminEventDetailPage() {
             </div>
 
             <div className="p-0 flex-1">
-              {participants.length > 0 ? (
+              {realParticipants.length > 0 ? (
                 <div className="divide-y divide-white/5">
-                  {participants.map((p, i) => (
+                  {realParticipants.map((p, i) => (
                     <div key={p.id || i} className="p-4 px-6 flex items-center gap-4 hover:bg-white/5 transition-colors group relative">
                       {/* LINK TO REPORT (IF DRILLING) */}
                       {event.type === 'drilling' && (
@@ -427,8 +576,6 @@ export default function AdminEventDetailPage() {
                             <p className="font-bold text-white">{p.name || "Guest"}</p>
                             {(() => {
                               const r = (p.role || '').toLowerCase();
-                              if (r.includes('admin')) return <Badge className="bg-red-500/10 text-red-500 border-0 h-5 text-[10px] font-bold">ADMIN</Badge>;
-                              if (r.includes('coach')) return <Badge className="bg-[#ffbe00]/10 text-[#ffbe00] border-0 h-5 text-[10px] font-bold">COACH</Badge>;
                               if (r === 'member') return <Badge className="bg-blue-500/10 text-blue-400 border-0 h-5 text-[10px]">MEMBER</Badge>;
                               return <Badge className="bg-gray-700/30 text-gray-400 border-0 h-5 text-[10px]">GUEST</Badge>;
                             })()}
@@ -542,7 +689,10 @@ export default function AdminEventDetailPage() {
                           )}
 
                           <DropdownMenuSeparator className="bg-white/10" />
-                          <DropdownMenuItem className="text-red-500 focus:text-red-500 cursor-pointer hover:bg-red-900/20 focus:bg-red-900/20" onClick={() => alert('Fitur Hapus Peserta (Coming Soon)')}>
+                          <DropdownMenuItem
+                            className="text-red-500 focus:text-red-500 cursor-pointer hover:bg-red-900/20 focus:bg-red-900/20 font-bold"
+                            onClick={() => handleDeleteClick(p)}
+                          >
                             Hapus Peserta
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -561,33 +711,27 @@ export default function AdminEventDetailPage() {
             </div>
 
             <div className="p-4 border-t border-white/5 bg-white/[0.02] text-center text-xs text-gray-600">
-              Showing {participants.length} of {bookedCount} registered users.
+              Showing {realParticipants.length} of {bookedCount} registered users.
             </div>
           </Card>
         </div>
 
       </div>
+      {/* UNIFIED FEEDBACK MODAL */}
       <FeedbackModal
-        isOpen={showCancelModal}
-        onClose={() => setShowCancelModal(false)}
-        type="warning"
-        title="Batalkan Event?"
-        description={
-          <span>
-            Tindakan ini tidak dapat dibatalkan. Event <strong>{event.title}</strong> akan dihapus dan semua booking akan dibatalkan.
-          </span>
-        }
+        isOpen={feedback.isOpen}
+        onClose={closeFeedback}
+        type={feedback.type}
+        title={feedback.title}
+        description={feedback.description}
         primaryAction={{
-          label: "YA, BATALKAN",
-          onClick: () => {
-            alert('Fitur Cancel Event (Action)'); // Placeholder for actual action
-            setShowCancelModal(false);
-          }
+          label: feedback.onConfirm ? "YA, LANJUTKAN" : "MENGERTI",
+          onClick: feedback.onConfirm || closeFeedback
         }}
-        secondaryAction={{
-          label: "Kembali",
-          onClick: () => setShowCancelModal(false)
-        }}
+        secondaryAction={feedback.onConfirm ? {
+          label: "Batalkan",
+          onClick: closeFeedback
+        } : undefined}
       />
 
       {/* EDIT PARTICIPANT MODAL */}

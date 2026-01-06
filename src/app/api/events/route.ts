@@ -27,16 +27,33 @@ export async function GET(req: Request) {
         const events = await Promise.all(snapshot.docs.map(async (doc) => {
             const eventData = doc.data();
 
-            // Fetch Valid Bookings from Root Collection for Real-time Count & Avatars
             const bookingsSnap = await db.collection("bookings")
                 .where("eventId", "==", doc.id)
                 .where("status", "in", ["paid", "confirmed", "pending", "pending_payment", "CONFIRMED"]) // Include all valid statuses
                 .get();
 
-            const realCount = bookingsSnap.size;
+            // FILTER: Exclude Assigned Staff (Host, Coach, Assistant)
+            const validDocs = bookingsSnap.docs.filter(bDoc => {
+                const bData = bDoc.data();
+                const uid = bData.userId;
+
+                // 1. Check Host
+                if (eventData.hostId && uid === eventData.hostId) return false;
+                if (eventData.organizer && uid === eventData.organizer) return false;
+
+                // 2. Check Assistant Coach
+                if (eventData.assistantCoachIds && Array.isArray(eventData.assistantCoachIds) && eventData.assistantCoachIds.includes(uid)) return false;
+
+                // 3. Check Main Coach (Name Match)
+                if (eventData.coachName && bData.userName && bData.userName.toLowerCase() === eventData.coachName.toLowerCase()) return false;
+
+                return true;
+            });
+
+            const realCount = validDocs.length;
 
             // Sort manual by createdAt desc (untuk menghindari error Index Firestore)
-            const sortedDocs = bookingsSnap.docs.sort((a, b) => {
+            const sortedDocs = validDocs.sort((a, b) => {
                 const dateA = a.data().createdAt || '';
                 const dateB = b.data().createdAt || '';
                 return dateB.localeCompare(dateA);

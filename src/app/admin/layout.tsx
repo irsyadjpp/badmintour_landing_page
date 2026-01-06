@@ -28,7 +28,7 @@ export default function AdminLayout({
          - Gunakan 'pl-28' (Padding Left) bukan 'ml-28': 
            Ini membuat area kiri tetap menjadi bagian dari container gelap, mencegah celah putih.
       */}
-      <main className="flex-1 w-full pl-6 md:pl-28 pr-6 py-8">
+      <main className="flex-1 w-full pl-6 md:pl-28 pr-6 md:pr-48 pt-20 md:pt-8 pb-8">
         {/* Wrapper Opsional: Membatasi lebar konten agar rapi di layar monitor lebar (Ultrawide) */}
         <div className="w-full">
           {children}

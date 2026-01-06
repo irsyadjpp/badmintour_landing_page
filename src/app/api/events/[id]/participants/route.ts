@@ -13,7 +13,7 @@ export async function GET(
     // Ambil booking yang statusnya PAID untuk event ini
     const bookingsSnap = await db.collection("bookings")
       .where("eventId", "==", eventId)
-      .where("status", "in", ["paid", "CONFIRMED", "pending_payment", "pending", "pending_approval", "approved", "rejected"]) // Include all statuses
+      .where("status", "in", ["paid", "confirmed", "CONFIRMED", "pending_payment", "pending", "pending_approval", "approved", "rejected"]) // Include all statuses
       .get();
 
     // 2. Scan Assessments to check hasAssessment flag
@@ -71,9 +71,10 @@ export async function GET(
           const userDoc = await db.collection('users').doc(userId).get();
           if (userDoc.exists) {
             const u = userDoc.data();
-            name = u?.name || name; // Keep latest name
+            name = u?.nickname || u?.name || name; // Prioritize Nickname
             avatar = u?.image || avatar; // Keep latest avatar
             level = u?.level || level; // Get Level
+            role = u?.role || role; // Update role from user's latest status
           }
         } catch (e) { }
       }
