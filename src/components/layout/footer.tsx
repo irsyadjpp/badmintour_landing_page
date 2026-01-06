@@ -32,6 +32,14 @@ export default function Footer() {
               >
                 Gabung Grup WA
               </a>
+              <a
+                href="https://www.tiktok.com/@badmintourofficial"
+                target="_blank"
+                className="bg-black border-2 border-gray-800 text-white px-8 py-4 rounded-full font-bold text-lg hover:border-[#00f2ea] hover:text-[#00f2ea] transition flex items-center gap-2 group"
+              >
+                <span>TikTok</span>
+                <span className="text-[#00f2ea] group-hover:drop-shadow-[2px_2px_0_rgba(255,0,80,0.8)] transition-all">♪</span>
+              </a>
             </div>
           </div>
 

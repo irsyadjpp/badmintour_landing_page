@@ -45,6 +45,38 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
+    {
+      id: "tiktok",
+      name: "TikTok",
+      type: "oauth",
+      clientId: process.env.NEXT_PUBLIC_TIKTOK_CLIENT_KEY,
+      clientSecret: process.env.TIKTOK_CLIENT_SECRET,
+      authorization: {
+        url: "https://www.tiktok.com/v2/auth/authorize/",
+        params: {
+          scope: "user.info.basic",
+          response_type: "code",
+          redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/tiktok`
+        },
+      },
+      token: {
+        url: "https://open.tiktokapis.com/v2/oauth/token/",
+        params: { grant_type: "authorization_code" },
+      },
+      userinfo: "https://open.tiktokapis.com/v2/user/info/?fields=open_id,union_id,avatar_url,display_name",
+      profile(profile: any) {
+        // TikTok response structure: { data: { user: { ... } }, error: ... }
+        const user = profile.data?.user || {};
+        return {
+          id: user.open_id,
+          name: user.display_name,
+          image: user.avatar_url,
+          email: null, // TikTok Login Kit (Basic) does not provide email
+          role: "member",
+        };
+      },
+      checks: ["state"],
+    },
     CredentialsProvider({
       name: "PIN",
       credentials: { pin: { label: "PIN", type: "password" } },
@@ -133,8 +165,10 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ user, account }) {
-      if (account?.provider === "google") {
+      if (account?.provider === "google" || account?.provider === "tiktok") {
         try {
+          // Note: TikTok might send different IDs so NextAuth maps it to user.id usually.
+          // For TikTok without email, we might generate a fake one or rely on ID.
           const userRef = db.collection("users").doc(user.id);
           const doc = await userRef.get();
 
@@ -142,11 +176,14 @@ export const authOptions: NextAuthOptions = {
             const newPin = generateDistinctPin();
             const nickname = extractNickname(user.name || "");
 
+            // Handle missing email from TikTok
+            const email = user.email || `${account.provider}_${user.id}@badmintour.app`;
+
             await userRef.set({
               uid: user.id,
-              name: user.name,
+              name: user.name || `User ${nickname}`,
               nickname: nickname,
-              email: user.email,
+              email: email,
               image: user.image,
               role: "member",
               roles: ["member"],
@@ -154,6 +191,7 @@ export const authOptions: NextAuthOptions = {
               pin: newPin,
               hasSeenPin: false, // Flag untuk modal PIN
               createdAt: new Date().toISOString(),
+              provider: account.provider
             });
             await logActivity({
               userId: user.id,

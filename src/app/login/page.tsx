@@ -55,11 +55,13 @@ function LoginContent() {
     const handleGoogleLogin = async () => {
         setIsLoading(true);
         setErrorMsg('');
-        // redirect: false agar kita bisa handle error state manual jika perlu, 
-        // tapi untuk google biasanya flow redirect otomatis.
-        // callbackUrl diset agar setelah login google sukses, dia balik ke halaman ini dulu 
-        // untuk diproses oleh useEffect Auto Redirect di atas.
         await signIn('google', { callbackUrl: '/login' });
+    };
+
+    const handleTikTokLogin = async () => {
+        setIsLoading(true);
+        setErrorMsg('');
+        await signIn('tiktok', { callbackUrl: '/login' });
     };
 
     const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -77,7 +79,7 @@ function LoginContent() {
     };
 
     const handlePinChange = (index: number, value: string) => {
-        // Validasi angka only
+        // ... existing implementation ...
         if (!/^\d*$/.test(value)) return;
 
         const newPin = [...pin];
@@ -94,6 +96,7 @@ function LoginContent() {
             handlePinSubmit(newPin.join(''));
         }
     };
+    // ... existing ...
 
     const handlePinSubmit = async (fullPin: string) => {
         setIsLoading(true);
@@ -156,8 +159,8 @@ function LoginContent() {
             <div className="bg-[#1A1A1A] border border-white/5 rounded-[2.5rem] p-8 shadow-2xl backdrop-blur-sm relative overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#ca1f3d] to-[#ffbe00]"></div>
 
-                {/* Google Login */}
-                <div className="mb-8">
+                {/* Social Login */}
+                <div className="mb-8 space-y-4">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 text-center">Metode Cepat</p>
                     <Button
                         onClick={handleGoogleLogin}
@@ -166,6 +169,15 @@ function LoginContent() {
                     >
                         <Chrome className="w-5 h-5 text-[#ca1f3d]" />
                         {isLoading ? "Memproses..." : "Masuk dengan Google"}
+                    </Button>
+
+                    <Button
+                        onClick={handleTikTokLogin}
+                        disabled={isLoading}
+                        className="w-full h-14 bg-black border border-gray-800 text-white hover:bg-gray-900 font-bold rounded-xl flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg"
+                    >
+                        <span className="text-[#00f2ea] text-xl font-black drop-shadow-[2px_2px_0_rgba(255,0,80,1)]">♪</span>
+                        {isLoading ? "Memproses..." : "Masuk dengan TikTok"}
                     </Button>
                 </div>
 

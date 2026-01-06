@@ -277,7 +277,8 @@ export default async function MabarPage() {
                           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider hidden md:block mt-1">/ PERSON</p>
                         </div>
 
-                        <Link href={`/member/mabar?id=${event.id}`} className="w-full relative z-10 hidden md:block">
+
+                        <Link href={`/mabar/${event.id}`} className="w-full relative z-10 hidden md:block">
                           <Button className={cn(
                             "w-full h-14 rounded-2xl font-black uppercase tracking-[0.15em] shadow-lg transition-all hover:scale-[1.02] active:scale-95 text-xs",
                             isFull
@@ -289,7 +290,7 @@ export default async function MabarPage() {
                         </Link>
 
                         {/* Mobile Button Overlay */}
-                        <Link href={`/member/mabar?id=${event.id}`} className="absolute inset-0 z-20 md:hidden" aria-label="Join Event" />
+                        <Link href={`/mabar/${event.id}`} className="absolute inset-0 z-20 md:hidden" aria-label="View Event Details" />
                       </div>
                     </div>
                   </div>
@@ -308,8 +309,8 @@ export default async function MabarPage() {
             )}
           </div>
         </div>
-      </main>
+      </main >
       <Footer />
-    </div>
+    </div >
   );
 }
