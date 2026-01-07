@@ -139,6 +139,11 @@ export default function HostEventsPage() {
                                             </Link>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem asChild>
+                                            <Link href={`/host/match/${event.id}`} className="w-full cursor-pointer flex items-center focus:bg-white/5 focus:text-[#ffbe00]">
+                                                <Trophy className="w-4 h-4 mr-2" /> Match Control
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild>
                                             <Link href={`/host/events/${event.id}/edit`} className="w-full cursor-pointer flex items-center focus:bg-white/5 focus:text-[#ffbe00]">
                                                 {/* Use Pencil Icon */}
                                                 <Pencil className="w-4 h-4 mr-2" /> Edit Event

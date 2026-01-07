@@ -35,7 +35,7 @@ export default function EventDetailPage() {
 
       try {
         // 1. Fetch Event Details
-        const eventRes = await fetch(`/api/events/${id}`);
+        const eventRes = await fetch(`/api/events/${id}?t=${Date.now()}`);
         const eventData = await eventRes.json();
 
         if (eventData.success) {
@@ -43,7 +43,7 @@ export default function EventDetailPage() {
         }
 
         // 2. Fetch Participants
-        const partRes = await fetch(`/api/events/${id}/participants`);
+        const partRes = await fetch(`/api/events/${id}/participants?t=${Date.now()}`);
         const partData = await partRes.json();
 
         if (partData.success) {

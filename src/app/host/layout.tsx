@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   description: 'Manage your badminton events.',
 };
 
+import HostMainWrapper from "@/components/layout/host-main-wrapper";
+import RoleSwitcher from "@/components/layout/role-switcher";
+
 export default function HostLayout({
   children,
 }: Readonly<{
@@ -21,11 +24,15 @@ export default function HostLayout({
 
       <HostSidebar />
 
-      <main className="relative z-10 w-full flex-1 pl-0 md:pl-32 pr-0 md:pr-8 py-4 md:py-8">
-        <div className="max-w-[1400px] mx-auto w-full">
-          {children}
-        </div>
-      </main>
+      {/* FLOATING ROLE SWITCHER (TOP RIGHT) */}
+      <div className="fixed top-8 right-6 z-50 animate-in fade-in slide-in-from-top-4 duration-500">
+        <RoleSwitcher />
+      </div>
+
+      <HostMainWrapper>
+        {children}
+      </HostMainWrapper>
+
       <PinAnnouncementModal />
     </div>
   );

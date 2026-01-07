@@ -114,15 +114,15 @@ export default function HostProfilePage() {
         <div className="space-y-8 pb-20">
             {/* HEADER */}
             <div className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-white/10 pb-6 px-6 relative">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-[#7c3aed]/10 rounded-full blur-[100px] pointer-events-none"></div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#ca1f3d]/10 rounded-full blur-[100px] pointer-events-none"></div>
 
                 <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl bg-[#7c3aed]/10 flex items-center justify-center border border-[#7c3aed]/20">
-                        <MapPin className="w-8 h-8 text-[#7c3aed]" />
+                    <div className="w-16 h-16 rounded-2xl bg-[#ca1f3d]/10 flex items-center justify-center border border-[#ca1f3d]/20">
+                        <MapPin className="w-8 h-8 text-[#ca1f3d]" />
                     </div>
                     <div>
                         <h1 className="text-4xl font-black text-white tracking-tighter">
-                            HOST <span className="text-[#7c3aed]">PROFILE</span>
+                            HOST <span className="text-[#ffbe00]">PROFILE</span>
                         </h1>
                         <p className="text-gray-400 mt-1 max-w-xl text-sm">
                             Kelola identitas penyelenggara turnamen Anda.
@@ -136,12 +136,12 @@ export default function HostProfilePage() {
                 {/* LEFT COLUMN: IDENTITY & PIN */}
                 <div className="space-y-8 lg:col-span-1">
                     <Card className="bg-[#151515] border-white/10 p-6 rounded-[2rem] flex flex-col items-center text-center h-fit relative overflow-hidden group">
-                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#7c3aed] via-[#ca1f3d] to-[#7c3aed] opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#ca1f3d] via-[#ffbe00] to-[#ca1f3d] opacity-50 group-hover:opacity-100 transition-opacity"></div>
 
                         <div className="relative mb-6 mt-4">
                             <Avatar className="w-32 h-32 border-4 border-[#1A1A1A] shadow-2xl relative z-10">
                                 <AvatarImage src={session?.user?.image || ""} />
-                                <AvatarFallback className="bg-[#7c3aed] text-white font-black text-4xl">
+                                <AvatarFallback className="bg-[#ca1f3d] text-white font-black text-4xl">
                                     {session?.user?.name?.charAt(0)}
                                 </AvatarFallback>
                             </Avatar>
@@ -156,7 +156,7 @@ export default function HostProfilePage() {
                         <div className="w-full space-y-3">
                             <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/5">
                                 <span className="text-xs text-gray-500 uppercase font-bold">Role</span>
-                                <span className="text-xs text-[#7c3aed] font-bold uppercase tracking-wider">EVENT HOST</span>
+                                <span className="text-xs text-[#ffbe00] font-bold uppercase tracking-wider">EVENT HOST</span>
                             </div>
                             <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/5">
                                 <span className="text-xs text-gray-500 uppercase font-bold">Domisili</span>
@@ -172,7 +172,7 @@ export default function HostProfilePage() {
                 <Card className="lg:col-span-2 bg-[#151515] border-white/10 p-8 rounded-[2rem]">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="flex items-center gap-2 mb-2">
-                            <div className="w-2 h-8 bg-[#7c3aed] rounded-full"></div>
+                            <div className="w-2 h-8 bg-[#ca1f3d] rounded-full"></div>
                             <h3 className="text-xl font-black text-white uppercase tracking-wide">Host Data</h3>
                         </div>
 
@@ -188,7 +188,7 @@ export default function HostProfilePage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-[#7c3aed] font-bold flex items-center gap-2">Nomor WhatsApp (Pairing Key) <Phone className="w-4 h-4" /></Label>
+                            <Label className="text-[#ffbe00] font-bold flex items-center gap-2">Nomor WhatsApp (Pairing Key) <Phone className="w-4 h-4" /></Label>
                             <Input
                                 value={formData.phoneNumber}
                                 onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value.replace(/\D/g, '') })}
@@ -197,7 +197,7 @@ export default function HostProfilePage() {
                                         setFormData(prev => ({ ...prev, phoneNumber: formatIndonesianPhoneNumber(prev.phoneNumber) }));
                                     }
                                 }}
-                                className="bg-[#0a0a0a] border-[#7c3aed]/50 text-white h-12 font-mono"
+                                className="bg-[#0a0a0a] border-[#ffbe00]/50 text-white h-12 font-mono"
                                 placeholder="08xxxxxxxxxx"
                                 disabled={isPhoneLocked}
                             />
@@ -214,7 +214,7 @@ export default function HostProfilePage() {
                             </div>
                         </div>
 
-                        <Button type="submit" disabled={isLoading} className="w-full bg-[#7c3aed] text-white font-bold h-12 hover:bg-[#6d28d9]">
+                        <Button type="submit" disabled={isLoading} className="w-full bg-[#ca1f3d] text-white font-bold h-12 hover:bg-[#a01830] shadow-[0_0_20px_rgba(202,31,61,0.3)] hover:shadow-[0_0_30px_rgba(202,31,61,0.5)] hover:scale-[1.01] transition-all">
                             {isLoading ? <Loader2 className="animate-spin" /> : "SIMPAN & TAUTKAN AKUN"}
                         </Button>
                     </form>
