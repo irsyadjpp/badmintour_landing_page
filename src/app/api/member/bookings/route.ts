@@ -131,13 +131,8 @@ export async function GET(req: Request) {
 
 
             // Pagination Logic
-            // If we fetched limit + 1 items via main query, we have more.
-            // Note: Phone docs might distort strict pagination size on first page, which is acceptable UI-wise.
             const hasMore = snapshot.docs.length > limit;
-            const validDocs = hasMore ? uniqueDocs.slice(0, uniqueDocs.length - 1) : uniqueDocs; // Cut off the extra item checked from Main Query
-            // Wait, if we merged Phone Docs, the 'limit' check is tricky.
-            // Let's rely on snapshot.docs.length for 'hasMore' of the User Stream.
-            // And we display ALL Phone matches found (capped 10) on top/mixed.
+
 
             const docsToReturn = hasMore ? snapshot.docs.slice(0, limit) : snapshot.docs;
             // Merge finally

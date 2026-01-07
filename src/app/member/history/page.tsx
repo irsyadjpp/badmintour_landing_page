@@ -174,7 +174,7 @@ export default function HistoryPage() {
             )
           })
         )}
-        )}
+
       </div>
 
       {/* LOAD MORE BUTTON */}

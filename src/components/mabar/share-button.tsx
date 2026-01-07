@@ -19,7 +19,24 @@ interface ShareButtonProps {
 export default function ShareButton({ title, text, url }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
 
-  const shareUrl = url || (typeof window !== 'undefined' ? window.location.href : '');
+  // Handle URL construction:
+  // 1. If explicit URL provided:
+  //    a. If starts with http, use as is.
+  //    b. If relative (starts with /), append origin.
+  // 2. If no URL, use window.location.href (or clean origin+pathname).
+  const getShareUrl = () => {
+    if (url) {
+      if (url.startsWith('http')) return url;
+      if (typeof window !== 'undefined') return `${window.location.origin}${url}`;
+      return url;
+    }
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}${window.location.pathname}`;
+    }
+    return '';
+  };
+
+  const shareUrl = getShareUrl();
   const shareText = `${title}\n${text}\n\nJoin di sini: ${shareUrl}`;
 
   const handleNativeShare = async () => {
@@ -43,7 +60,8 @@ export default function ShareButton({ title, text, url }: ShareButtonProps) {
   };
 
   const handleWhatsApp = () => {
-    const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+    // Use api.whatsapp.com/send for broader compatibility
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
     window.open(waUrl, '_blank');
   };
 

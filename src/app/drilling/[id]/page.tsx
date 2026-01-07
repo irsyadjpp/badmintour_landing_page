@@ -275,6 +275,7 @@ export default async function DrillingDetailPage({ params }: { params: { id: str
                   <ShareButton
                     title={`Drilling Badminton: ${event.title}`}
                     text={`Yuk latihan bareng Coach ${event.coachName || "Pro"} tanggal ${new Date(event.date).toLocaleDateString()} jam ${event.time} di ${event.location}!`}
+                    url={`/drilling/${event.id}`}
                   />
                 </div>
 

@@ -47,16 +47,45 @@ type Order = {
     orderedAt: string;
 };
 
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'; // Import useQueryClient
+
+// ... imports ...
+
 export default function AdminJerseyPage() {
     const { toast } = useToast();
-    const [orders, setOrders] = useState<Order[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const queryClient = useQueryClient(); // Init Client
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
-    const [migrating, setMigrating] = useState(false); // <--- State
+    const [migrating, setMigrating] = useState(false);
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(5);
+    // 1. INFINITE QUERY FETCHING
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading,
+        refetch
+    } = useInfiniteQuery({
+        queryKey: ['admin', 'jersey-orders'],
+        queryFn: async ({ pageParam = undefined }) => {
+            const url = new URL('/api/admin/jersey', window.location.origin);
+            url.searchParams.set('limit', '50');
+            if (pageParam) url.searchParams.set('cursor', pageParam as string);
+
+            const res = await fetch(url.toString());
+            const json = await res.json();
+            // Adjust structure if API returns pure array or object
+            // Our API returns { success: true, data: [...], meta: { cursor, hasMore } }
+            return json;
+        },
+        getNextPageParam: (lastPage) => lastPage.meta?.hasMore ? lastPage.meta.cursor : undefined,
+        initialPageParam: undefined,
+        // Keep data fresh longer to avoid flickering during simple updates unless explicitly invalidated
+        staleTime: 1000 * 60 * 5,
+    });
+
+    const orders = data?.pages.flatMap(page => page.data || []) || [];
 
     // 0. MIGRATE HANDLER
     const handleMigrate = async () => {
@@ -67,7 +96,7 @@ export default function AdminJerseyPage() {
             const data = await res.json();
             if (res.ok) {
                 toast({ title: "Migration Log", description: data.message, className: "bg-blue-600 text-white" });
-                fetchOrders(); // Refresh table
+                refetch(); // Refresh list
             } else {
                 throw new Error(data.error || "Migration failed");
             }
@@ -77,31 +106,6 @@ export default function AdminJerseyPage() {
             setMigrating(false);
         }
     };
-
-    // 1. FETCH DATA
-    const fetchOrders = async () => {
-        setIsLoading(true);
-        try {
-            const res = await fetch('/api/admin/jersey');
-            const data = await res.json();
-            if (data.success) {
-                setOrders(data.data);
-            }
-        } catch (error) {
-            toast({ title: "Error", description: "Gagal mengambil data pesanan.", variant: "destructive" });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchOrders();
-    }, []);
-
-    // Reset pagination when search/filter changes
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchTerm, statusFilter, itemsPerPage]);
 
     // 2. UPDATE STATUS
     const handleUpdateStatus = async (order: Order, newStatus: string) => {
@@ -117,15 +121,17 @@ export default function AdminJerseyPage() {
 
             if (res.ok) {
                 toast({ title: "Status Updated", description: `Pesanan diubah menjadi ${newStatus}`, className: "bg-green-600 text-white border-none" });
-                fetchOrders();
+                // Optimistic update or Refetch
+                // For simplicity, refetch. (Ideally optimize by updating cache directly)
+                queryClient.invalidateQueries({ queryKey: ['admin', 'jersey-orders'] });
             }
         } catch (error) {
             toast({ title: "Gagal Update", variant: "destructive" });
         }
     };
 
-    // 3. FILTERING
-    const filteredOrders = orders.filter(order => {
+    // 3. FILTERING (Client-Side on Loaded Data)
+    const filteredOrders = orders.filter((order: Order) => {
         const name = order.senderName || order.fullName || "No Name";
         const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (order.backName && order.backName.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -134,11 +140,9 @@ export default function AdminJerseyPage() {
         return matchesSearch && matchesStatus;
     });
 
-    // 4. PAGINATION LOGIC
-    const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const currentOrders = filteredOrders.slice(startIndex, endIndex);
+    // We display ALL filtered orders (Infinite Scroll style), no sub-pagination slice using 'currentPage'
+    const currentOrders = filteredOrders;
+
 
     // 4. STATS CALCULATION (Safe Calculation)
     const stats = {
@@ -236,7 +240,7 @@ export default function AdminJerseyPage() {
             if (res.ok) {
                 toast({ title: "Sukses", description: "Data pesanan berhasil diperbarui!", className: "bg-green-600 text-white" });
                 setIsEditOpen(false);
-                fetchOrders();
+                queryClient.invalidateQueries({ queryKey: ['admin', 'jersey-orders'] });
             } else {
                 throw new Error("Gagal update");
             }
@@ -266,7 +270,7 @@ export default function AdminJerseyPage() {
                         <DatabaseZap className={`w-4 h-4 mr-2 ${migrating ? 'animate-pulse' : ''}`} />
                         {migrating ? 'Migrating...' : 'Migrate Data'}
                     </Button>
-                    <Button variant="outline" onClick={fetchOrders} className="border-white/10 hover:bg-white/5 text-gray-300 hover:text-white rounded-xl">
+                    <Button variant="outline" onClick={() => refetch()} className="border-white/10 hover:bg-white/5 text-gray-300 hover:text-white rounded-xl">
                         <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} /> Refresh
                     </Button>
                     <Button className="bg-[#ca1f3d] hover:bg-[#a01830] text-white rounded-xl font-bold shadow-lg shadow-[#ca1f3d]/20">
@@ -422,81 +426,28 @@ export default function AdminJerseyPage() {
             </Card>
 
             {/* PAGINATION CONTROLS */}
-            {filteredOrders.length > 0 && (
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-400">
-                    <div className="flex items-center gap-4">
-                        <span>
-                            Showing <span className="text-white font-bold">{startIndex + 1}</span> to <span className="text-white font-bold">{Math.min(endIndex, filteredOrders.length)}</span> of <span className="text-white font-bold">{filteredOrders.length}</span> entries
-                        </span>
+            {/* LOAD MORE / FOOTER */}
+            <div className="flex flex-col items-center gap-4 py-8">
+                <p className="text-sm text-gray-500">
+                    Menampilkan <span className="text-white font-bold">{filteredOrders.length}</span> pesanan
+                    {orders.length > filteredOrders.length && <span> (dari {orders.length} terambil)</span>}
+                </p>
 
-                        {/* Rows Per Page Selector */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs uppercase font-bold text-gray-500">Rows:</span>
-                            <select
-                                value={itemsPerPage}
-                                onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                                className="bg-[#151515] border border-white/10 text-white text-xs rounded-lg px-2 py-1 outline-none focus:border-[#ffbe00]"
-                            >
-                                {[5, 10, 20, 50, 100].map(size => (
-                                    <option key={size} value={size}>{size}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                            disabled={currentPage === 1}
-                            className="bg-[#151515] border-white/10 text-white hover:bg-white/10 disabled:opacity-50"
-                        >
-                            Previous
-                        </Button>
-
-                        <div className="flex gap-1">
-                            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                                let pageNum = i + 1;
-                                // Logic simple untuk pagination (tampilkan max 5 page pertama atau logikanya bisa dibuat lebih kompleks)
-                                // Di sini kita pakai simple iteration untuk 5 halaman pertama atau logic sliding window jika perlu. 
-                                // Untuk MVP, tombol Prev/Next + Text "Page X of Y" sudah cukup, tapi kita coba render numbers.
-
-                                // Sliding window logic sederhana: center current page
-                                if (totalPages > 5) {
-                                    if (currentPage > 3) {
-                                        pageNum = currentPage - 2 + i;
-                                    }
-                                    if (pageNum > totalPages) return null;
-                                }
-
-                                return (
-                                    <button
-                                        key={pageNum}
-                                        onClick={() => setCurrentPage(pageNum)}
-                                        className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold transition-colors ${currentPage === pageNum
-                                            ? 'bg-[#ffbe00] text-black'
-                                            : 'bg-[#151515] text-gray-400 hover:bg-white/10 hover:text-white'
-                                            }`}
-                                    >
-                                        {pageNum}
-                                    </button>
-                                );
-                            }).filter(Boolean)}
-                        </div>
-
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                            disabled={currentPage === totalPages}
-                            className="bg-[#151515] border-white/10 text-white hover:bg-white/10 disabled:opacity-50"
-                        >
-                            Next
-                        </Button>
-                    </div>
-                </div>
-            )}
+                {hasNextPage && (
+                    <Button
+                        onClick={() => fetchNextPage()}
+                        disabled={isFetchingNextPage}
+                        variant="outline"
+                        className="rounded-full px-8 border-white/10 hover:bg-white/10 text-white"
+                    >
+                        {isFetchingNextPage ? (
+                            <><RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Memuat...</>
+                        ) : (
+                            <>Tampilkan Lebih Banyak</>
+                        )}
+                    </Button>
+                )}
+            </div>
 
             {/* EDIT DIALOG */}
             {isEditOpen && (

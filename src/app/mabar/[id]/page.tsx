@@ -275,6 +275,7 @@ export default async function EventDetailPage({ params }: { params: { id: string
                   <ShareButton
                     title={`Mabar Badminton: ${event.title}`}
                     text={`Yuk join mabar tanggal ${new Date(event.date).toLocaleDateString()} jam ${event.time} di ${event.location}!`}
+                    url={`/mabar/${event.id}`}
                   />
                 </div>
 
