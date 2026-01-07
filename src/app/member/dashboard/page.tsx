@@ -234,10 +234,19 @@ export default function MemberDashboard() {
                         <AvatarFallback className="bg-[#ffbe00] text-black font-black text-2xl">{session?.user?.name?.charAt(0) || "U"}</AvatarFallback>
                     </Avatar>
                     <div>
-                        <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-white">Hi, {session?.user?.name?.split(' ')[0] || 'Athlete'}!</h1>
-                        <div className="flex items-center gap-3 mt-1">
-                            <Badge variant="outline" className="text-[#ffbe00] border-[#ffbe00]/30 bg-[#ffbe00]/10 text-[10px] uppercase tracking-widest font-bold">Member</Badge>
-                            <span className="text-xs text-gray-500 font-mono">ID: {session?.user?.id?.slice(0, 6).toUpperCase() || '---'}</span>
+                        <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-white">
+                            Hi, {(session?.user as any)?.nickname || session?.user?.name?.split(' ')[0] || 'Athlete'}!
+                        </h1>
+                        <div className="flex flex-col gap-1 mt-1">
+                            <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-[#ffbe00] border-[#ffbe00]/30 bg-[#ffbe00]/10 text-[10px] uppercase tracking-widest font-bold">Member</Badge>
+                                <span className="text-xs text-gray-500 font-mono">ID: {session?.user?.id?.slice(0, 6).toUpperCase() || '---'}</span>
+                            </div>
+                            <div className="text-[10px] text-gray-400 font-mono flex flex-col sm:flex-row sm:gap-4">
+                                <span>{session?.user?.email}</span>
+                                <span className="hidden sm:inline">•</span>
+                                <span>{(session?.user as any)?.phoneNumber || "No Phone"}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -317,9 +326,12 @@ export default function MemberDashboard() {
                 {bookings.length > 0 ? (
                     bookings.map((booking: any) => (
                         <div key={booking.id} className="flex flex-col md:flex-row justify-between items-center bg-[#0a0a0a] p-4 rounded-xl border border-white/5 gap-4 group hover:border-[#ffbe00]/30 transition-colors">
-                            <div className="flex-1">
+                            <Link
+                                href={`/member/${booking.event.type === 'drilling' ? 'drilling' : 'mabar'}/${booking.event.id}`}
+                                className="flex-1 cursor-pointer select-none"
+                            >
                                 <div className="flex justify-between md:justify-start gap-4 mb-1">
-                                    <p className="font-bold text-white">{booking.event.title}</p>
+                                    <p className="font-bold text-white group-hover:text-[#ffbe00] transition-colors">{booking.event.title}</p>
                                     <Badge variant="outline" className={`text-[10px] ${booking.status === 'paid' || booking.status === 'confirmed' || booking.status === 'CONFIRMED' ? 'text-green-500 border-green-500/20 bg-green-500/10' :
                                         booking.status === 'pending_payment' ? 'text-yellow-500 border-yellow-500/20 bg-yellow-500/10' :
                                             booking.status === 'pending_approval' ? 'text-blue-500 border-blue-500/20 bg-blue-500/10' :
@@ -339,7 +351,7 @@ export default function MemberDashboard() {
                                 {booking.status === 'pending_payment' && (
                                     <p className="text-xs text-yellow-500 mt-2 font-mono">Total: Rp {booking.totalPrice.toLocaleString('id-ID')}</p>
                                 )}
-                            </div>
+                            </Link>
 
                             <div className="flex gap-2 w-full md:w-auto">
                                 {/* Action Buttons based on Status */}

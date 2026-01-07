@@ -50,8 +50,22 @@ export async function POST(req: Request) {
                 return NextResponse.json({ error: "Nama dan No. WhatsApp wajib diisi" }, { status: 400 });
             }
 
+            // 1. Normalize Phone Number
+            // Ensure we search for both formats (08xx and 628xx) to cover all bases
+            let cleanPhone = guestPhone.replace(/\D/g, '');
+            if (cleanPhone.startsWith('0')) cleanPhone = '62' + cleanPhone.slice(1);
+
+            const variant08 = '0' + cleanPhone.slice(2); // 08...
+            const variant62 = cleanPhone; // 628...
+
+            const possiblePhones = [variant62, variant08];
+
             // Cek apakah No. HP ini terdaftar (Member atau sudah pernah jadi Guest)
-            const userCheckSnapshot = await db.collection("users").where("phoneNumber", "==", guestPhone).limit(1).get();
+            // Use 'in' query to check both formats
+            const userCheckSnapshot = await db.collection("users")
+                .where("phoneNumber", "in", possiblePhones)
+                .limit(1)
+                .get();
 
             if (!userCheckSnapshot.empty) {
                 // LINK TO EXISTING ACCOUNT (Member or Previous Guest)
@@ -75,7 +89,7 @@ export async function POST(req: Request) {
                 await newGuestRef.set({
                     id: newGuestRef.id,
                     name: guestName,
-                    phoneNumber: guestPhone,
+                    phoneNumber: variant62, // Always save as 62 format for consistency
                     role: 'guest', // Mark as guest
                     createdAt: new Date().toISOString(),
                     isShadow: true, // Marker bahwa ini akun otomatis

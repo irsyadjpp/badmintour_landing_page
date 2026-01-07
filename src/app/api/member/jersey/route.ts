@@ -146,17 +146,55 @@ export async function GET(req: Request) {
     }
 
     try {
-        // Ambil semua order milik user ini (type 'jersey')
-        const snapshot = await db.collection("orders")
+        // 1. Fetch by USER ID
+        const userIdQuery = db.collection("orders")
             .where("userId", "==", session.user.id)
             .where("type", "==", "jersey")
             .orderBy("createdAt", "desc")
-            .get();
+            .limit(20);
 
-        const orders = snapshot.docs.map(doc => {
+        // 2. Fetch by PHONE (Sync Guest Orders)
+        let phoneQueryPromise = Promise.resolve({ docs: [] } as any);
+
+        let userPhone = (session.user as any).phoneNumber;
+        if (!userPhone) {
+            const uDoc = await db.collection("users").doc(session.user.id).get();
+            userPhone = uDoc.data()?.phoneNumber;
+        }
+
+        if (userPhone) {
+            let clean = userPhone.replace(/\D/g, '');
+            if (clean.startsWith('0')) clean = '62' + clean.slice(1);
+            const p62 = clean;
+            const p08 = '0' + clean.slice(2);
+
+            // Note: This requires index on (userPhone ASC, type ASC, createdAt DESC) if large data, 
+            // but for now likely fine or needs simple index.
+            // Note: Removed orderBy("createdAt", "desc") to avoid "Index Required" error. 
+            // Sorting is handled in-memory below.
+            phoneQueryPromise = db.collection("orders")
+                .where("userPhone", "in", [p62, p08])
+                .where("type", "==", "jersey")
+                .limit(20)
+                .get();
+        }
+
+        const [idSnap, phoneSnap] = await Promise.all([userIdQuery.get(), phoneQueryPromise]);
+
+        // 3. MERGE & DEDUPLICATE
+        const allMap = new Map();
+        idSnap.docs.forEach(doc => allMap.set(doc.id, doc));
+        phoneSnap.docs.forEach(doc => {
+            if (!allMap.has(doc.id)) allMap.set(doc.id, doc);
+        });
+
+        const sortedDocs = Array.from(allMap.values()).sort((a, b) => {
+            return b.data().createdAt > a.data().createdAt ? 1 : -1;
+        });
+
+        const orders = sortedDocs.map(doc => {
             const data = doc.data();
-            // Transform back to convenient UI format if needed, or UI will adapt.
-            // Keeping it raw with mapped fields for UI backward compat
+            // Transform back to convenient UI format
             return {
                 ...data,
                 // Flatten fields for UI compatibility

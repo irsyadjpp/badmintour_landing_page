@@ -243,7 +243,14 @@ export const authOptions: NextAuthOptions = {
           const activeRole = userData?.role || 'member';
 
           token.roles = userRoles;
-          token.role = activeRole; // Ini role yang sedang AKTIF
+          token.role = activeRole;
+
+          // REFRESH PROFILE DATA
+          // Ini Memastikan data session selalu up-to-date dengan database (setelah edit profile)
+          token.name = userData?.name || token.name;
+          token.nickname = userData?.nickname || token.nickname;
+          token.picture = userData?.image || token.picture;
+          token.phoneNumber = userData?.phoneNumber || "";
         }
       }
 
@@ -259,6 +266,12 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role as string; // Active Role
         (session.user as any).roles = token.roles as string[]; // Available Roles
+
+        // Pass DB-Refreshed Data to Client
+        session.user.name = token.name;
+        session.user.image = token.picture;
+        (session.user as any).nickname = token.nickname;
+        (session.user as any).phoneNumber = token.phoneNumber;
       }
       return session;
     }

@@ -38,11 +38,31 @@ async function getEventDetails(id: string) {
     });
 
     // Get Participants with Names
-    const participants = validBookings.map(b => ({
-      name: b.nickname || b.userNickname || (b.userName || b.name || "Unknown").split(' ')[0],
-      avatar: b.userImage || b.avatar || "",
-      role: b.userRole || "member"
-    }));
+    const userIds = validBookings.map((b: any) => b.userId).filter(Boolean);
+    const userMap: Record<string, any> = {};
+
+    if (userIds.length > 0) {
+      const distinctUserIds = [...new Set(userIds)];
+      const userRefs = distinctUserIds.map(uid => db.collection('users').doc(uid));
+
+      if (userRefs.length > 0) {
+        const userDocs = await db.getAll(...userRefs);
+        userDocs.forEach(doc => {
+          if (doc.exists) {
+            userMap[doc.id] = doc.data();
+          }
+        });
+      }
+    }
+
+    const participants = validBookings.map(b => {
+      const freshUser = userMap[b.userId];
+      return {
+        name: freshUser?.nickname || freshUser?.name || b.nickname || b.userNickname || (b.userName || b.name || "Unknown").split(' ')[0],
+        avatar: freshUser?.image || freshUser?.photoURL || b.userImage || b.avatar || "",
+        role: b.userRole || "member"
+      };
+    });
 
     const filled = validBookings.length;
 

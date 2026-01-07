@@ -114,36 +114,67 @@ export async function GET(req: Request) {
             const limit = parseInt(searchParams.get('limit') || '20');
             const cursor = searchParams.get('cursor'); // expects ISO Date String of last item
 
-            let query = db.collection("bookings")
+            // 1. Fetch by User ID
+            const userIdQuery = db.collection("bookings")
                 .where("userId", "==", session.user.id)
                 .where("status", "in", ["paid", "confirmed", "pending", "pending_payment", "CONFIRMED", "pending_approval", "waiting_approval"])
                 .orderBy("bookedAt", "desc")
-                .limit(limit + 1); // Fetch 1 extra to check next page
+                .limit(limit + 5); // Fetch extra buffer
 
-            if (cursor) {
-                query = query.startAfter(cursor);
+            // 2. Fetch by Phone (Link Orphaned Bookings)
+            let phoneQueryPromise = Promise.resolve({ empty: true, docs: [] } as any);
+
+            // Get Phone from Session or DB
+            let userPhone = (session.user as any).phoneNumber;
+            if (!userPhone) {
+                // Fallback fetch if not in session yet (auth.ts fix pending propagation)
+                const uDoc = await db.collection("users").doc(session.user.id).get();
+                userPhone = uDoc.data()?.phoneNumber;
             }
 
-            const snapshot = await query.get();
+            if (userPhone && (cursor === null || cursor === undefined || cursor === '')) {
+                // Formatting Check (08 vs 62)
+                let clean = userPhone.replace(/\D/g, '');
+                if (clean.startsWith('0')) clean = '62' + clean.slice(1);
+                const p62 = clean;
+                const p08 = '0' + clean.slice(2);
 
-            // Handle Phone Number Match (Legacy/Guest) - ONLY if First Page (cursor is null) to avoid dups/complexity
-            // We append phone-based bookings only on fresh load.
+                // Only run this "Guest Sync" on the first page load to avoid cursor complexity
+                // and because recent bookings are most relevant.
+                // Note: Removed orderBy to avoid Index Requirement. Sorted in memory later.
+                phoneQueryPromise = db.collection("bookings")
+                    .where("guestPhone", "in", [p62, p08])
+                    .limit(10) // Check last 10 guest bookings
+                    .get();
+            }
 
+            const [userIdSnap, phoneSnap] = await Promise.all([userIdQuery.get(), phoneQueryPromise]);
 
-            // Pagination Logic
-            const hasMore = snapshot.docs.length > limit;
+            // 3. MERGE & DEDUPLICATE
+            const allDocs = new Map();
 
+            userIdSnap.docs.forEach(doc => allDocs.set(doc.id, doc));
+            phoneSnap.docs.forEach(doc => {
+                // Only add if not exist (userId query takes precedence)
+                if (!allDocs.has(doc.id)) {
+                    allDocs.set(doc.id, doc);
+                }
+            });
 
-            const docsToReturn = hasMore ? snapshot.docs.slice(0, limit) : snapshot.docs;
-            // Merge finally
-            // Actually, merging phone logic with cursor paging is messy. 
-            // Better to return phone matches as separate list? Or just ignore for pagination phase?
-            // "Guest Match" is usually for claiming. 
-            // Let's stick to PURE pagination for userId. 
-            // And maybe a "guest_matches" separate field? 
-            // For now, I will implement Strict Pagination for UserId only to solve the Performance Issue.
-            // Phone logic is causing the slow "Fetch All" currently. 
-            // I will COMMENT OUT phone logic for 'pagination list' to ensure speed.
+            // Convert to Array and Sort manually
+            let sortedDocs = Array.from(allDocs.values()).sort((a, b) => {
+                const dateA = a.data().bookedAt;
+                const dateB = b.data().bookedAt;
+                return (dateB > dateA) ? 1 : -1; // Descending
+            });
+
+            // Apply Pagination Slice
+            // Note: Cursor logic won't work perfectly with mixed sources if we don't fetch all. 
+            // But since phone query is only typically small/recent, this hybrid Approach is "Good Enough" for UX.
+            // Ideally we'd migrate the data.
+
+            const hasMore = sortedDocs.length > limit;
+            const docsToReturn = hasMore ? sortedDocs.slice(0, limit) : sortedDocs;
             // Providing a separate 'sync' endpoint is better.
 
             // 3b. Fetch Assessments & Reviews (Batch Optimization)
