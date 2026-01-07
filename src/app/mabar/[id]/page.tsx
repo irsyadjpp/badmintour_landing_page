@@ -1,5 +1,6 @@
 import { db } from "@/lib/firebase-admin";
 import ShareButton from "@/components/mabar/share-button";
+import GuestBookingDialog from "@/components/mabar/guest-booking-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -253,16 +254,14 @@ export default async function EventDetailPage({ params }: { params: { id: string
                       </div>
                     </div>
 
-                    <Link href={`/member/mabar?id=${event.id}`}>
-                      <Button className={cn(
-                        "w-full h-14 rounded-xl text-sm font-black uppercase tracking-widest shadow-lg transition-all hover:scale-105 active:scale-95",
-                        isFull
-                          ? "bg-gray-100 text-gray-400 hover:bg-gray-100 cursor-not-allowed"
-                          : "bg-[#ffbe00] text-black hover:bg-[#ffca28]"
-                      )}>
-                        {isFull ? "Full Booked" : "Join Now"}
-                      </Button>
-                    </Link>
+                    <GuestBookingDialog
+                      eventId={event.id}
+                      eventTitle={event.title}
+                      isFull={isFull}
+                      price={event.price}
+                      quota={total}
+                      bookedSlot={filled}
+                    />
 
                     <p className="text-[10px] text-gray-400 text-center mt-4 font-medium leading-relaxed">
                       *Pastikan saldo cukup atau siapkan pembayaran via QRIS. Pembatalan maks H-1.
