@@ -14,7 +14,7 @@ export async function GET(
     // 1. Fetch Bookings
     const bookingsSnap = await db.collection("bookings")
       .where("eventId", "==", eventId)
-      .where("status", "in", ["paid", "confirmed", "CONFIRMED", "pending_payment", "pending", "pending_approval", "approved", "rejected"])
+      .where("status", "in", ["paid", "confirmed", "CONFIRMED", "pending_payment", "pending", "pending_approval", "approved", "rejected", "cancelled"])
       .get();
 
     // 2. Scan Assessments
@@ -82,7 +82,10 @@ export async function GET(
         partnerName: data.partnerName || "",
         hasAssessment: userId ? assessedPlayerIds.has(userId) : false,
         checkInAt: data.checkInAt ? data.checkInAt.toDate() : null,
-        level: level
+        level: level,
+        cancelReason: data.cancelReason || null,
+        cancelledAt: data.cancelledAt || null,
+        cancelledBy: data.cancelledBy || null
       };
     }));
 

@@ -17,7 +17,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const { status, partnerName, price, isSponsored } = await req.json();
+    const { status, partnerName, price, isSponsored, cancelReason } = await req.json();
 
     if (!status || !['paid', 'pending', 'cancelled', 'pending_approval', 'approved', 'rejected', 'confirmed'].includes(status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
@@ -47,6 +47,14 @@ export async function PATCH(
     if (partnerName !== undefined) updateData.partnerName = partnerName;
     if (price !== undefined) updateData.price = price;
     if (isSponsored !== undefined) updateData.isSponsored = isSponsored;
+
+    // Support for Cancellation Reason
+    if (status === 'cancelled') {
+      if (cancelReason) updateData.cancelReason = cancelReason;
+      updateData.cancelledAt = new Date().toISOString();
+      updateData.cancelledBy = session.user.id;
+      updateData.cancelledByName = session.user.name;
+    }
 
     await bookingRef.update(updateData);
 
